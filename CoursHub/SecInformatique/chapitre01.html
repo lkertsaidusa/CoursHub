@@ -1,0 +1,1619 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SEC INFO — Chapitre 1</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&family=DM+Sans:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #03070d;
+  --bg2: #071220;
+  --neon: #00ffe7;
+  --neon2: #ff2d78;
+  --neon3: #f5c518;
+  --neon4: #7b2dff;
+  --neon5: #00b4ff;
+  --text: #c8e6f5;
+  --muted: #3d6680;
+  --card: rgba(0,255,231,0.03);
+  --border: rgba(0,255,231,0.12);
+  --glow: 0 0 40px rgba(0,255,231,0.15);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin:0; padding:0; }
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  overflow-x: hidden;
+  cursor: none;
+}
+
+/* ===== CURSOR ===== */
+#cursor-ring {
+  position: fixed; width: 36px; height: 36px;
+  border: 1.5px solid var(--neon); border-radius: 50%;
+  pointer-events: none; z-index: 99999;
+  transform: translate(-50%,-50%);
+  transition: width .3s, height .3s, border-color .3s, opacity .3s;
+  mix-blend-mode: screen;
+}
+#cursor-dot {
+  position: fixed; width: 5px; height: 5px;
+  background: var(--neon); border-radius: 50%;
+  pointer-events: none; z-index: 99999;
+  transform: translate(-50%,-50%);
+  transition: transform .1s;
+}
+body:has(.card:hover) #cursor-ring,
+body:has(.expand-btn:hover) #cursor-ring {
+  width: 60px; height: 60px;
+  border-color: var(--neon2);
+}
+
+/* ===== CANVAS ===== */
+#bg-canvas { position: fixed; inset: 0; z-index: 0; opacity: .4; pointer-events: none; }
+
+/* ===== SCANLINES ===== */
+#scanlines {
+  position: fixed; inset: 0; z-index: 1; pointer-events: none;
+  background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,.08) 2px, rgba(0,0,0,.08) 4px);
+  animation: scanline-move 8s linear infinite;
+}
+@keyframes scanline-move { to { background-position: 0 100px; } }
+
+/* ===== PROGRESS ===== */
+#progress { position: fixed; top:0; left:0; height:2px; z-index:1000; background: linear-gradient(90deg,var(--neon),var(--neon2)); box-shadow: 0 0 12px var(--neon); transition: width .1s; }
+
+/* ===== NAV ===== */
+#sidenav {
+  position: fixed; right: 20px; top: 50%; transform: translateY(-50%);
+  display: flex; flex-direction: column; gap: 10px; z-index: 500;
+}
+.snav-item {
+  display: flex; align-items: center; gap: 10px; cursor: pointer;
+  justify-content: flex-end;
+}
+.snav-label {
+  font-family: 'Share Tech Mono', monospace; font-size: .65rem;
+  color: var(--muted); letter-spacing: 2px; text-transform: uppercase;
+  opacity: 0; transform: translateX(10px); transition: opacity .3s, transform .3s;
+  white-space: nowrap;
+}
+.snav-item:hover .snav-label, .snav-item.active .snav-label { opacity:1; transform: translateX(0); }
+.snav-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  border: 1.5px solid var(--muted); transition: all .3s; flex-shrink: 0;
+}
+.snav-item.active .snav-dot, .snav-item:hover .snav-dot {
+  border-color: var(--neon); background: var(--neon); box-shadow: 0 0 8px var(--neon);
+}
+
+/* ===== SECTIONS ===== */
+.page-section {
+  position: relative; z-index: 2;
+  min-height: 100vh; padding: 100px 60px;
+  max-width: 1200px; margin: 0 auto;
+  display: flex; flex-direction: column; justify-content: center;
+}
+@media(max-width:700px){ .page-section{ padding: 80px 20px; } }
+
+/* ===== HERO ===== */
+#hero {
+  max-width: 100%; min-height: 100vh;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  text-align: center; padding: 60px 20px;
+  background: radial-gradient(ellipse 60% 50% at 50% 50%, rgba(0,255,231,.05) 0%, transparent 70%);
+}
+
+.hero-eyebrow {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: .8rem; color: var(--muted);
+  letter-spacing: 5px; text-transform: uppercase;
+  margin-bottom: 20px;
+  animation: fade-down .8s .2s both;
+}
+.hero-title {
+  font-family: 'Orbitron', sans-serif;
+  font-size: clamp(3rem, 10vw, 8rem);
+  font-weight: 900; line-height: 1;
+  color: var(--neon);
+  text-shadow: 0 0 60px rgba(0,255,231,.5), 0 0 120px rgba(0,255,231,.2);
+  animation: fade-up .8s .4s both, glow-pulse 3s 1.2s infinite;
+  position: relative;
+}
+@keyframes glow-pulse {
+  0%,100%{ text-shadow: 0 0 60px rgba(0,255,231,.5), 0 0 120px rgba(0,255,231,.2); }
+  50%{ text-shadow: 0 0 80px rgba(0,255,231,.8), 0 0 160px rgba(0,255,231,.4); }
+}
+.hero-sub {
+  font-family: 'Orbitron', sans-serif;
+  font-size: clamp(.9rem,2vw,1.2rem);
+  color: var(--muted); letter-spacing: 4px;
+  text-transform: uppercase; margin-top: 10px;
+  animation: fade-up .8s .5s both;
+}
+.hero-desc {
+  font-size: clamp(1rem,2.5vw,1.3rem);
+  max-width: 600px; margin: 30px auto 0;
+  line-height: 1.7; color: var(--text); opacity: .8;
+  animation: fade-up .8s .7s both;
+}
+.hero-desc em { color: var(--neon); font-style: normal; font-weight: 700; }
+
+/* TERMINAL HERO */
+.hero-terminal {
+  margin-top: 40px; max-width: 560px; width: 100%;
+  background: rgba(5,15,10,.9); border: 1px solid rgba(0,255,231,.15);
+  border-radius: 14px; overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0,0,0,.5), 0 0 0 1px rgba(0,255,231,.05);
+  animation: fade-up .8s .9s both;
+}
+.term-titlebar {
+  height: 32px; background: rgba(0,255,231,.05);
+  border-bottom: 1px solid rgba(0,255,231,.08);
+  display: flex; align-items: center; padding: 0 14px; gap: 7px;
+}
+.tdot { width:11px;height:11px;border-radius:50%; }
+.td-r{background:#ff5f57;} .td-y{background:#ffbd2e;} .td-g{background:#28c941;}
+.term-title-text {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: .7rem; color: var(--muted); margin-left: auto; margin-right: auto; letter-spacing:2px;
+}
+.term-body { padding: 20px; font-family: 'Share Tech Mono', monospace; font-size: .82rem; line-height: 2; }
+.t-prompt { color: var(--neon); }
+.t-cmd { color: #a8d5c8; }
+.t-ok { color: #28c941; }
+.t-warn { color: var(--neon3); }
+.t-err { color: var(--neon2); }
+.t-comment { color: var(--muted); }
+.t-blink { display:inline-block;width:7px;height:14px;background:var(--neon);animation:blink 1s infinite;vertical-align:middle; }
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+
+/* SCROLL CUE */
+.scroll-cue {
+  margin-top: 60px; animation: fade-up .8s 1.2s both;
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  color: var(--muted); font-family: 'Share Tech Mono', monospace;
+  font-size: .7rem; letter-spacing: 3px; text-transform: uppercase;
+}
+.scroll-mouse {
+  width: 24px; height: 38px;
+  border: 2px solid var(--muted); border-radius: 12px;
+  display: flex; justify-content: center; padding-top: 5px;
+  animation: float 2s infinite;
+}
+.scroll-wheel {
+  width: 3px; height: 6px; border-radius: 2px;
+  background: var(--neon); animation: scroll-down 2s infinite;
+}
+@keyframes scroll-down { 0%{transform:translateY(0);opacity:1} 100%{transform:translateY(10px);opacity:0} }
+@keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(6px)} }
+
+/* ===== SECTION HEADER ===== */
+.sec-badge {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: .72rem; color: var(--neon);
+  letter-spacing: 4px; text-transform: uppercase;
+  margin-bottom: 8px; opacity: .8;
+}
+.sec-title {
+  font-family: 'Orbitron', sans-serif;
+  font-size: clamp(1.6rem, 4vw, 2.8rem);
+  font-weight: 700; line-height: 1.2; margin-bottom: 6px;
+}
+.sec-title .c1{color:var(--neon)} .sec-title .c2{color:var(--neon2)} .sec-title .c3{color:var(--neon3)} .sec-title .c4{color:var(--neon4)}
+.sec-line { width: 60px; height: 2px; margin-bottom: 30px; }
+.sec-line-1{background:linear-gradient(90deg,var(--neon),transparent)}
+.sec-line-2{background:linear-gradient(90deg,var(--neon2),transparent)}
+.sec-line-3{background:linear-gradient(90deg,var(--neon3),transparent)}
+.sec-line-4{background:linear-gradient(90deg,var(--neon4),transparent)}
+.sec-intro {
+  font-size: 1.05rem; line-height: 1.8; color: var(--text);
+  opacity: .8; max-width: 720px; margin-bottom: 40px;
+}
+.sec-intro strong { color: var(--neon); font-weight: 700; }
+
+/* ===== EXPAND CARDS ===== */
+.expand-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 16px;
+}
+.expand-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px; overflow: hidden;
+  transition: border-color .3s, box-shadow .3s, transform .3s;
+  cursor: pointer;
+}
+.expand-card:hover {
+  border-color: rgba(0,255,231,.35);
+  box-shadow: 0 12px 40px rgba(0,255,231,.08), 0 0 0 1px rgba(0,255,231,.08);
+  transform: translateY(-3px);
+}
+.expand-card.open { border-color: rgba(0,255,231,.4); box-shadow: 0 0 0 1px rgba(0,255,231,.15), 0 20px 60px rgba(0,255,231,.1); transform: none; }
+.ec-header {
+  padding: 24px; display: flex; align-items: center; gap: 16px;
+  position: relative;
+}
+.ec-header::after {
+  content:''; position:absolute; bottom:0; left:24px; right:24px;
+  height:1px; background:var(--border);
+  transform: scaleX(0); transition: transform .3s;
+}
+.expand-card.open .ec-header::after { transform: scaleX(1); }
+.ec-icon {
+  width: 50px; height: 50px; border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.5rem; flex-shrink: 0;
+  background: rgba(0,255,231,.06); border: 1px solid rgba(0,255,231,.1);
+  transition: transform .3s;
+}
+.expand-card:hover .ec-icon, .expand-card.open .ec-icon { transform: scale(1.1) rotate(-5deg); }
+.ec-meta { flex: 1; }
+.ec-title {
+  font-family: 'Orbitron', sans-serif; font-size: .85rem;
+  font-weight: 700; letter-spacing: 1px; text-transform: uppercase;
+  margin-bottom: 4px;
+}
+.ec-teaser { font-size: .82rem; color: var(--muted); line-height: 1.4; }
+.ec-toggle {
+  width: 28px; height: 28px; border-radius: 50%;
+  border: 1px solid var(--border); display: flex; align-items: center; justify-content: center;
+  color: var(--muted); font-size: 1rem; transition: all .3s; flex-shrink: 0;
+  background: rgba(0,255,231,.03);
+}
+.expand-card.open .ec-toggle { transform: rotate(45deg); border-color: var(--neon); color: var(--neon); background: rgba(0,255,231,.08); }
+.ec-body {
+  max-height: 0; overflow: hidden; transition: max-height .5s cubic-bezier(.4,0,.2,1), padding .3s;
+}
+.expand-card.open .ec-body { max-height: 800px; }
+.ec-content { padding: 24px; }
+.ec-desc { font-size: .93rem; line-height: 1.8; color: var(--text); opacity: .85; margin-bottom: 20px; }
+.ec-example {
+  background: rgba(0,255,231,.04); border-left: 3px solid var(--neon);
+  border-radius: 0 8px 8px 0; padding: 14px 18px; margin-bottom: 16px;
+}
+.ec-ex-label {
+  font-family: 'Share Tech Mono', monospace; font-size: .65rem;
+  color: var(--muted); letter-spacing: 3px; text-transform: uppercase; margin-bottom: 5px;
+}
+.ec-ex-text { font-size: .88rem; line-height: 1.6; color: var(--neon); }
+.ec-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+.ec-tag {
+  font-family: 'Share Tech Mono', monospace; font-size: .68rem;
+  padding: 3px 10px; border-radius: 20px; letter-spacing: 1px;
+  border: 1px solid; background: transparent;
+}
+
+/* ===== PILLARS (5 objectifs) ===== */
+.pillars-wrap { display: flex; flex-direction: column; gap: 12px; }
+.pillar {
+  display: flex; align-items: stretch; gap: 0;
+  border: 1px solid var(--border); border-radius: 14px; overflow: hidden;
+  cursor: pointer; transition: border-color .3s, box-shadow .3s;
+  background: var(--card);
+}
+.pillar:hover { border-color: rgba(0,255,231,.3); }
+.pillar.open { border-color: rgba(0,255,231,.35); box-shadow: 0 8px 30px rgba(0,0,0,.3); }
+.pillar-num {
+  min-width: 70px; display: flex; align-items: center; justify-content: center;
+  font-family: 'Orbitron', sans-serif; font-size: 1.8rem; font-weight: 900;
+  border-right: 1px solid var(--border);
+  transition: background .3s;
+}
+.pillar-main { flex: 1; padding: 20px 24px; }
+.pillar-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+.pillar-name {
+  font-family: 'Orbitron', sans-serif; font-size: .95rem;
+  font-weight: 700; letter-spacing: 1px; text-transform: uppercase;
+}
+.pillar-arrow { font-size: 1rem; color: var(--muted); transition: transform .3s; }
+.pillar.open .pillar-arrow { transform: rotate(90deg); }
+.pillar-short { font-size: .85rem; color: var(--muted); line-height: 1.4; }
+.pillar-expanded {
+  max-height: 0; overflow: hidden; transition: max-height .5s cubic-bezier(.4,0,.2,1);
+  border-top: 0 solid var(--border);
+}
+.pillar.open .pillar-expanded { max-height: 600px; border-top-width: 1px; }
+.pillar-inner { padding: 20px 24px 20px 94px; display: flex; flex-direction: column; gap: 14px; }
+.pillar-detail { font-size: .9rem; line-height: 1.75; opacity: .85; }
+.pillar-baby {
+  display: flex; align-items: flex-start; gap: 10px;
+  background: rgba(245,197,24,.05); border: 1px solid rgba(245,197,24,.15);
+  border-radius: 10px; padding: 12px 16px; font-size: .85rem; color: var(--neon3); line-height: 1.6;
+}
+.pillar-counter {
+  font-family: 'Share Tech Mono', monospace; font-size: .75rem;
+  padding: 6px 14px; border-radius: 8px; display: inline-flex;
+  align-items: center; gap: 6px; color: white; font-weight: 600;
+}
+
+/* ===== ATTACK TAXONOMY ===== */
+.taxonomy-visual {
+  position: relative; padding: 40px;
+  background: rgba(0,0,0,.3); border: 1px solid var(--border);
+  border-radius: 16px; margin-bottom: 30px;
+  overflow: hidden;
+}
+.taxonomy-visual::before {
+  content:''; position:absolute; inset:0;
+  background: radial-gradient(ellipse at 50% 0%, rgba(123,45,255,.08) 0%, transparent 60%);
+  pointer-events:none;
+}
+.tax-root {
+  display: inline-flex; align-items: center; gap: 10px;
+  background: linear-gradient(135deg, rgba(123,45,255,.3), rgba(60,20,120,.3));
+  border: 1px solid rgba(123,45,255,.5);
+  padding: 14px 28px; border-radius: 12px;
+  font-family: 'Orbitron', sans-serif; font-size: .9rem; font-weight: 700;
+  box-shadow: 0 0 30px rgba(123,45,255,.2);
+  position: relative; left: 50%; transform: translateX(-50%);
+}
+.tax-connector {
+  width: 2px; height: 40px; background: var(--border);
+  margin: 0 auto;
+}
+.tax-branches {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 20px; position: relative;
+}
+.tax-branches::before {
+  content:''; position:absolute; top:0; left:25%; right:25%;
+  height:2px; background:var(--border);
+}
+.tax-branch { display: flex; flex-direction: column; align-items: center; }
+.tax-branch-line { width:2px; height:30px; background:var(--border); }
+.tax-node {
+  padding: 14px 24px; border-radius: 12px;
+  font-family: 'Orbitron', sans-serif; font-size: .85rem; font-weight: 700;
+  text-align: center; cursor: pointer; transition: all .3s;
+  position: relative; user-select: none;
+}
+.tax-passive {
+  background: rgba(0,255,231,.06); border: 2px solid rgba(0,255,231,.3);
+  color: var(--neon);
+}
+.tax-passive:hover, .tax-passive.lit { background: rgba(0,255,231,.12); box-shadow: 0 0 30px rgba(0,255,231,.2); border-color: var(--neon); }
+.tax-active {
+  background: rgba(255,45,120,.06); border: 2px solid rgba(255,45,120,.3);
+  color: var(--neon2);
+}
+.tax-active:hover, .tax-active.lit { background: rgba(255,45,120,.12); box-shadow: 0 0 30px rgba(255,45,120,.2); border-color: var(--neon2); }
+.tax-leaves { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; width: 100%; }
+.tax-leaf {
+  padding: 8px 16px; border-radius: 8px; font-size: .78rem;
+  font-family: 'Share Tech Mono', monospace; text-align: center;
+  cursor: pointer; transition: all .2s; user-select: none;
+}
+.leaf-p { background:rgba(0,255,231,.04);border:1px solid rgba(0,255,231,.15);color:var(--neon); }
+.leaf-p:hover, .leaf-p.lit { background:rgba(0,255,231,.1);border-color:var(--neon);transform:translateX(4px); }
+.leaf-a { background:rgba(255,45,120,.04);border:1px solid rgba(255,45,120,.15);color:var(--neon2); }
+.leaf-a:hover, .leaf-a.lit { background:rgba(255,45,120,.1);border-color:var(--neon2);transform:translateX(-4px); }
+.tax-tooltip {
+  position: absolute; left:50%; transform:translateX(-50%);
+  bottom: 10px; background: rgba(5,15,10,.95);
+  border: 1px solid var(--border); border-radius: 10px;
+  padding: 10px 16px; font-size: .8rem; white-space: nowrap;
+  color: var(--text); pointer-events: none;
+  transition: opacity .3s; opacity: 0;
+  font-family: 'Share Tech Mono', monospace;
+}
+
+/* ===== MODAL ===== */
+#modal-overlay {
+  position: fixed; inset: 0; z-index: 9000;
+  background: rgba(0,0,0,.85); backdrop-filter: blur(10px);
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; pointer-events: none; transition: opacity .3s;
+  padding: 20px;
+}
+#modal-overlay.open { opacity:1; pointer-events:all; }
+#modal-box {
+  background: #070f1a; border: 1px solid rgba(0,255,231,.2);
+  border-radius: 20px; max-width: 700px; width: 100%;
+  max-height: 90vh; overflow-y: auto;
+  transform: scale(.92) translateY(20px);
+  transition: transform .35s cubic-bezier(.34,1.56,.64,1);
+  position: relative;
+  box-shadow: 0 40px 120px rgba(0,0,0,.8), 0 0 0 1px rgba(0,255,231,.05);
+}
+#modal-overlay.open #modal-box { transform: scale(1) translateY(0); }
+.modal-topbar {
+  display: flex; align-items: center; padding: 16px 20px 0;
+  gap: 7px;
+}
+.modal-close {
+  position: absolute; top: 16px; right: 20px;
+  width: 32px; height: 32px; border-radius: 50%;
+  border: 1px solid rgba(255,255,255,.1); background: rgba(255,255,255,.05);
+  color: var(--muted); font-size: 1.1rem; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all .2s;
+}
+.modal-close:hover { border-color: var(--neon2); color: var(--neon2); background: rgba(255,45,120,.08); }
+#modal-body { padding: 28px 28px 32px; }
+.modal-icon { font-size: 2.5rem; margin-bottom: 12px; display: block; }
+.modal-title {
+  font-family: 'Orbitron', sans-serif; font-size: 1.3rem;
+  font-weight: 700; margin-bottom: 6px;
+}
+.modal-category {
+  font-family: 'Share Tech Mono', monospace; font-size: .72rem;
+  color: var(--muted); letter-spacing: 3px; text-transform: uppercase;
+  margin-bottom: 20px;
+}
+.modal-section { margin-bottom: 22px; }
+.modal-sec-title {
+  font-family: 'Orbitron', sans-serif; font-size: .75rem;
+  letter-spacing: 2px; text-transform: uppercase; margin-bottom: 10px;
+  padding-bottom: 6px; border-bottom: 1px solid var(--border);
+}
+.modal-text { font-size: .92rem; line-height: 1.8; opacity: .85; }
+.modal-analogy {
+  background: rgba(245,197,24,.05); border: 1px solid rgba(245,197,24,.2);
+  border-radius: 10px; padding: 16px; font-size: .88rem;
+  color: var(--neon3); line-height: 1.7; display: flex; gap: 10px;
+  margin: 16px 0;
+}
+.modal-code {
+  background: rgba(0,0,0,.5); border: 1px solid rgba(0,255,231,.1);
+  border-radius: 10px; padding: 16px; font-family: 'Share Tech Mono', monospace;
+  font-size: .8rem; line-height: 1.8; margin: 12px 0;
+  overflow-x: auto;
+}
+.modal-code .cc { color: var(--muted); }
+.modal-code .ck { color: var(--neon4); }
+.modal-code .cv { color: var(--neon); }
+.modal-code .cs { color: var(--neon3); }
+.modal-steps { display: flex; flex-direction: column; gap: 10px; margin: 12px 0; }
+.modal-step {
+  display: flex; align-items: flex-start; gap: 12px;
+  font-size: .88rem; line-height: 1.6;
+}
+.modal-step-num {
+  width: 24px; height: 24px; border-radius: 50%; flex-shrink: 0;
+  font-family: 'Orbitron', sans-serif; font-size: .7rem;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700;
+}
+.modal-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 16px; }
+.modal-tag {
+  font-family: 'Share Tech Mono', monospace; font-size: .68rem;
+  padding: 4px 12px; border-radius: 20px; letter-spacing: 1px; border: 1px solid;
+}
+
+/* ===== ATTACK CARDS (clickable for modal) ===== */
+.attack-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+}
+.attack-card-v2 {
+  background: var(--card); border: 1px solid rgba(255,45,120,.12);
+  border-radius: 14px; padding: 24px; cursor: pointer;
+  transition: all .3s; position: relative; overflow: hidden;
+}
+.attack-card-v2::before {
+  content:''; position:absolute; inset:0;
+  background: radial-gradient(circle at 80% 20%, rgba(255,45,120,.06), transparent 70%);
+  opacity:0; transition: opacity .3s;
+}
+.attack-card-v2:hover { border-color: rgba(255,45,120,.4); transform: translateY(-4px); box-shadow: 0 16px 40px rgba(0,0,0,.4), 0 0 20px rgba(255,45,120,.08); }
+.attack-card-v2:hover::before { opacity:1; }
+.ac-icon { font-size: 2rem; margin-bottom: 14px; display: block; }
+.ac-type {
+  font-family: 'Share Tech Mono', monospace; font-size: .65rem;
+  letter-spacing: 3px; text-transform: uppercase; margin-bottom: 6px;
+}
+.ac-name {
+  font-family: 'Orbitron', sans-serif; font-size: .9rem; font-weight: 700;
+  color: var(--neon2); margin-bottom: 10px;
+}
+.ac-preview { font-size: .85rem; line-height: 1.6; color: var(--text); opacity: .7; }
+.ac-click-hint {
+  margin-top: 14px; font-family: 'Share Tech Mono', monospace;
+  font-size: .68rem; color: var(--muted); letter-spacing: 2px;
+  display: flex; align-items: center; gap: 6px;
+  text-transform: uppercase;
+}
+.ac-click-hint::before { content: '→'; color: var(--neon2); transition: transform .2s; }
+.attack-card-v2:hover .ac-click-hint::before { transform: translateX(4px); }
+
+/* ===== DEFENSES GRID ===== */
+.def-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 14px;
+}
+.def-card {
+  background: var(--card); border: 1px solid rgba(123,45,255,.15);
+  border-radius: 14px; padding: 22px; cursor: pointer;
+  transition: all .3s; text-align: center; position: relative; overflow: hidden;
+}
+.def-card::after {
+  content:''; position:absolute; bottom:0; left:0; right:0; height:2px;
+  background: linear-gradient(90deg, transparent, var(--neon4), transparent);
+  transform: scaleX(0); transition: transform .3s;
+}
+.def-card:hover, .def-card:focus { border-color: rgba(123,45,255,.5); transform: translateY(-4px); box-shadow: 0 12px 30px rgba(0,0,0,.3), 0 0 20px rgba(123,45,255,.1); }
+.def-card:hover::after { transform: scaleX(1); }
+.def-icon { font-size: 2rem; margin-bottom: 10px; display: block; transition: transform .3s; }
+.def-card:hover .def-icon { transform: scale(1.2) rotate(-8deg); }
+.def-name {
+  font-family: 'Orbitron', sans-serif; font-size: .78rem; font-weight: 700;
+  color: var(--neon4); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px;
+}
+.def-short { font-size: .8rem; color: var(--text); opacity: .65; line-height: 1.5; }
+.def-badge {
+  margin-top: 10px; display: inline-block;
+  font-family: 'Share Tech Mono', monospace; font-size: .62rem;
+  padding: 3px 10px; border-radius: 20px;
+  background: rgba(123,45,255,.1); border: 1px solid rgba(123,45,255,.25);
+  color: var(--neon4); letter-spacing: 1px;
+}
+
+/* ===== QUIZ IMPROVED ===== */
+.quiz-shell {
+  max-width: 720px; margin: 0 auto;
+}
+.quiz-progress {
+  display: flex; gap: 6px; margin-bottom: 24px;
+}
+.qp-dot {
+  flex: 1; height: 3px; background: rgba(255,255,255,.1); border-radius: 2px;
+  transition: background .3s;
+}
+.qp-dot.done { background: var(--neon); }
+.qp-dot.current { background: var(--neon2); animation: pulse-bar .8s infinite; }
+@keyframes pulse-bar { 0%,100%{opacity:1} 50%{opacity:.5} }
+.quiz-card {
+  background: rgba(5,15,20,.8); border: 1px solid var(--border);
+  border-radius: 16px; padding: 32px; backdrop-filter: blur(10px);
+}
+.q-counter {
+  font-family: 'Share Tech Mono', monospace; font-size: .7rem;
+  color: var(--muted); letter-spacing: 3px; text-transform: uppercase;
+  margin-bottom: 14px;
+}
+.q-text { font-size: 1.1rem; font-weight: 600; line-height: 1.6; margin-bottom: 24px; }
+.q-opts { display: flex; flex-direction: column; gap: 10px; }
+.q-opt {
+  padding: 14px 20px; border-radius: 10px;
+  border: 1px solid rgba(255,255,255,.08);
+  background: rgba(255,255,255,.02);
+  cursor: pointer; transition: all .2s;
+  display: flex; align-items: center; gap: 14px;
+  font-size: .93rem; user-select: none;
+}
+.q-opt:hover { background: rgba(0,255,231,.04); border-color: rgba(0,255,231,.25); transform: translateX(4px); }
+.q-opt.correct { background: rgba(40,201,65,.08); border-color: #28c941; color: #28c941; }
+.q-opt.wrong { background: rgba(255,45,120,.08); border-color: var(--neon2); color: var(--neon2); }
+.q-letter {
+  width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0;
+  border: 1.5px solid rgba(255,255,255,.15);
+  font-family: 'Orbitron', monospace; font-size: .7rem; font-weight: 700;
+  display: flex; align-items: center; justify-content: center; transition: all .2s;
+}
+.q-opt.correct .q-letter { border-color: #28c941; background: rgba(40,201,65,.15); }
+.q-opt.wrong .q-letter { border-color: var(--neon2); background: rgba(255,45,120,.15); }
+.q-feedback {
+  margin-top: 16px; padding: 16px 20px; border-radius: 10px;
+  font-size: .88rem; line-height: 1.7; display: none;
+}
+.q-feedback.show { display: block; animation: pop-in .3s both; }
+.q-feedback.good { background: rgba(40,201,65,.07); border: 1px solid rgba(40,201,65,.3); color: #28c941; }
+.q-feedback.bad { background: rgba(255,45,120,.07); border: 1px solid rgba(255,45,120,.3); color: var(--neon2); }
+.q-next {
+  margin-top: 18px; padding: 12px 28px;
+  background: transparent; border: 1.5px solid var(--neon);
+  color: var(--neon); border-radius: 30px;
+  font-family: 'Orbitron', sans-serif; font-size: .78rem;
+  font-weight: 700; letter-spacing: 2px; cursor: pointer;
+  transition: all .3s; display: none; text-transform: uppercase;
+}
+.q-next.show { display: inline-block; animation: fade-up .3s both; }
+.q-next:hover { background: var(--neon); color: var(--bg); box-shadow: 0 0 20px var(--neon); }
+.quiz-result {
+  text-align: center; padding: 40px; display: none;
+}
+.quiz-result.show { display: block; animation: pop-in .5s both; }
+.qr-score {
+  font-family: 'Orbitron', sans-serif; font-size: 5rem; font-weight: 900;
+  text-shadow: 0 0 40px currentColor; margin-bottom: 10px;
+}
+.qr-label { font-family: 'Share Tech Mono', monospace; font-size: .8rem; color: var(--muted); letter-spacing: 3px; margin-bottom: 30px; }
+.qr-msg { font-size: 1.15rem; line-height: 1.7; }
+.qr-restart {
+  margin-top: 24px; padding: 14px 32px;
+  background: linear-gradient(135deg, var(--neon), #00b4d8);
+  color: var(--bg); border: none; border-radius: 30px;
+  font-family: 'Orbitron', sans-serif; font-size: .8rem; font-weight: 700;
+  letter-spacing: 2px; cursor: pointer; transition: all .3s;
+  box-shadow: 0 8px 24px rgba(0,255,231,.3);
+}
+.qr-restart:hover { transform: translateY(-2px); box-shadow: 0 12px 32px rgba(0,255,231,.4); }
+
+/* ===== GLOSSAIRE ===== */
+.gloss-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 12px;
+}
+.gloss-item {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 10px; padding: 16px 18px; cursor: pointer;
+  transition: all .3s;
+}
+.gloss-item:hover { background: rgba(0,255,231,.05); border-color: rgba(0,255,231,.25); transform: translateX(4px); }
+.gloss-term { font-family: 'Orbitron', sans-serif; font-size: .78rem; font-weight: 700; color: var(--neon); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 4px; }
+.gloss-def { font-size: .82rem; color: var(--muted); line-height: 1.5; }
+
+/* ===== ANIMATIONS ===== */
+@keyframes fade-up { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+@keyframes fade-down { from{opacity:0;transform:translateY(-20px)} to{opacity:1;transform:translateY(0)} }
+@keyframes pop-in { from{opacity:0;transform:scale(.9)} to{opacity:1;transform:scale(1)} }
+
+.reveal { opacity:0; transform:translateY(24px); transition: opacity .7s, transform .7s; }
+.reveal.visible { opacity:1; transform:translateY(0); }
+.reveal-l { opacity:0; transform:translateX(-24px); transition: opacity .6s, transform .6s; }
+.reveal-l.visible { opacity:1; transform:translateX(0); }
+.reveal-r { opacity:0; transform:translateX(24px); transition: opacity .6s, transform .6s; }
+.reveal-r.visible { opacity:1; transform:translateX(0); }
+
+/* ===== SCROLLBAR ===== */
+::-webkit-scrollbar{width:5px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:rgba(0,255,231,.3);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:rgba(0,255,231,.6)}
+
+/* ===== FOOTER ===== */
+footer {
+  position: relative; z-index: 2; text-align: center;
+  padding: 60px 20px; border-top: 1px solid var(--border);
+  font-family: 'Share Tech Mono', monospace; font-size: .8rem; color: var(--muted);
+}
+footer .f-neon{color:var(--neon)} footer .f-pink{color:var(--neon2)}
+
+/* MISC */
+.divider { width:100%;height:1px;background:linear-gradient(90deg,transparent,var(--border),transparent);margin:20px 0; }
+</style>
+</head>
+<body>
+
+<!-- UI CHROME -->
+<div id="cursor-ring"></div>
+<div id="cursor-dot"></div>
+<canvas id="bg-canvas"></canvas>
+<div id="scanlines"></div>
+<div id="progress"></div>
+
+<nav id="sidenav"></nav>
+
+<!-- MODAL -->
+<div id="modal-overlay" onclick="closeModal(event)">
+  <div id="modal-box">
+    <div class="modal-topbar">
+      <div class="tdot td-r"></div><div class="tdot td-y"></div><div class="tdot td-g"></div>
+    </div>
+    <button class="modal-close" onclick="closeModal(null,true)">✕</button>
+    <div id="modal-body"></div>
+  </div>
+</div>
+
+<!-- ============================================================ HERO -->
+<section id="hero" data-nav="Intro">
+  <p class="hero-eyebrow">UMMTO · Sécurité Informatique · Chapitre 01</p>
+  <h1 class="hero-title">SEC INFO</h1>
+  <p class="hero-sub">Introduction à la Sécurité Informatique</p>
+  <p class="hero-desc">Les slides de ta prof étaient chiantes ? On a <em>tout</em> réorganisé. Clique partout, explore tout, apprends <em>vraiment</em>.</p>
+
+  <div class="hero-terminal">
+    <div class="term-titlebar">
+      <div class="tdot td-r"></div><div class="tdot td-y"></div><div class="tdot td-g"></div>
+      <span class="term-title-text">terminal — sec_info_ch1.sh</span>
+    </div>
+    <div class="term-body">
+      <div><span class="t-prompt">$ </span><span class="t-cmd">sudo init-course --chapter=1 --mode=fun</span></div>
+      <div id="term-output"></div>
+      <div id="term-last"><span class="t-prompt">$ </span><span class="t-blink"></span></div>
+    </div>
+  </div>
+
+  <div class="scroll-cue">
+    <div class="scroll-mouse"><div class="scroll-wheel"></div></div>
+    <span>Commence ici</span>
+  </div>
+</section>
+
+<!-- ============================================================ DÉFINITION -->
+<section class="page-section" id="sec-def" data-nav="Définition">
+  <div class="sec-badge">// 01 · définition</div>
+  <h2 class="sec-title">C'est quoi la <span class="c1">Sécurité</span> Informatique ?</h2>
+  <div class="sec-line sec-line-1"></div>
+  <p class="sec-intro reveal">
+    La sécurité informatique, c'est l'<strong>ensemble des moyens</strong> mis en œuvre pour réduire la <strong>vulnérabilité</strong> d'un système contre les menaces accidentelles ou intentionnelles.<br><br>
+    En clair : on cherche à protéger les données, les systèmes et les réseaux contre tout ce qui pourrait les compromettre. <strong>Clique sur chaque carte</strong> pour en savoir plus 👇
+  </p>
+
+  <div class="expand-grid">
+
+    <div class="expand-card reveal" onclick="toggleExpand(this)">
+      <div class="ec-header">
+        <div class="ec-icon" style="background:rgba(255,45,120,.06);border-color:rgba(255,45,120,.15);">🦠</div>
+        <div class="ec-meta">
+          <div class="ec-title" style="color:var(--neon2)">Menace</div>
+          <div class="ec-teaser">Type d'action susceptible de nuire…</div>
+        </div>
+        <div class="ec-toggle">+</div>
+      </div>
+      <div class="ec-body">
+        <div class="ec-content">
+          <div class="ec-desc">Une <strong style="color:var(--neon2)">menace</strong> représente n'importe quelle action qui <em>pourrait</em> nuire à un système informatique. C'est le danger potentiel, pas encore réalisé. La menace n'est pas liée à une faille particulière — elle existe dans l'absolu.</div>
+          <div class="ec-example">
+            <div class="ec-ex-label">// exemples concrets</div>
+            <div class="ec-ex-text" style="color:var(--neon2)">→ Un virus circule sur le réseau local<br>→ Un employé mécontent a accès aux serveurs<br>→ Une panne électrique qui peut corrompre des données</div>
+          </div>
+          <div class="ec-example" style="border-color:var(--neon3);background:rgba(245,197,24,.04)">
+            <div class="ec-ex-label" style="color:var(--neon3)">// analogie baby 🍼</div>
+            <div class="ec-ex-text" style="color:var(--neon3)">C'est un voleur qui rôde dans ton quartier. Il n'a pas encore agi, mais il représente une menace. Qu'il passe à l'acte ou non, la menace existe.</div>
+          </div>
+          <div class="ec-tags">
+            <span class="ec-tag" style="color:var(--neon2);border-color:rgba(255,45,120,.3)">Intentionnelle</span>
+            <span class="ec-tag" style="color:var(--neon3);border-color:rgba(245,197,24,.3)">Accidentelle</span>
+            <span class="ec-tag" style="color:var(--muted);border-color:rgba(74,122,153,.3)">Environnementale</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="expand-card reveal" style="transition-delay:.1s" onclick="toggleExpand(this)">
+      <div class="ec-header">
+        <div class="ec-icon" style="background:rgba(0,255,231,.06);border-color:rgba(0,255,231,.15);">🕳️</div>
+        <div class="ec-meta">
+          <div class="ec-title" style="color:var(--neon)">Vulnérabilité</div>
+          <div class="ec-teaser">Faille ou bug exploitable…</div>
+        </div>
+        <div class="ec-toggle">+</div>
+      </div>
+      <div class="ec-body">
+        <div class="ec-content">
+          <div class="ec-desc">Une <strong style="color:var(--neon)">vulnérabilité</strong> est une faille ou un bug dans un système pouvant être exploitée pour obtenir un accès illicite ou des privilèges supérieurs. C'est le chaînon manquant entre la menace et l'attaque : sans vulnérabilité, une menace ne peut pas se concrétiser.</div>
+          <div class="ec-example">
+            <div class="ec-ex-label">// exemples concrets</div>
+            <div class="ec-ex-text">→ Mots de passe trop simples (123456)<br>→ Comptes sans mot de passe<br>→ Logiciel non mis à jour (CVE connues)<br>→ Port réseau laissé ouvert inutilement</div>
+          </div>
+          <div class="ec-example" style="border-color:var(--neon3);background:rgba(245,197,24,.04)">
+            <div class="ec-ex-label" style="color:var(--neon3)">// analogie baby 🍼</div>
+            <div class="ec-ex-text" style="color:var(--neon3)">C'est la fenêtre que tu as laissée ouverte chez toi. Le voleur (menace) peut s'en servir pour entrer. La fenêtre ouverte = vulnérabilité.</div>
+          </div>
+          <div class="ec-tags">
+            <span class="ec-tag" style="color:var(--neon);border-color:rgba(0,255,231,.3)">CVE</span>
+            <span class="ec-tag" style="color:var(--neon);border-color:rgba(0,255,231,.3)">0-day</span>
+            <span class="ec-tag" style="color:var(--neon);border-color:rgba(0,255,231,.3)">Misconfiguration</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="expand-card reveal" style="transition-delay:.2s" onclick="toggleExpand(this)">
+      <div class="ec-header">
+        <div class="ec-icon" style="background:rgba(123,45,255,.06);border-color:rgba(123,45,255,.15);">🛡️</div>
+        <div class="ec-meta">
+          <div class="ec-title" style="color:var(--neon4)">Contre-mesure</div>
+          <div class="ec-teaser">Actions de prévention et protection…</div>
+        </div>
+        <div class="ec-toggle">+</div>
+      </div>
+      <div class="ec-body">
+        <div class="ec-content">
+          <div class="ec-desc">Une <strong style="color:var(--neon4)">contre-mesure</strong> est l'ensemble des actions mises en place pour prévenir, détecter ou corriger une menace. Elle agit directement sur les vulnérabilités pour les éliminer ou les réduire. On distingue les contre-mesures techniques (antivirus, chiffrement) et organisationnelles (formation, procédures).</div>
+          <div class="ec-example">
+            <div class="ec-ex-label">// exemples</div>
+            <div class="ec-ex-text" style="color:var(--neon4)">→ Chiffrement des données sensibles<br>→ Authentification à deux facteurs (2FA)<br>→ Antivirus et détection d'intrusions (IDS/IPS)<br>→ Formation et sensibilisation des employés<br>→ Mise à jour régulière des systèmes</div>
+          </div>
+          <div class="ec-example" style="border-color:var(--neon3);background:rgba(245,197,24,.04)">
+            <div class="ec-ex-label" style="color:var(--neon3)">// analogie baby 🍼</div>
+            <div class="ec-ex-text" style="color:var(--neon3)">Fermer et verrouiller ta fenêtre + installer une alarme + alerter les voisins = contre-mesures contre le voleur.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="expand-card reveal" style="transition-delay:.3s" onclick="toggleExpand(this)">
+      <div class="ec-header">
+        <div class="ec-icon">⚔️</div>
+        <div class="ec-meta">
+          <div class="ec-title" style="color:var(--neon3)">Attaque</div>
+          <div class="ec-teaser">Exploitation concrète d'une faille…</div>
+        </div>
+        <div class="ec-toggle">+</div>
+      </div>
+      <div class="ec-body">
+        <div class="ec-content">
+          <div class="ec-desc">Une <strong style="color:var(--neon3)">attaque</strong> c'est la concrétisation d'une menace via l'exploitation d'une vulnérabilité. Tout ordinateur connecté est potentiellement vulnérable. L'entité responsable s'appelle un <em>intrus</em>. Les motivations varient : curiosité, gain financier, concurrence, vengeance, ou même recherche de failles pour les corriger.</div>
+          <div class="ec-example" style="border-color:var(--neon3);background:rgba(245,197,24,.04)">
+            <div class="ec-ex-label" style="color:var(--neon3)">// pourquoi attaque-t-on ?</div>
+            <div class="ec-ex-text" style="color:var(--neon3)">💰 Argent / ransomware · 🕵️ Espionnage · 😈 Vandalisme · 🏆 Challenge technique · 🔍 Bug bounty (légal)</div>
+          </div>
+          <div class="ec-example">
+            <div class="ec-ex-label">// interne vs externe</div>
+            <div class="ec-ex-text">Interne : employé mécontent, erreur humaine<br>Externe : hacker distant, virus propagé via email</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="expand-card reveal" style="transition-delay:.4s" onclick="toggleExpand(this)">
+      <div class="ec-header">
+        <div class="ec-icon">🌐</div>
+        <div class="ec-meta">
+          <div class="ec-title" style="color:var(--neon5)">Cybercrime</div>
+          <div class="ec-teaser">Crimes via les technologies numériques…</div>
+        </div>
+        <div class="ec-toggle">+</div>
+      </div>
+      <div class="ec-body">
+        <div class="ec-content">
+          <div class="ec-desc">Le <strong style="color:var(--neon5)">cyberespace</strong> est l'ensemble des données numérisées formant un univers d'information via l'interconnexion mondiale des ordinateurs. Un <strong>crime informatique</strong> utilise un système informatique comme objet ou moyen du délit. Le <strong>cybercrime</strong> fait spécifiquement appel à Internet.</div>
+          <div class="ec-example" style="border-color:var(--neon5);background:rgba(0,180,255,.04)">
+            <div class="ec-ex-label" style="color:var(--neon5)">// distinctions clés</div>
+            <div class="ec-ex-text" style="color:var(--neon5)">Crime informatique = délit impliquant un ordi (outil ou cible)<br>Cybercrime = sous-ensemble utilisant Internet pour le délit</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ============================================================ 5 PILIERS -->
+<section class="page-section" id="sec-piliers" data-nav="Objectifs">
+  <div class="sec-badge">// 02 · les 5 piliers</div>
+  <h2 class="sec-title">Objectifs de la <span class="c2">Sécurité</span></h2>
+  <div class="sec-line sec-line-2"></div>
+  <p class="sec-intro reveal">5 propriétés fondamentales. Chaque système sécurisé doit les garantir. <strong>Clique sur un pilier</strong> pour voir le détail, les exemples, et l'analogie qui va tout clarifier.</p>
+
+  <div class="pillars-wrap">
+
+    <div class="pillar reveal" onclick="togglePillar(this)">
+      <div class="pillar-num" style="color:#00b4d8;background:rgba(0,180,216,.06)">01</div>
+      <div class="pillar-main">
+        <div class="pillar-top">
+          <div class="pillar-name" style="color:#00b4d8">Disponibilité</div>
+          <div class="pillar-arrow">▶</div>
+        </div>
+        <div class="pillar-short">Garantir l'accès aux ressources avec des temps de réponse acceptables — continuité de service.</div>
+      </div>
+      <div class="pillar-expanded">
+        <div class="pillar-inner">
+          <div class="pillar-detail">La <strong style="color:#00b4d8">disponibilité</strong> assure que les services sont accessibles quand on en a besoin, avec des performances acceptables. On la garantit grâce à la redondance (duplication des ressources), les sauvegardes régulières et des plans de continuité d'activité (PCA). Une panne = violation de disponibilité.</div>
+          <div class="pillar-baby">🍕 <span>Imagine une pizzeria ouverte 24h/24. Si elle est subitement fermée 3h au moment où t'as faim, la disponibilité n'est pas assurée. En informatique : un serveur qui tombe = frustration garantie.</span></div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px">
+            <span class="pillar-counter" style="background:rgba(0,180,216,.12);border:1px solid rgba(0,180,216,.25)">🔁 Redondance</span>
+            <span class="pillar-counter" style="background:rgba(0,180,216,.12);border:1px solid rgba(0,180,216,.25)">💾 Sauvegardes</span>
+            <span class="pillar-counter" style="background:rgba(0,180,216,.12);border:1px solid rgba(0,180,216,.25)">📊 SLA</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="pillar reveal" style="transition-delay:.08s" onclick="togglePillar(this)">
+      <div class="pillar-num" style="color:#06d6a0;background:rgba(6,214,160,.06)">02</div>
+      <div class="pillar-main">
+        <div class="pillar-top">
+          <div class="pillar-name" style="color:#06d6a0">Intégrité</div>
+          <div class="pillar-arrow">▶</div>
+        </div>
+        <div class="pillar-short">Détecter si des données ont été modifiées — intentionnellement ou accidentellement.</div>
+      </div>
+      <div class="pillar-expanded">
+        <div class="pillar-inner">
+          <div class="pillar-detail">L'<strong style="color:#06d6a0">intégrité</strong> garantit que les données sont exactement celles qui ont été produites, sans altération. On la vérifie via des fonctions de hachage (SHA-256, MD5) : si un seul bit change, le hash change complètement. Elle protège contre les modifications malveillantes ET les erreurs accidentelles.</div>
+          <div class="pillar-baby">📝 <span>Ton contrat de travail dit "salaire : 500€/mois". Si quelqu'un change "500" en "50", tu veux le savoir ! L'intégrité te dit : "ce document a été modifié" — ou "il est intact".</span></div>
+          <div style="background:rgba(6,214,160,.05);border:1px solid rgba(6,214,160,.15);border-radius:8px;padding:12px 16px;font-family:'Share Tech Mono',monospace;font-size:.78rem;color:#06d6a0;line-height:1.6">
+            SHA256("Bonjour") = 7509e5bda0c762d2bac7f90d758b5b2263fa01ccbc542ab5e3df163be08e6ca9<br>
+            SHA256("Bpnjour") = a3f2... <span style="color:var(--neon2)">← complètement différent !</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="pillar reveal" style="transition-delay:.16s" onclick="togglePillar(this)">
+      <div class="pillar-num" style="color:#f72585;background:rgba(247,37,133,.06)">03</div>
+      <div class="pillar-main">
+        <div class="pillar-top">
+          <div class="pillar-name" style="color:#f72585">Confidentialité</div>
+          <div class="pillar-arrow">▶</div>
+        </div>
+        <div class="pillar-short">Garantir que seules les entités autorisées comprennent les informations transmises.</div>
+      </div>
+      <div class="pillar-expanded">
+        <div class="pillar-inner">
+          <div class="pillar-detail">La <strong style="color:#f72585">confidentialité</strong> s'assure que les données ne sont lisibles que par les personnes autorisées. On l'obtient par deux moyens complémentaires : le <em>contrôle d'accès</em> (qui peut lire ?) et le <em>chiffrement</em> (transformer les données pour qu'elles soient incompréhensibles sans la clé).</div>
+          <div class="pillar-baby">🔒 <span>C'est comme envoyer une lettre dans une enveloppe scellée. Même si le facteur la lit (interception), il ne voit que du charabia chiffré. Seul le destinataire avec la "clé" peut déchiffrer.</span></div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <span class="pillar-counter" style="background:rgba(247,37,133,.1);border:1px solid rgba(247,37,133,.25)">🔐 Chiffrement</span>
+            <span class="pillar-counter" style="background:rgba(247,37,133,.1);border:1px solid rgba(247,37,133,.25)">🚪 Contrôle d'accès</span>
+            <span class="pillar-counter" style="background:rgba(247,37,133,.1);border:1px solid rgba(247,37,133,.25)">👁️ Need-to-know</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="pillar reveal" style="transition-delay:.24s" onclick="togglePillar(this)">
+      <div class="pillar-num" style="color:#f5c518;background:rgba(245,197,24,.06)">04</div>
+      <div class="pillar-main">
+        <div class="pillar-top">
+          <div class="pillar-name" style="color:#f5c518">Authentification</div>
+          <div class="pillar-arrow">▶</div>
+        </div>
+        <div class="pillar-short">Vérifier l'identité d'une entité avant de lui accorder l'accès à une ressource.</div>
+      </div>
+      <div class="pillar-expanded">
+        <div class="pillar-inner">
+          <div class="pillar-detail">L'<strong style="color:#f5c518">authentification</strong> consiste à vérifier qu'une entité est bien celle qu'elle prétend être. Il existe 3 facteurs d'authentification : ce qu'on <em>sait</em> (mot de passe, PIN), ce qu'on <em>possède</em> (carte, token), ce qu'on <em>est</em> (biométrie : empreinte, visage). Le MFA (Multi-Factor Authentication) combine plusieurs facteurs.</div>
+          <div class="pillar-baby">🎫 <span>C'est le videur d'une boîte de nuit qui vérifie ta carte d'identité + compare ta tête à la photo. "T'es bien toi ? OK, tu rentres."</span></div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <span class="pillar-counter" style="background:rgba(245,197,24,.1);border:1px solid rgba(245,197,24,.25)">🧠 Mot de passe</span>
+            <span class="pillar-counter" style="background:rgba(245,197,24,.1);border:1px solid rgba(245,197,24,.25)">📱 OTP / Token</span>
+            <span class="pillar-counter" style="background:rgba(245,197,24,.1);border:1px solid rgba(245,197,24,.25)">👆 Biométrie</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="pillar reveal" style="transition-delay:.32s" onclick="togglePillar(this)">
+      <div class="pillar-num" style="color:#7b2dff;background:rgba(123,45,255,.06)">05</div>
+      <div class="pillar-main">
+        <div class="pillar-top">
+          <div class="pillar-name" style="color:#7b2dff">Non-Répudiation</div>
+          <div class="pillar-arrow">▶</div>
+        </div>
+        <div class="pillar-short">Ne pas pouvoir nier qu'un événement ou une action a bien eu lieu.</div>
+      </div>
+      <div class="pillar-expanded">
+        <div class="pillar-inner">
+          <div class="pillar-detail">La <strong style="color:#7b2dff">non-répudiation</strong> garantit qu'une entité ne peut pas nier avoir effectué une action. On l'obtient via les signatures numériques, les journaux d'audit (logs) et les horodatages. Elle est cruciale dans les transactions électroniques, les contrats numériques et les échanges légaux.</div>
+          <div class="pillar-baby">📦 <span>Le bon de livraison que tu signes quand tu reçois un colis : le livreur prouve qu'il t'a bien remis le colis. Tu ne peux pas dire "je n'ai rien reçu" si ta signature est là.</span></div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <span class="pillar-counter" style="background:rgba(123,45,255,.12);border:1px solid rgba(123,45,255,.3)">✍️ Signature numérique</span>
+            <span class="pillar-counter" style="background:rgba(123,45,255,.12);border:1px solid rgba(123,45,255,.3)">⏱️ Horodatage</span>
+            <span class="pillar-counter" style="background:rgba(123,45,255,.12);border:1px solid rgba(123,45,255,.3)">📋 Logs</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ============================================================ TAXONOMIE -->
+<section class="page-section" id="sec-taxo" data-nav="Taxonomie">
+  <div class="sec-badge">// 03 · classification</div>
+  <h2 class="sec-title">Taxonomie des <span class="c2">Attaques</span></h2>
+  <div class="sec-line sec-line-2"></div>
+  <p class="sec-intro reveal">Les attaques se divisent en deux grandes familles. <strong>Survole ou clique</strong> sur les nœuds du diagramme pour comprendre chaque type.</p>
+
+  <div class="taxonomy-visual reveal">
+    <div class="tax-root">🎯 Scénarios d'Attaques</div>
+    <div class="tax-connector"></div>
+    <div class="tax-branches">
+      <div class="tax-branch">
+        <div class="tax-node tax-passive" onclick="showModal('passive')" title="Cliquez pour en savoir plus">
+          🕵️ Attaque Passive
+        </div>
+        <div class="tax-branch-line"></div>
+        <div class="tax-leaves">
+          <div class="tax-leaf leaf-p" onclick="showModal('interception')">Interception</div>
+        </div>
+      </div>
+      <div class="tax-branch">
+        <div class="tax-node tax-active" onclick="showModal('active')" title="Cliquez pour en savoir plus">
+          ⚔️ Attaque Active
+        </div>
+        <div class="tax-branch-line"></div>
+        <div class="tax-leaves">
+          <div class="tax-leaf leaf-a" onclick="showModal('fabrication')">Fabrication</div>
+          <div class="tax-leaf leaf-a" onclick="showModal('modification')">Modification</div>
+          <div class="tax-leaf leaf-a" onclick="showModal('interruption')">Interruption</div>
+        </div>
+      </div>
+    </div>
+    <p style="text-align:center;margin-top:24px;font-family:'Share Tech Mono',monospace;font-size:.72rem;color:var(--muted);letter-spacing:2px">← CLIQUE SUR UN NŒUD POUR LES DÉTAILS →</p>
+  </div>
+</section>
+
+<!-- ============================================================ ATTAQUES DÉTAILLÉES -->
+<section class="page-section" id="sec-attacks" data-nav="Attaques">
+  <div class="sec-badge">// 04 · attaques connues</div>
+  <h2 class="sec-title">Les Attaques <span class="c2">en Détail</span></h2>
+  <div class="sec-line sec-line-2"></div>
+  <p class="sec-intro reveal">Les attaques les plus fréquentes que tu dois connaître. <strong>Clique sur une carte</strong> pour ouvrir le dossier complet avec schéma, étapes et contre-mesures.</p>
+
+  <div class="attack-grid">
+    <div class="attack-card-v2 reveal" onclick="showModal('malware')">
+      <span class="ac-icon">🦠</span>
+      <div class="ac-type" style="color:var(--neon2)">Code malveillant</div>
+      <div class="ac-name">Virus & Malwares</div>
+      <div class="ac-preview">Programmes qui s'auto-reproduisent et infectent d'autres fichiers. Virus, chevaux de Troie, bombes logiques, spywares...</div>
+      <div class="ac-click-hint">Ouvrir le dossier</div>
+    </div>
+    <div class="attack-card-v2 reveal" style="transition-delay:.08s" onclick="showModal('recon')">
+      <span class="ac-icon">🔍</span>
+      <div class="ac-type" style="color:var(--neon2)">Reconnaissance</div>
+      <div class="ac-name">Sniffing & Scanning</div>
+      <div class="ac-preview">L'attaquant cartographie le réseau : IPs actives, ports ouverts, OS installé. Utilise des outils comme Wireshark, Nmap...</div>
+      <div class="ac-click-hint">Ouvrir le dossier</div>
+    </div>
+    <div class="attack-card-v2 reveal" style="transition-delay:.16s" onclick="showModal('brute')">
+      <span class="ac-icon">💪</span>
+      <div class="ac-type" style="color:var(--neon2)">Devinette</div>
+      <div class="ac-name">Force Brute & Dictionnaire</div>
+      <div class="ac-preview">Essayer toutes les combinaisons de mots de passe. Par dictionnaire : mots courants d'abord. Par force brute : tout tester.</div>
+      <div class="ac-click-hint">Ouvrir le dossier</div>
+    </div>
+    <div class="attack-card-v2 reveal" style="transition-delay:.24s" onclick="showModal('dos')">
+      <span class="ac-icon">🌊</span>
+      <div class="ac-type" style="color:var(--neon2)">Déni de Service</div>
+      <div class="ac-name">DoS & DDoS</div>
+      <div class="ac-preview">Inonder un serveur de requêtes pour le faire tomber. Le DDoS est coordonné depuis des milliers de machines.</div>
+      <div class="ac-click-hint">Ouvrir le dossier</div>
+    </div>
+    <div class="attack-card-v2 reveal" style="transition-delay:.32s" onclick="showModal('mitm')">
+      <span class="ac-icon">👤</span>
+      <div class="ac-type" style="color:var(--neon2)">Interception Active</div>
+      <div class="ac-name">Man-in-the-Middle</div>
+      <div class="ac-preview">L'attaquant se glisse entre deux parties qui communiquent. Il peut lire, modifier ou injecter des données.</div>
+      <div class="ac-click-hint">Ouvrir le dossier</div>
+    </div>
+    <div class="attack-card-v2 reveal" style="transition-delay:.4s" onclick="showModal('spam')">
+      <span class="ac-icon">📧</span>
+      <div class="ac-type" style="color:var(--neon2)">Ingénierie Sociale</div>
+      <div class="ac-name">Spam / Phishing / Scam</div>
+      <div class="ac-preview">Manipuler les humains plutôt que les machines. Spam, phishing, arnaques, hoax — l'humain est souvent le maillon faible.</div>
+      <div class="ac-click-hint">Ouvrir le dossier</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ DÉFENSES -->
+<section class="page-section" id="sec-def2" data-nav="Défenses">
+  <div class="sec-badge">// 05 · mécanismes de protection</div>
+  <h2 class="sec-title">L'Arsenal de <span class="c4">Défense</span></h2>
+  <div class="sec-line sec-line-4"></div>
+  <p class="sec-intro reveal">Face aux attaques, voici les outils du défenseur. <strong>Clique</strong> sur chaque mécanisme pour comprendre comment il fonctionne et contre quelle attaque il protège.</p>
+
+  <div class="def-grid">
+    <div class="def-card reveal" onclick="showModal('chiffrement')">
+      <span class="def-icon">🔐</span>
+      <div class="def-name">Chiffrement</div>
+      <div class="def-short">Rendre les données illisibles sans la clé. Base de tout.</div>
+      <span class="def-badge">↗ Confidentialité</span>
+    </div>
+    <div class="def-card reveal" style="transition-delay:.07s" onclick="showModal('sig_num')">
+      <span class="def-icon">✍️</span>
+      <div class="def-name">Signature Numérique</div>
+      <div class="def-short">Prouver l'authenticité et l'intégrité d'un document.</div>
+      <span class="def-badge">↗ Authentification</span>
+    </div>
+    <div class="def-card reveal" style="transition-delay:.14s" onclick="showModal('firewall')">
+      <span class="def-icon">🔥</span>
+      <div class="def-name">Pare-feu</div>
+      <div class="def-short">Filtrer le trafic réseau selon des règles définies.</div>
+      <span class="def-badge">↗ Disponibilité</span>
+    </div>
+    <div class="def-card reveal" style="transition-delay:.21s" onclick="showModal('antivirus')">
+      <span class="def-icon">🦺</span>
+      <div class="def-name">Antivirus</div>
+      <div class="def-short">Détecter et neutraliser les codes malveillants.</div>
+      <span class="def-badge">↗ Intégrité</span>
+    </div>
+    <div class="def-card reveal" style="transition-delay:.28s" onclick="showModal('ids')">
+      <span class="def-icon">🚨</span>
+      <div class="def-name">IDS/IPS</div>
+      <div class="def-short">Détecter et bloquer les intrusions en temps réel.</div>
+      <span class="def-badge">↗ Disponibilité</span>
+    </div>
+    <div class="def-card reveal" style="transition-delay:.35s" onclick="showModal('timestamp')">
+      <span class="def-icon">⏱️</span>
+      <div class="def-name">Horodatage</div>
+      <div class="def-short">Certifier qu'un document existait à un instant précis.</div>
+      <span class="def-badge">↗ Non-répudiation</span>
+    </div>
+    <div class="def-card reveal" style="transition-delay:.42s" onclick="showModal('steg')">
+      <span class="def-icon">🎭</span>
+      <div class="def-name">Stéganographie</div>
+      <div class="def-short">Cacher un message secret dans un autre fichier.</div>
+      <span class="def-badge">↗ Confidentialité</span>
+    </div>
+    <div class="def-card reveal" style="transition-delay:.49s" onclick="showModal('notarisation')">
+      <span class="def-icon">📜</span>
+      <div class="def-name">Notarisation</div>
+      <div class="def-short">Tiers de confiance certifiant l'authenticité d'échanges.</div>
+      <span class="def-badge">↗ Non-répudiation</span>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ GLOSSAIRE -->
+<section class="page-section" id="sec-gloss" data-nav="Glossaire">
+  <div class="sec-badge">// 06 · référence rapide</div>
+  <h2 class="sec-title"><span class="c3">Glossaire</span> Express</h2>
+  <div class="sec-line sec-line-3"></div>
+  <p class="sec-intro reveal">Tous les termes clés du chapitre en un coup d'œil. Clique pour ouvrir la définition complète.</p>
+  <div class="gloss-grid reveal">
+    <div class="gloss-item" onclick="showModal('g_cyberespace')"><div class="gloss-term">Cyberespace</div><div class="gloss-def">Univers numérique formé par l'interconnexion mondiale des ordinateurs.</div></div>
+    <div class="gloss-item" onclick="showModal('g_menace')"><div class="gloss-term">Menace</div><div class="gloss-def">Action susceptible de nuire à un système dans l'absolu.</div></div>
+    <div class="gloss-item" onclick="showModal('g_vuln')"><div class="gloss-term">Vulnérabilité</div><div class="gloss-def">Faille exploitable pour obtenir un accès illicite.</div></div>
+    <div class="gloss-item" onclick="showModal('g_intrus')"><div class="gloss-term">Intrus</div><div class="gloss-def">Entité responsable d'une attaque sur un système.</div></div>
+    <div class="gloss-item" onclick="showModal('g_cve')"><div class="gloss-term">CVE</div><div class="gloss-def">Common Vulnerabilities and Exposures — base de données des failles connues.</div></div>
+    <div class="gloss-item" onclick="showModal('g_sniffer')"><div class="gloss-term">Sniffer</div><div class="gloss-def">Outil qui capture et analyse le trafic réseau (ex : Wireshark).</div></div>
+    <div class="gloss-item" onclick="showModal('g_botnet')"><div class="gloss-term">Botnet</div><div class="gloss-def">Réseau de machines infectées contrôlées à distance pour des attaques DDoS.</div></div>
+    <div class="gloss-item" onclick="showModal('g_2fa')"><div class="gloss-term">2FA / MFA</div><div class="gloss-def">Double / Multi-Factor Authentication — couches de vérification d'identité.</div></div>
+    <div class="gloss-item" onclick="showModal('g_hash')"><div class="gloss-term">Hachage</div><div class="gloss-def">Fonction mathématique produisant une empreinte unique d'un fichier (SHA-256, MD5).</div></div>
+    <div class="gloss-item" onclick="showModal('g_cheval')"><div class="gloss-term">Cheval de Troie</div><div class="gloss-def">Malware caché dans un programme légitime qui s'exécute à l'insu de l'utilisateur.</div></div>
+    <div class="gloss-item" onclick="showModal('g_phishing')"><div class="gloss-term">Phishing</div><div class="gloss-def">Usurpation d'identité par email pour voler des informations.</div></div>
+    <div class="gloss-item" onclick="showModal('g_zero')"><div class="gloss-term">Zero-Day</div><div class="gloss-def">Vulnérabilité inconnue du fabricant, donc non corrigée = danger maximal.</div></div>
+  </div>
+</section>
+
+<!-- ============================================================ QUIZ -->
+<section class="page-section" id="sec-quiz" data-nav="Quiz">
+  <div class="sec-badge">// 07 · teste-toi !</div>
+  <h2 class="sec-title">Mini <span class="c1">Quiz</span></h2>
+  <div class="sec-line sec-line-1"></div>
+  <p class="sec-intro reveal">7 questions pour valider que t'as bien tout absorbé. Prêt ? 🎮</p>
+  <div class="quiz-shell">
+    <div class="quiz-progress" id="qprogress"></div>
+    <div id="qcard" class="quiz-card"></div>
+    <div id="qresult" class="quiz-result"></div>
+  </div>
+</section>
+
+<footer>
+  <p><span class="f-neon">SEC INFO</span> · Chapitre 1 · Introduction à la Sécurité Informatique</p>
+  <p style="margin-top:6px">Mme S. BELATTAF · UMMTO · Made with <span class="f-pink">♥</span> pour rendre ça moins chiant</p>
+</footer>
+
+<script>
+/* ===================== CURSOR ===================== */
+const ring = document.getElementById('cursor-ring');
+const dot = document.getElementById('cursor-dot');
+let mx=0,my=0,rx=0,ry=0;
+document.addEventListener('mousemove', e=>{
+  mx=e.clientX; my=e.clientY;
+  dot.style.left=mx+'px'; dot.style.top=my+'px';
+});
+function animCursor(){
+  rx+=(mx-rx)*.15; ry+=(my-ry)*.15;
+  ring.style.left=rx+'px'; ring.style.top=ry+'px';
+  requestAnimationFrame(animCursor);
+}
+animCursor();
+
+/* ===================== CANVAS ===================== */
+const cvs=document.getElementById('bg-canvas');
+const c=cvs.getContext('2d');
+function resizeCanvas(){ cvs.width=window.innerWidth; cvs.height=window.innerHeight; }
+resizeCanvas();
+window.addEventListener('resize',resizeCanvas);
+const pts=Array.from({length:70},()=>({
+  x:Math.random()*window.innerWidth, y:Math.random()*window.innerHeight,
+  vx:(Math.random()-.5)*.35, vy:(Math.random()-.5)*.35,
+  r:Math.random()*1.5+.5, a:Math.random()*.5+.15
+}));
+function drawBg(){
+  c.clearRect(0,0,cvs.width,cvs.height);
+  pts.forEach(p=>{
+    p.x+=p.vx; p.y+=p.vy;
+    if(p.x<0)p.x=cvs.width; if(p.x>cvs.width)p.x=0;
+    if(p.y<0)p.y=cvs.height; if(p.y>cvs.height)p.y=0;
+    c.beginPath(); c.arc(p.x,p.y,p.r,0,Math.PI*2);
+    c.fillStyle=`rgba(0,255,231,${p.a})`; c.fill();
+  });
+  for(let i=0;i<pts.length;i++) for(let j=i+1;j<pts.length;j++){
+    const dx=pts[i].x-pts[j].x, dy=pts[i].y-pts[j].y;
+    const d=Math.sqrt(dx*dx+dy*dy);
+    if(d<100){ c.beginPath(); c.moveTo(pts[i].x,pts[i].y); c.lineTo(pts[j].x,pts[j].y);
+      c.strokeStyle=`rgba(0,255,231,${.05*(1-d/100)})`; c.lineWidth=.5; c.stroke(); }
+  }
+  requestAnimationFrame(drawBg);
+}
+drawBg();
+
+/* ===================== PROGRESS ===================== */
+window.addEventListener('scroll',()=>{
+  document.getElementById('progress').style.width=(window.scrollY/(document.documentElement.scrollHeight-window.innerHeight)*100)+'%';
+});
+
+/* ===================== TYPEWRITER ===================== */
+const termLines=[
+  {t:'t',text:'<span class="t-prompt">$ </span><span class="t-cmd">sudo apt install securite-informatique</span>',delay:0},
+  {t:'o',text:'<span class="t-ok">✓</span> <span class="t-cmd">Définitions..........................OK</span>',delay:800},
+  {t:'o',text:'<span class="t-ok">✓</span> <span class="t-cmd">Piliers de sécurité.................OK</span>',delay:1400},
+  {t:'o',text:'<span class="t-ok">✓</span> <span class="t-cmd">Taxonomie des attaques..............OK</span>',delay:2000},
+  {t:'w',text:'<span class="t-warn">⚠</span> <span class="t-warn">Slides ennuyeuses — suppression...</span>',delay:2600},
+  {t:'o',text:'<span class="t-ok">✓</span> <span class="t-cmd">Mode interactif activé..............OK</span>',delay:3400},
+  {t:'o',text:'<span class="t-ok">✓</span> <span class="t-cmd">Analogies baby installées...........OK</span>',delay:4000},
+  {t:'t',text:'<span class="t-prompt">$ </span><span class="t-comment"># Ready. Scroll down to learn 🚀</span>',delay:4800},
+];
+const tout=document.getElementById('term-output');
+const tlast=document.getElementById('term-last');
+termLines.forEach(l=>{
+  setTimeout(()=>{
+    const d=document.createElement('div');
+    d.innerHTML=l.text; tout.appendChild(d);
+    d.style.animation='fade-up .3s both';
+  },l.delay);
+});
+
+/* ===================== SIDENAV ===================== */
+const secs=document.querySelectorAll('[data-nav]');
+const nav=document.getElementById('sidenav');
+secs.forEach((s,i)=>{
+  const item=document.createElement('div');
+  item.className='snav-item';
+  item.innerHTML=`<span class="snav-label">${s.dataset.nav}</span><div class="snav-dot"></div>`;
+  item.addEventListener('click',()=>s.scrollIntoView({behavior:'smooth'}));
+  nav.appendChild(item);
+});
+const navItems=nav.querySelectorAll('.snav-item');
+new IntersectionObserver(es=>{
+  es.forEach(e=>{
+    if(e.isIntersecting){
+      const i=[...secs].indexOf(e.target);
+      navItems.forEach(n=>n.classList.remove('active'));
+      if(navItems[i])navItems[i].classList.add('active');
+    }
+  });
+},{threshold:.3}).observe;
+// simpler approach:
+window.addEventListener('scroll',()=>{
+  let ci=0;
+  secs.forEach((s,i)=>{
+    if(s.getBoundingClientRect().top<window.innerHeight*.5)ci=i;
+  });
+  navItems.forEach(n=>n.classList.remove('active'));
+  navItems[ci]?.classList.add('active');
+});
+
+/* ===================== REVEAL ===================== */
+const obsReveal=new IntersectionObserver(es=>{
+  es.forEach(e=>{ if(e.isIntersecting)e.target.classList.add('visible'); });
+},{threshold:.12});
+document.querySelectorAll('.reveal,.reveal-l,.reveal-r').forEach(el=>{
+  obsReveal.observe(el);
+  // stagger siblings
+  const parent=el.parentElement;
+  const siblings=[...parent.children].filter(c=>c.classList.contains('reveal')||c.classList.contains('reveal-l'));
+  const idx=siblings.indexOf(el);
+  if(idx>0 && !el.style.transitionDelay) el.style.transitionDelay=(idx*.1)+'s';
+});
+
+/* ===================== EXPAND CARDS ===================== */
+function toggleExpand(card){
+  const isOpen=card.classList.contains('open');
+  document.querySelectorAll('.expand-card').forEach(c=>c.classList.remove('open'));
+  if(!isOpen)card.classList.add('open');
+}
+
+/* ===================== PILLARS ===================== */
+function togglePillar(p){
+  const isOpen=p.classList.contains('open');
+  document.querySelectorAll('.pillar').forEach(x=>x.classList.remove('open'));
+  if(!isOpen)p.classList.add('open');
+}
+
+/* ===================== MODAL DATA ===================== */
+const modals={
+  passive:{
+    icon:'🕵️',title:'Attaque Passive',cat:'Taxonomie · Attaque Passive',color:'var(--neon)',
+    desc:`Une attaque passive consiste à <strong style="color:var(--neon)">observer sans agir</strong>. L'intrus intercepte des données qui transitent sur le réseau, sans les modifier et sans que la victime s'en aperçoive. La disponibilité et l'intégrité ne sont pas touchées — seule la <strong style="color:var(--neon)">confidentialité</strong> est violée.`,
+    analogy:'🎧 C\'est un espion avec des écouteurs posés sur ton câble téléphonique. Il entend tout, mais ne dit rien. Tu ne sais jamais qu\'il t\'écoute.',
+    steps:['L\'intrus se positionne sur le réseau (entre A et B)','Il capture et copie les paquets qui transitent','Il analyse les données à son aise','A et B ne remarquent rien — aucune perturbation'],
+    stepColor:'var(--neon)',
+    tags:['Confidentialité','Passive','Sniffing','Non-détectable']
+  },
+  active:{
+    icon:'⚔️',title:'Attaque Active',cat:'Taxonomie · Attaque Active',color:'var(--neon2)',
+    desc:`Une attaque active implique une <strong style="color:var(--neon2)">intervention directe</strong> sur les données ou le système. L'intrus ne se contente plus d'observer : il crée, modifie, supprime ou bloque. Ces attaques sont généralement plus visibles que les attaques passives.`,
+    analogy:'✂️ Cette fois l\'espion ne se contente plus d\'écouter — il coupe le câble, enregistre un faux message, ou colle des scotchs sur certains mots. La communication est altérée.',
+    steps:['Fabrication : créer de faux messages','Modification : altérer les messages en transit','Interruption : bloquer la communication entre A et B'],
+    stepColor:'var(--neon2)',
+    tags:['Intégrité','Disponibilité','Authentification','Détectable']
+  },
+  interception:{
+    icon:'👁️',title:'Interception',cat:'Attaque Passive · Sur la Confidentialité',color:'var(--neon)',
+    desc:`L'interception est la forme classique d'attaque passive. Un intrus <strong>I</strong> se place entre <strong>A</strong> (émetteur) et <strong>B</strong> (récepteur) et lit les messages qui circulent. Le message M arrive à B intact, A pense que tout va bien, mais I en a une copie.`,
+    analogy:'📬 Le facteur malveillant : il ouvre ta lettre, la photocopie, puis la referme et la livre normalement. Tout le monde croit que tout s\'est passé normalement.',
+    code:`A ──[M]──► I ──[M]──► B\n         ↓\n       [copie M]\n   (I lit les données)`,
+    steps:['A envoie le message M à B','I intercepte M sur le réseau','I lit M et en garde une copie','I transmet M à B sans modification','B reçoit M — rien d\'anormal apparent'],
+    stepColor:'var(--neon)',
+    tags:['Passive','Confidentialité','Sniffing','Wi-Fi','Réseau local']
+  },
+  fabrication:{
+    icon:'🎭',title:'Fabrication',cat:'Attaque Active · Sur l\'Authenticité',color:'var(--neon2)',
+    desc:`La fabrication est une attaque active où l'intrus <strong style="color:var(--neon2)">crée de faux messages</strong> et les envoie à B en se faisant passer pour A. B croit recevoir un message légitime de A, alors qu'il vient d'I. C'est une attaque sur l'<strong style="color:var(--neon2)">authenticité</strong>.`,
+    analogy:'🖊️ Quelqu\'un signe un chèque à ta place et se fait passer pour toi à la banque. La banque paie — et toi tu n\'es au courant de rien.',
+    code:`A          I ──[faux M]──► B\n(n'a rien envoyé)  ↑\n             (se fait passer pour A)`,
+    steps:['A n\'envoie rien à B','I crée un faux message M_faux','I envoie M_faux à B en se faisant passer pour A','B croit avoir reçu un message de A','B agit sur la base d\'un message falsifié'],
+    stepColor:'var(--neon2)',
+    tags:['Active','Authenticité','Usurpation d\'identité','Spoofing']
+  },
+  modification:{
+    icon:'✏️',title:'Modification',cat:'Attaque Active · Sur l\'Intégrité',color:'var(--neon2)',
+    desc:`L'intrus intercepte le message M envoyé par A, le modifie (M → M'), puis envoie la version altérée M' à B. B reçoit un message qu'il croit authentique, mais qui a été falsifié. C'est une attaque sur l'<strong style="color:var(--neon2)">intégrité</strong>.`,
+    analogy:'💌 Tu envoies "Donne-lui une augmentation de 500€". I intercepte, change "500" en "50000€", et envoie le message modifié. B applique. Catastrophe.',
+    code:`A ──[M]──► I ──[M']──► B\n         ↑\n    (I modifie M → M')`,
+    steps:['A envoie M à B','I intercepte M en route','I modifie M pour obtenir M_prime','I transmet M_prime à B','B reçoit M_prime croyant que c\'est le vrai M'],
+    stepColor:'var(--neon2)',
+    tags:['Active','Intégrité','Man-in-the-Middle','Injection']
+  },
+  interruption:{
+    icon:'🔌',title:'Interruption',cat:'Attaque Active · Sur la Disponibilité',color:'var(--neon2)',
+    desc:`L'intrus bloque les messages entre A et B. B ne reçoit jamais rien. Le service est coupé. C'est une attaque sur la <strong style="color:var(--neon2)">disponibilité</strong> — c'est le principe derrière les attaques DoS/DDoS.`,
+    analogy:'📵 Imagines que quelqu\'un coupe physiquement le câble réseau entre deux bâtiments, ou bloque tous tes appels. Tu essaies de contacter B — silence total.',
+    code:`A ──[M]──► I ──✂──► B\n         ↑\n   (I bloque M — B ne reçoit rien)`,
+    steps:['A envoie M à B','I se positionne sur le chemin','I capture et supprime M','B ne reçoit rien','A attend une réponse qui ne vient jamais'],
+    stepColor:'var(--neon2)',
+    tags:['Active','Disponibilité','DoS','DDoS','Réseau']
+  },
+  malware:{
+    icon:'🦠',title:'Virus & Codes Malveillants',cat:'Attaque Virale · Code Malveillant',color:'var(--neon2)',
+    desc:`Un <strong style="color:var(--neon2)">code malveillant</strong> est un programme conçu pour nuire à un système. Il en existe plusieurs types selon leur comportement et leur vecteur de propagation.`,
+    analogy:'🤒 Un virus informatique fonctionne comme un virus biologique : il s\'installe dans un "hôte" (fichier), utilise ses ressources pour se reproduire, et contamines les fichiers voisins.',
+    steps:[
+      '<strong style="color:var(--neon)">Virus</strong> : s\'auto-réplique en infectant d\'autres fichiers. Il a besoin d\'un hôte.',
+      '<strong style="color:var(--neon3)">Cheval de Troie</strong> : se cache dans un programme légitime (ex: faux jeu), donne accès à distance.',
+      '<strong style="color:var(--neon2)">Bombe logique</strong> : dormant jusqu\'à une condition (date, événement) — puis déclenche des actions destructrices.',
+      '<strong style="color:#00b4ff">Spyware</strong> : collecte discrètement des infos (mots de passe, historique) et les envoie à l\'attaquant.'
+    ],
+    stepColor:'var(--neon2)',
+    tags:['Virus','Trojan','Spyware','Ransomware','Worm','Rootkit']
+  },
+  recon:{
+    icon:'🔍',title:'Reconnaissance & Sniffing',cat:'Attaque · Reconnaissance réseau',color:'var(--neon3)',
+    desc:`Avant d\'attaquer, un intrus réalise une phase de <strong style="color:var(--neon3)">reconnaissance</strong> pour cartographier sa cible. Il utilise des outils libres pour scanner le réseau et identifier les surfaces d\'attaque.`,
+    analogy:'🏠 Le cambrioleur professionnel passe des semaines à observer la maison : quand les propriétaires partent, où sont les caméras, quelle serrure, quelle fenêtre est mal fermée.',
+    steps:[
+      'Ping sweep : trouver les adresses IP actives sur le réseau',
+      'Port scanning (Nmap) : identifier les ports ouverts et services disponibles',
+      'OS fingerprinting : déterminer le système d\'exploitation de la cible',
+      'Sniffing (Wireshark) : capturer les paquets qui transitent (emails, mots de passe en clair)',
+      'Enumération : récupérer noms d\'utilisateurs, partages réseau, versions logicielles'
+    ],
+    stepColor:'var(--neon3)',
+    tags:['Wireshark','Nmap','Nessus','OSINT','Passive','Active']
+  },
+  brute:{
+    icon:'💪',title:'Force Brute & Dictionnaire',cat:'Attaque · Devinette de mot de passe',color:'var(--neon2)',
+    desc:`La <strong style="color:var(--neon2)">force brute</strong> essaie toutes les combinaisons possibles jusqu'à trouver le mot de passe. L'<strong style="color:var(--neon2)">attaque par dictionnaire</strong> est plus intelligente : elle essaie d'abord les mots courants, les prénoms, les dates…`,
+    analogy:'🔑 Imagine 1000 clés identiques à une serrure. La force brute les essaie toutes. L\'attaque dictionnaire commence par les clés les plus communes (master, 1234, admin...) et économise du temps.',
+    code:`// Force brute\npour chaque combo dans [a-zA-Z0-9]:\n  essayer(combo)\n\n// Dictionnaire  \npour chaque mot dans dictionnaire.txt:\n  essayer(mot) + variantes (mot123, M0t)`,
+    steps:['Force brute : essaie toutes les combinaisons (a, b, ..., aa, ab...)','Par dictionnaire : commence par "password", "123456", "admin"...','Hybride : dictionnaire + chiffres/symboles (password1!, Passw0rd)','Contre-mesure : limiter les tentatives, mots de passe longs (12+ chars)'],
+    stepColor:'var(--neon2)',
+    tags:['Mots de passe','Hashcat','John the Ripper','MFA','Lockout policy']
+  },
+  dos:{
+    icon:'🌊',title:'DoS & DDoS',cat:'Déni de Service · Availability Attack',color:'var(--neon2)',
+    desc:`Une attaque <strong style="color:var(--neon2)">DoS</strong> (Denial of Service) produit l'interruption ou le ralentissement d'un service en le saturant de requêtes. Une <strong style="color:var(--neon2)">DDoS</strong> (Distributed DoS) coordonne des milliers de machines infectées (botnet) pour amplifier l'attaque.`,
+    analogy:'📞 Imagines que 1 000 000 personnes appellent le même restaurant en même temps. La ligne est saturée — aucun vrai client ne peut passer commande.',
+    steps:['DoS simple : une seule source génère un volume énorme de trafic','DDoS : un botnet (milliers de PC zombies) attaque simultanément','SYN Flood : envoyer des millions de requêtes TCP incomplètes','Amplification DNS : utiliser des serveurs DNS pour amplifier l\'attaque x100'],
+    stepColor:'var(--neon2)',
+    tags:['Botnet','SYN Flood','UDP Flood','Amplification','Cloudflare','CDN']
+  },
+  mitm:{
+    icon:'👤',title:'Man-in-the-Middle (MITM)',cat:'Attaque · Interception Active',color:'var(--neon2)',
+    desc:`L'attaquant se positionne <strong style="color:var(--neon2)">entre deux parties</strong> qui communiquent. Il peut lire, modifier ou injecter des données — les deux victimes croient communiquer directement l'une avec l'autre. Souvent réalisé via un faux WiFi ou ARP spoofing.`,
+    analogy:'📮 Le facteur corrompu : tu envoies une lettre à ta banque. Le facteur l\'ouvre, lit ton numéro de compte, peut modifier le montant d\'un virement, recolle l\'enveloppe et la livre. Tout semble normal.',
+    steps:['Attaquant crée un faux WiFi ("Free_Airport_WiFi")', 'Victime se connecte au faux réseau','Tout le trafic transite par l\'attaquant','Il déchiffre le HTTPS avec SSL stripping','Il lit/modifie les données puis les relaie'],
+    stepColor:'var(--neon2)',
+    tags:['ARP Spoofing','SSL Stripping','Faux WiFi','HTTPS','Certificats']
+  },
+  spam:{
+    icon:'📧',title:'Spam / Phishing / Scam',cat:'Ingénierie Sociale · Social Engineering',color:'var(--neon3)',
+    desc:`L'ingénierie sociale exploite la <strong style="color:var(--neon3)">psychologie humaine</strong> plutôt que les failles techniques. Le <strong>spam</strong> surcharge les serveurs. Le <strong>phishing</strong> usurpe une identité de confiance pour voler des infos. Le <strong>scam</strong> extorque de l'argent par des arnaques.`,
+    analogy:'🎣 Le phishing, c\'est comme pêcher. L\'attaquant lance un faux hameçon (email d\'une fausse banque) avec un appât ("Votre compte est bloqué !"). Tu paniques et tu cliques → pris au piège.',
+    steps:[
+      '<strong style="color:var(--neon3)">Spam</strong> : emails en masse → surcharger serveurs / diffuser malware',
+      '<strong style="color:var(--neon2)">Phishing</strong> : faux email BNP/PayPal → voler identifiants',
+      '<strong style="color:#00b4ff">Spear phishing</strong> : phishing ciblé et personnalisé → plus efficace',
+      '<strong style="color:var(--neon)">Hoax</strong> : fausse information relayée volontairement par les utilisateurs',
+      '<strong style="color:var(--neon3)">Scam/arnaque</strong> : "Prince nigérian", fausse loterie → voler argent'
+    ],
+    stepColor:'var(--neon3)',
+    tags:['Phishing','Spear phishing','BEC','Vishing','Smishing']
+  },
+  chiffrement:{
+    icon:'🔐',title:'Chiffrement',cat:'Mécanisme de Défense · Confidentialité',color:'var(--neon4)',
+    desc:`Le <strong style="color:var(--neon4)">chiffrement</strong> transforme des données lisibles (texte clair) en données illisibles (texte chiffré) via un algorithme et une clé. Sans la clé de déchiffrement, les données sont inutilisables.`,
+    analogy:'🔒 Enfermer un message dans un coffre-fort. N\'importe qui peut voir le coffre, mais seul celui qui a la combinaison peut l\'ouvrir.',
+    code:`Clair : "Bonjour Alice"\nClé  : [clé secrète]\n         ↓ AES-256\nChiffré: "xK9#mP2@qL..."`,
+    steps:['Chiffrement symétrique (AES) : même clé pour chiffrer/déchiffrer — rapide','Chiffrement asymétrique (RSA) : clé publique pour chiffrer, clé privée pour déchiffrer','HTTPS = TLS qui chiffre les échanges web','SSH chiffre les connexions administrateur distantes'],
+    stepColor:'var(--neon4)',
+    tags:['AES-256','RSA','TLS/SSL','HTTPS','Symétrique','Asymétrique']
+  },
+  sig_num:{
+    icon:'✍️',title:'Signature Numérique',cat:'Mécanisme de Défense · Authenticité',color:'var(--neon4)',
+    desc:`La <strong style="color:var(--neon4)">signature numérique</strong> garantit deux choses : l'auteur d'un document est bien celui qu'il prétend (authenticité) et le document n'a pas été modifié (intégrité). Elle utilise la cryptographie asymétrique.`,
+    analogy:'📝 C\'est la version numérique du tampon du notaire — impossible à falsifier, prouve qui a signé et à quel moment.',
+    steps:['Alice calcule le hash de son document','Alice chiffre ce hash avec sa clé PRIVÉE → signature','Alice envoie document + signature','Bob déchiffre la signature avec la clé PUBLIQUE d\'Alice','Bob compare le hash obtenu avec celui du document reçu'],
+    stepColor:'var(--neon4)',
+    tags:['RSA','ECDSA','PKI','Certificat','Hash']
+  },
+  firewall:{
+    icon:'🔥',title:'Pare-feu (Firewall)',cat:'Mécanisme de Défense · Filtrage réseau',color:'var(--neon4)',
+    desc:`Le <strong style="color:var(--neon4)">pare-feu</strong> est le gardien du réseau. Il analyse chaque paquet entrant et sortant et applique des règles pour décider ce qui passe et ce qui est bloqué.`,
+    analogy:'🚧 C\'est le poste de douane d\'un pays : chaque personne (paquet) est vérifiée selon une liste de règles. Pas de passeport valide ? Bloqué.',
+    steps:['Filtrage stateless : examine chaque paquet indépendamment (IP, port)','Filtrage stateful : analyse l\'état des connexions TCP/UDP','Pare-feu applicatif (WAF) : comprend les protocoles HTTP, SQL...','Règle par défaut : TOUT bloquer, puis autoriser ce qui est nécessaire'],
+    stepColor:'var(--neon4)',
+    tags:['iptables','Stateful','WAF','DMZ','Règles ACL']
+  },
+  antivirus:{
+    icon:'🦺',title:'Antivirus',cat:'Mécanisme de Défense · Protection contre malwares',color:'var(--neon4)',
+    desc:`L'<strong style="color:var(--neon4)">antivirus</strong> surveille le système pour détecter et neutraliser les codes malveillants. Il utilise une base de signatures (empreintes connues des virus) et des analyses comportementales.`,
+    analogy:'👮 C\'est un agent de sécurité avec une liste noire. Il compare chaque fichier qui entre contre sa liste de criminels connus. Si ça matche → mis en quarantaine.',
+    steps:['Scan par signatures : compare les fichiers aux empreintes de virus connus','Heuristique : analyse le comportement suspect (même inconnu)','Temps réel : surveille chaque ouverture de fichier','Mise à jour des bases : crucial — nouveaux virus chaque jour'],
+    stepColor:'var(--neon4)',
+    tags:['Signature','Heuristique','Quarantaine','Rootkit','EDR']
+  },
+  ids:{
+    icon:'🚨',title:'IDS / IPS',cat:'Mécanisme de Défense · Détection d\'intrusions',color:'var(--neon4)',
+    desc:`Un <strong style="color:var(--neon4)">IDS</strong> (Intrusion Detection System) surveille et alerte. Un <strong style="color:var(--neon4)">IPS</strong> (Intrusion Prevention System) surveille ET bloque automatiquement. Ils analysent le trafic réseau et les logs pour détecter les comportements anormaux.`,
+    analogy:'📹 L\'IDS = caméra de surveillance avec alarme. L\'IPS = caméra + porte blindée qui se ferme automatiquement quand quelque chose de suspect est détecté.',
+    steps:['IDS passif : analyse et alerte (mais ne bloque pas)','IPS actif : analyse, alerte ET bloque en temps réel','Détection par signature : schémas d\'attaques connus','Détection comportementale : baselines + anomalies'],
+    stepColor:'var(--neon4)',
+    tags:['Snort','Suricata','SIEM','Log analysis','Zero-day']
+  },
+  timestamp:{
+    icon:'⏱️',title:'Horodatage (Timestamping)',cat:'Mécanisme de Défense · Non-répudiation',color:'var(--neon4)',
+    desc:`L'<strong style="color:var(--neon4)">horodatage</strong> certifie qu'un document ou une action a eu lieu à un instant précis, de manière irréfutable. Il est émis par une Autorité de Confiance tierce et est cryptographiquement lié au document.`,
+    analogy:'📮 Le cachet de la poste : quand tu envoies une lettre en recommandé, le tampon date prouve que tu l\'as envoyée ce jour-là. Impossible de prétendre l\'avoir envoyée avant ou après.',
+    steps:['Hash du document calculé','Hash + heure précise envoyés à une Autorité de Confiance','L\'autorité signe le tout avec sa clé privée','Token d\'horodatage retourné — non modifiable','Vérification possible par n\'importe qui avec la clé publique'],
+    stepColor:'var(--neon4)',
+    tags:['RFC 3161','TSA','PKI','Non-répudiation','Légal']
+  },
+  steg:{
+    icon:'🎭',title:'Stéganographie',cat:'Mécanisme de Défense · Confidentialité',color:'var(--neon4)',
+    desc:`La <strong style="color:var(--neon4)">stéganographie</strong> cache un message secret à l'intérieur d'un autre fichier (image, audio, vidéo) de façon imperceptible. Différente du chiffrement : l'ennemi ne sait même pas qu'un message existe.`,
+    analogy:'🖼️ Dans une photo d\'un paysage, chaque pixel a une valeur de 0 à 255. On modifie légèrement les pixels (255→254) pour encoder un message secret. L\'image semble identique à l\'œil nu.',
+    code:`Image normale : ...255 200 147 ...\nImage steganographique : ...254 201 146 ...\n                         ↑   ↑   ↑\n                    (bits du message cachés)`,
+    steps:['Choisir un fichier porteur (image JPEG, audio MP3)','Remplacer les bits de poids faible par les bits du message','L\'image paraît visuellement identique (±1 sur 255)','Seul quelqu\'un qui connaît la technique peut extraire le message'],
+    stepColor:'var(--neon4)',
+    tags:['LSB','Watermarking','Stéganalyse','Image','Audio']
+  },
+  notarisation:{
+    icon:'📜',title:'Notarisation',cat:'Mécanisme de Défense · Non-répudiation',color:'var(--neon4)',
+    desc:`La <strong style="color:var(--neon4)">notarisation</strong> fait intervenir un <em>tiers de confiance</em> pour certifier l'authenticité, l'intégrité et l'origine d'échanges électroniques. Ce tiers est reconnu par toutes les parties et est responsable légalement.`,
+    analogy:'⚖️ Le notaire dans la vie réelle : quand tu achètes un appartement, le notaire certifie que la transaction est légale, que les parties sont bien celles qu\'elles prétendent être, et garde une trace légale.',
+    steps:['Les parties se mettent d\'accord sur un Tiers de Confiance','Chaque transaction est enregistrée et signée par ce tiers','En cas de litige, le tiers fournit la preuve irréfutable','Utilisé dans : e-commerce, contrats numériques, administration électronique'],
+    stepColor:'var(--neon4)',
+    tags:['PKI','CA','Tiers de confiance','Légal','eIDAS']
+  },
+  // GLOSSAIRE
+  g_cyberespace:{icon:'🌐',title:'Cyberespace',cat:'Glossaire',color:'var(--neon5)',desc:`Ensemble des données numérisées constituant un univers d'information et un milieu de communication, lié à l'interconnexion mondiale des ordinateurs. (Petit Robert)<br><br>C'est en gros "Internet et tout ce qui y est connecté" — mais aussi les réseaux privés, les serveurs, les bases de données, etc.`,analogy:'🌍 Pense au cyberespace comme un deuxième monde parallèle au monde physique, où existent tes emails, tes photos, ton argent virtuel, tes conversations...',steps:[],stepColor:'var(--neon5)',tags:['Internet','Réseau','Données','Monde numérique']},
+  g_menace:{icon:'⚠️',title:'Menace',cat:'Glossaire',color:'var(--neon2)',desc:`Type d'action susceptible de nuire dans l'absolu. La menace est le danger potentiel — elle n'est pas encore concrétisée. Une menace devient une attaque uniquement si elle exploite une vulnérabilité.`,analogy:'🐝 Une abeille sur ton épaule = menace. Elle n\'a pas encore piqué, mais elle pourrait. Si tu te défiles (contre-mesure), elle repart. Si tu la laisses piquer (vulnérabilité), c\'est une attaque.',steps:[],stepColor:'var(--neon2)',tags:['Potentiel','Risque','Intentionnel','Accidentel']},
+  g_vuln:{icon:'🕳️',title:'Vulnérabilité',cat:'Glossaire',color:'var(--neon)',desc:`Faille ou bug pouvant être utilisé pour obtenir un niveau d'accès illicite à une ressource ou à des privilèges supérieurs. La vulnérabilité est le "maillon faible" qu'une menace peut exploiter.`,analogy:'🪟 La fenêtre ouverte de ta maison. Elle ne se cambriolera pas toute seule (ce n\'est pas une menace), mais si un voleur passe par là, c\'est bien elle qui a permis le cambriolage.',steps:[],stepColor:'var(--neon)',tags:['CVE','Bug','Faille','Patch','Zero-day']},
+  g_intrus:{icon:'👾',title:'Intrus',cat:'Glossaire',color:'var(--neon2)',desc:`Entité (personne ou programme) responsable d'une attaque de sécurité. L'intrus peut être externe (hacker distant) ou interne (employé mécontent). Ses motivations varient : argent, curiosité, vengeance, défi technique, espionnage.`,analogy:'🎭 Pas forcément un type en sweat à capuche dans une cave obscure. L\'intrus peut être ton collègue qui accède à des fichiers confidentiels, ou un script automatisé qui tourne 24h/24.',steps:[],stepColor:'var(--neon2)',tags:['Hacker','Cracker','Insider','Script kiddie','APT']},
+  g_cve:{icon:'📋',title:'CVE',cat:'Glossaire · Common Vulnerabilities and Exposures',color:'var(--neon3)',desc:`Base de données publique référençant toutes les vulnérabilités connues des logiciels. Chaque faille reçoit un identifiant unique (CVE-ANNÉE-NUMÉRO) et un score de gravité (CVSS de 0 à 10).`,analogy:'📰 C\'est le "journal officiel" des failles informatiques. Quand une faille est découverte dans Windows, OpenSSL, etc., elle est publiée sur CVE avec une description, son score de dangerosité, et les correctifs disponibles.',steps:[],stepColor:'var(--neon3)',tags:['CVE-2021-44228','Log4Shell','CVSS','NVD','Patch']},
+  g_sniffer:{icon:'🔬',title:'Sniffer',cat:'Glossaire · Outil réseau',color:'var(--neon)',desc:`Outil qui capture et analyse les paquets qui transitent sur un réseau. Utilisé légitimement par les admins pour diagnostiquer des problèmes, ou illégalement pour espionner le trafic.`,analogy:'🦻 C\'est un stéthoscope posé sur le câble réseau. Il écoute tout ce qui passe. Wireshark est l\'exemple le plus connu — gratuit et très puissant.',steps:[],stepColor:'var(--neon)',tags:['Wireshark','tcpdump','Packet capture','Réseau','Légal/Illégal']},
+  g_botnet:{icon:'🤖',title:'Botnet',cat:'Glossaire · Réseau de machines zombies',color:'var(--neon2)',desc:`Réseau de machines infectées contrôlées à distance par un attaquant. Les propriétaires des machines ne savent généralement pas que leur PC est utilisé. Utilisé massivement pour les attaques DDoS.`,analogy:'🧟 Imagine des milliers de personnes hypnotisées qui obéissent à une seule personne. Ton PC peut être un "zombie" dans un botnet à ton insu — il fait des attaques pendant que tu travailles dessus !',steps:[],stepColor:'var(--neon2)',tags:['C&C','Zombie','DDoS','Mirai','Emotet']},
+  g_2fa:{icon:'📱',title:'2FA / MFA',cat:'Glossaire · Multi-Factor Authentication',color:'var(--neon3)',desc:`Authentification avec deux facteurs (2FA) ou plusieurs (MFA). Combine "ce que tu sais" (mot de passe) avec "ce que tu possèdes" (téléphone, token) ou "ce que tu es" (biométrie).`,analogy:'🏦 Pour retirer de l\'argent : ta carte bancaire (ce que tu as) + ton code PIN (ce que tu sais). Deux facteurs. Si quelqu\'un vole ta carte, il ne connaît pas ton code — te voilà protégé.',steps:[],stepColor:'var(--neon3)',tags:['TOTP','SMS OTP','FIDO2','Yubikey','Google Authenticator']},
+  g_hash:{icon:'#️⃣',title:'Fonction de Hachage',cat:'Glossaire · Cryptographie',color:'var(--neon)',desc:`Algorithme qui transforme n'importe quelle donnée en une empreinte de taille fixe. Propriétés clés : irréversible (on ne peut pas retrouver l'original), déterministe (même entrée = même hash), effet avalanche (1 bit change → hash complètement différent).`,analogy:'🍲 C\'est comme mixer des ingrédients dans un blender. Le smoothie final est une "empreinte" des ingrédients. Impossible de retrouver exactement les ingrédients originaux, et un seul ingrédient différent change complètement le goût.',steps:[],stepColor:'var(--neon)',tags:['MD5','SHA-1','SHA-256','bcrypt','Intégrité']},
+  g_cheval:{icon:'🐴',title:'Cheval de Troie',cat:'Glossaire · Malware',color:'var(--neon2)',desc:`Malware qui se déguise en programme légitime (jeu, utilitaire, mise à jour). Une fois exécuté par l'utilisateur, il installe un accès backdoor, vole des données ou télécharge d'autres malwares.`,analogy:'🎁 Mythe grec : les Grecs offrent un grand cheval en bois aux Troyens. La nuit, des soldats cachés à l\'intérieur en sortent et ouvrent les portes de la ville. Ton "logiciel gratuit" fait pareil sur ton PC.',steps:[],stepColor:'var(--neon2)',tags:['RAT','Backdoor','Dropper','APT','Social engineering']},
+  g_phishing:{icon:'🎣',title:'Phishing',cat:'Glossaire · Ingénierie sociale',color:'var(--neon3)',desc:`Technique d'attaque consistant à envoyer un email frauduleux imitant une entité de confiance (banque, PayPal, Netflix) pour inciter la victime à cliquer sur un lien malveillant ou à fournir ses identifiants.`,analogy:'🎣 La pêche : l\'attaquant jette un hameçon (faux email) avec un appât attractif ("Votre compte sera bloqué dans 24h"). La victime paniquée mord à l\'hameçon et donne ses informations.',steps:[],stepColor:'var(--neon3)',tags:['Spear phishing','BEC','Vishing','Smishing','Clone phishing']},
+  g_zero:{icon:'0️⃣',title:'Zero-Day (0-day)',cat:'Glossaire · Vulnérabilité critique',color:'var(--neon2)',desc:`Vulnérabilité inconnue du fabricant du logiciel, donc non corrigée. Les attaquants qui la connaissent ont un avantage considérable : il n'existe pas encore de patch pour se protéger. "Zero day" = zéro jour pour se défendre.`,analogy:'🔓 Imagine qu\'un cambrioleur découvre une faille dans un modèle de serrure, avant que le fabricant soit au courant. Il peut ouvrir toutes les portes équipées de cette serrure, et personne n\'est encore averti.',steps:[],stepColor:'var(--neon2)',tags:['0-day','Exploit','CVE','Patch Tuesday','Bug bounty']},
+};
+
+/* ===================== SHOW MODAL ===================== */
+function showModal(key){
+  const d=modals[key]; if(!d)return;
+  const body=document.getElementById('modal-body');
+  const letters=['A','B','C','D','E','F'];
+  let stepsHtml='';
+  if(d.steps&&d.steps.length){
+    stepsHtml=`<div class="modal-steps">${d.steps.map((s,i)=>`
+      <div class="modal-step">
+        <div class="modal-step-num" style="background:rgba(0,0,0,.3);border:1.5px solid ${d.stepColor};color:${d.stepColor}">${letters[i]||i+1}</div>
+        <div>${s}</div>
+      </div>`).join('')}</div>`;
+  }
+  let codeHtml='';
+  if(d.code){
+    codeHtml=`<div class="modal-code">${d.code.replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>').replace(/\/\/.*/g,m=>`<span class="cc">${m}</span>`)}</div>`;
+  }
+  body.innerHTML=`
+    <span class="modal-icon">${d.icon}</span>
+    <div class="modal-title" style="color:${d.color}">${d.title}</div>
+    <div class="modal-category">${d.cat}</div>
+    ${d.desc?`<div class="modal-section"><div class="modal-sec-title" style="color:${d.color}">📖 Définition</div><div class="modal-text">${d.desc}</div></div>`:''}
+    ${d.analogy?`<div class="modal-analogy"><span style="font-size:1.2rem">💡</span><div>${d.analogy}</div></div>`:''}
+    ${codeHtml?`<div class="modal-section"><div class="modal-sec-title" style="color:${d.color}">💻 Schéma / Code</div>${codeHtml}</div>`:''}
+    ${stepsHtml?`<div class="modal-section"><div class="modal-sec-title" style="color:${d.color}">⚙️ Détails / Étapes</div>${stepsHtml}</div>`:''}
+    ${d.tags?.length?`<div class="modal-tags">${d.tags.map(t=>`<span class="modal-tag" style="color:${d.color};border-color:${d.color}40">${t}</span>`).join('')}</div>`:''}
+  `;
+  document.getElementById('modal-overlay').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+function closeModal(e,force){
+  if(force||e?.target===document.getElementById('modal-overlay')){
+    document.getElementById('modal-overlay').classList.remove('open');
+    document.body.style.overflow='';
+  }
+}
+document.addEventListener('keydown',e=>{ if(e.key==='Escape')closeModal(null,true); });
+
+/* ===================== QUIZ ===================== */
+const questions=[
+  {q:"🕵️ Un intrus observe le trafic réseau entre A et B sans rien modifier. Quel type d'attaque est-ce ?",opts:["Fabrication","Interruption","Interception","Modification"],ans:2,fb:"✅ <strong>Interception</strong> ! C'est une attaque passive — l'intrus écoute sans agir. Seule la confidentialité est violée."},
+  {q:"💣 Un serveur devient inaccessible car des milliers de machines l'inondent simultanément de requêtes. C'est...",opts:["Un virus","Une attaque DDoS","Du phishing","Une injection SQL"],ans:1,fb:"✅ <strong>DDoS</strong> (Distributed Denial of Service) ! Des milliers de machines coordonnées attaquent la disponibilité."},
+  {q:"🎯 Quel objectif garantit qu'on ne peut pas nier avoir envoyé un message ou effectué une transaction ?",opts:["Confidentialité","Disponibilité","Non-répudiation","Intégrité"],ans:2,fb:"✅ La <strong>non-répudiation</strong> ! Elle empêche toute personne de nier une action. On l'obtient via les signatures numériques."},
+  {q:"🐴 Un attaquant cache son code malveillant dans un jeu vidéo qui semble légitime. C'est...",opts:["Un virus","Un ver","Un cheval de Troie","Une bombe logique"],ans:2,fb:"✅ <strong>Cheval de Troie (Trojan)</strong> ! Il se déguise en programme légitime. Une fois installé, il ouvre une backdoor."},
+  {q:"🔐 Alice chiffre son document avec la clé PUBLIQUE de Bob. Qui peut déchiffrer ce document ?",opts:["Alice avec sa clé privée","N'importe qui","Bob avec sa clé privée","Bob avec la clé publique d'Alice"],ans:2,fb:"✅ <strong>Bob avec sa clé privée</strong> ! En chiffrement asymétrique : clé publique pour chiffrer, clé privée (et seulement elle) pour déchiffrer."},
+  {q:"🔑 Quelle propriété permet de détecter si des données ont été modifiées après leur création ?",opts:["Disponibilité","Authentification","Confidentialité","Intégrité"],ans:3,fb:"✅ L'<strong>Intégrité</strong> ! Elle s'assure que les données sont exactement celles produites à l'origine, via des fonctions de hachage."},
+  {q:"🌊 Pour se défendre contre une attaque DDoS, quel mécanisme filtre le trafic illégitime avant qu'il n'atteigne le serveur ?",opts:["Antivirus","Signature numérique","Pare-feu / CDN","Stéganographie"],ans:2,fb:"✅ Le <strong>pare-feu / CDN</strong> (ex: Cloudflare) ! Il filtre les paquets malveillants et absorbe le trafic avant qu'il ne sature le serveur."},
+];
+let qidx=0, qscore=0, qanswered=false;
+
+function buildProgress(){
+  const p=document.getElementById('qprogress');
+  p.innerHTML=questions.map((_,i)=>`<div class="qp-dot ${i<qidx?'done':i===qidx?'current':''}"></div>`).join('');
+}
+function renderQ(){
+  buildProgress();
+  const r=document.getElementById('qresult');
+  const qc=document.getElementById('qcard');
+  if(qidx>=questions.length){
+    qc.style.display='none';
+    r.classList.add('show');
+    const pct=Math.round(qscore/questions.length*100);
+    const msgs=[
+      [0,70,'😬 Revois le cours, t\'as encore du chemin !'],
+      [70,90,'🔥 Très bien ! Tu maîtrises l\'essentiel.'],
+      [90,101,'🏆 PARFAIT ! Chapeau bas, hacker légal certifié.']
+    ];
+    const msg=msgs.find(m=>pct>=m[0]&&pct<m[1]);
+    r.innerHTML=`
+      <div class="qr-score" style="color:${pct===100?'var(--neon)':pct>=70?'var(--neon3)':'var(--neon2)'}">${qscore}/${questions.length}</div>
+      <div class="qr-label">${pct}% — ${['Insuffisant','Bien','Excellent'][pct<70?0:pct<90?1:2]}</div>
+      <div class="qr-msg">${msg[2]}</div>
+      <button class="qr-restart" onclick="restartQ()">Recommencer le quiz 🔄</button>
+    `;
+    return;
+  }
+  qanswered=false;
+  const q=questions[qidx];
+  const ls=['A','B','C','D'];
+  qc.style.display='';
+  qc.innerHTML=`
+    <div class="q-counter">Question ${qidx+1} sur ${questions.length}</div>
+    <div class="q-text">${q.q}</div>
+    <div class="q-opts">
+      ${q.opts.map((o,i)=>`<div class="q-opt" onclick="answerQ(${i})" data-i="${i}"><span class="q-letter">${ls[i]}</span>${o}</div>`).join('')}
+    </div>
+    <div class="q-feedback" id="qfb"></div>
+    <button class="q-next" id="qnext" onclick="nextQ()">${qidx<questions.length-1?'Question suivante →':'Voir les résultats 🏁'}</button>
+  `;
+}
+function answerQ(i){
+  if(qanswered)return; qanswered=true;
+  const q=questions[qidx];
+  document.querySelectorAll('.q-opt').forEach((o,j)=>{
+    if(j===q.ans)o.classList.add('correct');
+    else if(j===i&&i!==q.ans)o.classList.add('wrong');
+  });
+  const fb=document.getElementById('qfb');
+  fb.classList.remove('show');
+  if(i===q.ans){ qscore++; fb.className='q-feedback show good'; fb.innerHTML=q.fb; }
+  else{ fb.className='q-feedback show bad'; fb.innerHTML=`❌ Mauvaise réponse ! ${q.fb}`; }
+  document.getElementById('qnext').classList.add('show');
+}
+function nextQ(){ qidx++; renderQ(); }
+function restartQ(){ qidx=0; qscore=0; qanswered=false; document.getElementById('qresult').classList.remove('show'); renderQ(); }
+renderQ();
+</script>
+</body>
+</html>

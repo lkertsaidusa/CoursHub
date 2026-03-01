@@ -1,0 +1,984 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chapitre II — Expliqué pour les Nuls 🤖</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Fira+Code:wght@400;500&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --green:#3DDC84;--pink:#FF006E;--cyan:#00F5FF;--blue:#4285F4;
+  --bg:#050814;--card:#0a0e27;
+}
+html{scroll-behavior:smooth;}
+body{font-family:'Space Mono',monospace;background:var(--bg);color:#fff;overflow-x:hidden;}
+
+/* BG */
+.bg-fixed{position:fixed;inset:0;z-index:-1;
+  background:radial-gradient(ellipse at top,#0a0e27,var(--bg));}
+.bg-grid{position:absolute;inset:0;
+  background-image:linear-gradient(90deg,rgba(61,220,132,.03) 1px,transparent 1px),
+  linear-gradient(rgba(61,220,132,.03) 1px,transparent 1px);
+  background-size:50px 50px;animation:gridScroll 20s linear infinite;}
+@keyframes gridScroll{to{transform:translateY(50px);}}
+
+/* HEADER */
+header{text-align:center;padding:4rem 2rem 2rem;position:relative;}
+.chap-badge{display:inline-block;background:linear-gradient(135deg,var(--pink),var(--blue));
+  padding:.4rem 1.4rem;border-radius:50px;font-family:'Orbitron',sans-serif;
+  font-size:.85rem;margin-bottom:1rem;box-shadow:0 0 20px rgba(255,0,110,.4);}
+h1{font-family:'Orbitron',sans-serif;font-size:clamp(1.8rem,5vw,3.2rem);font-weight:900;
+  background:linear-gradient(135deg,var(--green),var(--cyan));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  animation:glitch 6s infinite;}
+@keyframes glitch{
+  0%,89%,100%{transform:translate(0);}
+  91%{transform:translate(-2px,2px);}93%{transform:translate(2px,-2px);}
+  95%{transform:translate(-2px,-2px);}97%{transform:translate(2px,2px);}
+}
+.subtitle{color:var(--green);font-family:'Fira Code',monospace;margin-top:.5rem;font-size:1rem;}
+.intro-text{max-width:700px;margin:1.5rem auto 0;color:rgba(255,255,255,.7);
+  font-size:.9rem;line-height:1.8;text-align:center;}
+
+/* NAV DOTS */
+.nav-dots{position:fixed;right:1.5rem;top:50%;transform:translateY(-50%);
+  z-index:100;display:flex;flex-direction:column;gap:.8rem;}
+.nav-dot{width:12px;height:12px;border-radius:50%;background:rgba(61,220,132,.3);
+  border:2px solid var(--green);cursor:pointer;transition:all .3s;position:relative;}
+.nav-dot.active,.nav-dot:hover{background:var(--green);box-shadow:0 0 12px var(--green);}
+.nav-dot::after{content:attr(data-label);position:absolute;right:1.8rem;top:50%;
+  transform:translateY(-50%);white-space:nowrap;font-size:.7rem;color:var(--green);
+  font-family:'Fira Code',monospace;opacity:0;pointer-events:none;transition:opacity .2s;}
+.nav-dot:hover::after{opacity:1;}
+
+/* SECTION */
+.section{max-width:1100px;margin:0 auto;padding:5rem 2rem;}
+.section-title{font-family:'Orbitron',sans-serif;font-size:clamp(1.4rem,3vw,2.2rem);
+  color:var(--cyan);text-align:center;margin-bottom:.5rem;}
+.section-sub{text-align:center;color:rgba(255,255,255,.5);
+  font-family:'Fira Code',monospace;font-size:.85rem;margin-bottom:3rem;}
+.section-title::after{content:'';display:block;width:80px;height:3px;margin:.6rem auto 0;
+  background:linear-gradient(90deg,transparent,var(--cyan),transparent);}
+
+/* SCROLL REVEAL */
+.reveal{opacity:0;transform:translateY(60px);transition:opacity .8s ease,transform .8s ease;}
+.reveal.active{opacity:1;transform:translateY(0);}
+.reveal-left{opacity:0;transform:translateX(-60px);transition:opacity .8s ease,transform .8s ease;}
+.reveal-left.active{opacity:1;transform:translateX(0);}
+.reveal-right{opacity:0;transform:translateX(60px);transition:opacity .8s ease,transform .8s ease;}
+.reveal-right.active{opacity:1;transform:translateX(0);}
+
+/* ANALOGY CARD — big intro cards */
+.analogy{background:rgba(61,220,132,.06);border:2px solid rgba(61,220,132,.3);
+  border-radius:20px;padding:2rem;margin-bottom:2rem;cursor:pointer;
+  transition:all .4s;position:relative;overflow:hidden;}
+.analogy:hover{border-color:var(--green);box-shadow:0 0 40px rgba(61,220,132,.2);
+  transform:translateY(-4px);}
+.analogy-header{display:flex;align-items:center;gap:1rem;}
+.analogy-icon{font-size:3rem;flex-shrink:0;}
+.analogy-title{font-family:'Orbitron',sans-serif;font-size:1.2rem;color:var(--green);}
+.analogy-teaser{color:rgba(255,255,255,.6);font-size:.85rem;margin-top:.3rem;}
+.analogy-body{max-height:0;overflow:hidden;transition:max-height .6s ease,opacity .4s ease;
+  opacity:0;}
+.analogy.open .analogy-body{max-height:600px;opacity:1;}
+.analogy-body-inner{margin-top:1.5rem;padding-top:1.5rem;
+  border-top:1px solid rgba(61,220,132,.2);}
+.toggle-hint{position:absolute;top:1.2rem;right:1.5rem;color:var(--green);
+  font-size:1.4rem;transition:transform .4s;}
+.analogy.open .toggle-hint{transform:rotate(45deg);}
+
+/* BABY EXPLAIN */
+.baby-box{background:linear-gradient(135deg,rgba(0,245,255,.07),rgba(61,220,132,.07));
+  border-left:4px solid var(--cyan);border-radius:0 12px 12px 0;
+  padding:1.2rem 1.5rem;margin:1rem 0;font-size:.9rem;color:rgba(255,255,255,.85);
+  line-height:1.9;}
+.baby-box strong{color:var(--cyan);}
+.emoji-big{font-size:2rem;margin-right:.5rem;}
+
+/* CODE BLOCK */
+.code-wrap{background:rgba(0,0,0,.7);border:1px solid rgba(61,220,132,.3);
+  border-radius:14px;padding:1.5rem;font-family:'Fira Code',monospace;
+  font-size:.8rem;line-height:1.9;overflow-x:auto;position:relative;}
+.code-wrap .code-label{position:absolute;top:.6rem;right:.8rem;
+  font-size:.7rem;color:rgba(255,255,255,.3);font-family:'Fira Code',monospace;}
+.kw{color:var(--pink);}
+.cls{color:var(--cyan);}
+.str{color:var(--green);}
+.cmt{color:rgba(255,255,255,.35);font-style:italic;}
+.tag{color:var(--pink);}
+.attr{color:var(--cyan);}
+.val{color:var(--green);}
+.hl{background:rgba(61,220,132,.15);border-radius:4px;padding:0 3px;}
+
+/* SPOTLIGHT — clickable line explanation */
+.code-line{cursor:pointer;border-radius:4px;padding:0 4px;transition:background .2s;
+  display:block;}
+.code-line:hover{background:rgba(61,220,132,.12);}
+.code-line.selected{background:rgba(61,220,132,.2);}
+.line-explain{max-height:0;overflow:hidden;transition:max-height .5s ease,opacity .4s;
+  opacity:0;}
+.line-explain.show{max-height:200px;opacity:1;}
+.line-explain-inner{background:rgba(0,0,0,.5);border-left:3px solid var(--pink);
+  border-radius:0 8px 8px 0;padding:.8rem 1rem;margin-top:.5rem;
+  font-size:.8rem;color:rgba(255,255,255,.8);line-height:1.7;}
+.line-explain-inner strong{color:var(--pink);}
+
+/* FILE CARDS */
+.files-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+  gap:1.5rem;margin-top:2rem;}
+.file-card{background:var(--card);border:2px solid rgba(61,220,132,.25);
+  border-radius:18px;padding:1.8rem;cursor:pointer;transition:all .4s;
+  position:relative;overflow:hidden;}
+.file-card::before{content:'';position:absolute;inset:-2px;
+  background:conic-gradient(from 0deg,transparent,var(--green),transparent 60deg);
+  animation:spin 4s linear infinite;opacity:0;transition:opacity .3s;
+  border-radius:20px;}
+.file-card:hover::before{opacity:.15;}
+.file-card::after{content:'';position:absolute;inset:2px;background:var(--card);
+  border-radius:16px;z-index:0;}
+.file-card>*{position:relative;z-index:1;}
+@keyframes spin{100%{transform:rotate(360deg);}}
+.file-card:hover{transform:translateY(-10px);box-shadow:0 20px 60px rgba(61,220,132,.3);
+  border-color:var(--green);}
+.file-icon{font-size:3rem;margin-bottom:.8rem;display:block;}
+.file-name{font-family:'Orbitron',sans-serif;font-size:1rem;color:var(--neon-cyan,#00F5FF);
+  margin-bottom:.5rem;}
+.file-short{color:rgba(255,255,255,.55);font-size:.8rem;margin-bottom:1rem;}
+.file-detail{max-height:0;overflow:hidden;transition:max-height .6s,opacity .4s;opacity:0;}
+.file-card.open .file-detail{max-height:400px;opacity:1;}
+.file-detail-inner{padding-top:1rem;border-top:1px solid rgba(61,220,132,.2);
+  font-size:.82rem;line-height:1.8;color:rgba(255,255,255,.8);}
+.file-detail-inner strong{color:var(--green);}
+.open-badge{position:absolute;top:1rem;right:1rem;font-size:1.2rem;
+  transition:transform .4s;}
+.file-card.open .open-badge{transform:rotate(45deg);}
+
+/* R.java INTERACTIVE */
+.r-demo{margin-top:2rem;}
+.r-grid{display:grid;grid-template-columns:1fr 1fr;gap:2rem;margin-top:1.5rem;}
+.r-panel{background:var(--card);border:1px solid rgba(61,220,132,.3);
+  border-radius:16px;padding:1.5rem;}
+.r-panel-title{font-family:'Orbitron',sans-serif;font-size:.95rem;color:var(--pink);
+  margin-bottom:1rem;}
+.r-item{background:rgba(0,0,0,.4);border-left:3px solid var(--green);
+  border-radius:0 8px 8px 0;padding:.7rem 1rem;margin-bottom:.8rem;
+  font-family:'Fira Code',monospace;font-size:.8rem;cursor:pointer;
+  transition:all .3s;}
+.r-item:hover{background:rgba(61,220,132,.1);border-left-color:var(--cyan);
+  transform:translateX(6px);}
+.r-item.active{background:rgba(61,220,132,.15);border-left-color:var(--cyan);}
+.r-item-id{color:var(--pink);font-size:.75rem;float:right;}
+.r-arrow{display:flex;align-items:center;justify-content:center;
+  font-size:2.5rem;color:var(--green);animation:arrowBounce 1.5s ease-in-out infinite;}
+@keyframes arrowBounce{0%,100%{transform:translateX(0);}50%{transform:translateX(8px);}}
+.r-result{background:rgba(0,0,0,.5);border:1px solid rgba(0,245,255,.3);
+  border-radius:12px;padding:1.2rem;min-height:60px;transition:all .4s;
+  font-family:'Fira Code',monospace;font-size:.8rem;color:var(--cyan);}
+
+/* BUILD INTERACTIVE */
+.build-steps-interactive{display:grid;grid-template-columns:1fr 1fr;gap:0;margin-top:2rem;
+  align-items:start;}
+.build-pipeline{display:flex;flex-direction:column;gap:.6rem;}
+.build-explain-panel{position:sticky;top:6rem;padding-left:2rem;}
+.build-node{background:var(--card);border:2px solid rgba(61,220,132,.3);
+  border-radius:16px;padding:1.2rem 1.5rem;cursor:pointer;transition:all .35s;
+  position:relative;display:flex;align-items:center;gap:1rem;}
+.build-node:hover{border-color:var(--green);box-shadow:0 0 20px rgba(61,220,132,.2);
+  transform:translateX(6px);}
+.build-node.active{border-color:var(--cyan);background:rgba(0,245,255,.07);
+  box-shadow:0 0 25px rgba(0,245,255,.2);transform:translateX(8px);}
+.build-node-icon{font-size:2rem;flex-shrink:0;}
+.build-node-name{font-family:'Orbitron',sans-serif;font-size:.85rem;color:var(--green);}
+.build-node-ext{font-family:'Fira Code',monospace;font-size:.72rem;color:var(--pink);
+  margin-top:.15rem;}
+.build-node .step-num{position:absolute;right:1rem;top:.8rem;
+  font-family:'Orbitron',sans-serif;font-size:.65rem;color:rgba(255,255,255,.25);}
+.arrow-connector{display:flex;align-items:center;padding-left:1.7rem;
+  color:var(--pink);font-size:1.3rem;line-height:1;opacity:.6;}
+
+/* Explain panel */
+.build-explain-panel .panel-placeholder{
+  border:2px dashed rgba(61,220,132,.2);border-radius:16px;padding:2rem;
+  text-align:center;color:rgba(255,255,255,.25);font-size:.85rem;line-height:1.8;}
+.build-explain-panel .panel-placeholder .icon{font-size:3rem;display:block;margin-bottom:1rem;}
+.explain-card{background:rgba(0,245,255,.06);border:2px solid rgba(0,245,255,.35);
+  border-radius:16px;padding:1.8rem;animation:popIn .3s cubic-bezier(.34,1.56,.64,1);}
+@keyframes popIn{from{opacity:0;transform:scale(.92) translateY(10px);}to{opacity:1;transform:scale(1) translateY(0);}}
+.explain-card-title{font-family:'Orbitron',sans-serif;font-size:1rem;color:var(--cyan);
+  margin-bottom:1rem;padding-bottom:.7rem;border-bottom:1px solid rgba(0,245,255,.2);}
+.explain-card p{font-size:.87rem;color:rgba(255,255,255,.85);line-height:1.85;}
+.explain-card strong{color:var(--cyan);}
+.explain-card .pizza-tag{display:inline-block;background:rgba(255,0,110,.15);
+  border:1px solid rgba(255,0,110,.3);border-radius:20px;padding:.2rem .8rem;
+  font-size:.75rem;color:var(--pink);margin-top:1rem;}
+
+@media(max-width:768px){
+  .build-steps-interactive{grid-template-columns:1fr;}
+  .build-explain-panel{position:static;padding-left:0;margin-top:1.5rem;}
+}
+
+/* MANIFEST INTERACTIVE */
+.manifest-interactive{display:grid;grid-template-columns:1fr 1fr;gap:2rem;margin-top:2rem;}
+.manifest-code .code-line{border-radius:4px;}
+.manifest-explain{background:var(--card);border:1px solid rgba(255,0,110,.3);
+  border-radius:16px;padding:1.5rem;display:flex;flex-direction:column;
+  justify-content:center;min-height:300px;}
+.manifest-explain h3{font-family:'Orbitron',sans-serif;font-size:1rem;
+  color:var(--pink);margin-bottom:1rem;}
+.manifest-explain p{font-size:.85rem;color:rgba(255,255,255,.8);line-height:1.8;}
+.manifest-explain .placeholder{color:rgba(255,255,255,.3);font-size:.85rem;
+  text-align:center;margin:auto;}
+
+/* QUIZ */
+.quiz-section{background:linear-gradient(135deg,rgba(61,220,132,.05),rgba(255,0,110,.05));
+  border:1px solid rgba(61,220,132,.2);border-radius:20px;padding:2.5rem;margin-top:3rem;}
+.quiz-title{font-family:'Orbitron',sans-serif;font-size:1.3rem;color:var(--cyan);
+  margin-bottom:2rem;text-align:center;}
+.quiz-q{margin-bottom:2rem;}
+.quiz-q p{font-size:.95rem;margin-bottom:1rem;color:rgba(255,255,255,.9);}
+.quiz-opts{display:flex;flex-wrap:wrap;gap:.8rem;}
+.quiz-opt{background:rgba(0,0,0,.4);border:1px solid rgba(61,220,132,.3);
+  border-radius:10px;padding:.6rem 1.2rem;cursor:pointer;font-size:.85rem;
+  font-family:'Fira Code',monospace;transition:all .3s;}
+.quiz-opt:hover{border-color:var(--green);background:rgba(61,220,132,.1);}
+.quiz-opt.correct{border-color:var(--green);background:rgba(61,220,132,.2);
+  color:var(--green);}
+.quiz-opt.wrong{border-color:var(--pink);background:rgba(255,0,110,.15);
+  color:var(--pink);}
+.quiz-feedback{font-size:.85rem;margin-top:.8rem;padding:.6rem 1rem;
+  border-radius:8px;display:none;}
+.quiz-feedback.show{display:block;}
+.quiz-feedback.ok{background:rgba(61,220,132,.15);color:var(--green);}
+.quiz-feedback.ko{background:rgba(255,0,110,.15);color:var(--pink);}
+
+/* PROGRESS BAR */
+.progress-container{position:fixed;top:0;left:0;width:100%;height:3px;z-index:200;}
+.progress-bar{height:100%;width:0%;
+  background:linear-gradient(90deg,var(--green),var(--cyan));transition:width .1s;}
+
+footer{text-align:center;padding:3rem;border-top:1px solid rgba(61,220,132,.2);
+  color:rgba(255,255,255,.4);font-size:.8rem;}
+footer span{color:var(--green);}
+
+@media(max-width:768px){
+  .r-grid,.manifest-interactive,.r-grid{grid-template-columns:1fr;}
+  .nav-dots{display:none;}
+  .build-row{flex-direction:column;}
+}
+</style>
+</head>
+<body>
+
+<div class="bg-fixed"><div class="bg-grid"></div></div>
+<div class="progress-container"><div class="progress-bar" id="progressBar"></div></div>
+
+<!-- NAV DOTS -->
+<div class="nav-dots">
+  <div class="nav-dot active" data-section="s0" data-label="Intro"></div>
+  <div class="nav-dot" data-section="s1" data-label="La pile d'outils"></div>
+  <div class="nav-dot" data-section="s2" data-label="Les fichiers"></div>
+  <div class="nav-dot" data-section="s3" data-label="La classe R"></div>
+  <div class="nav-dot" data-section="s4" data-label="AndroidManifest"></div>
+  <div class="nav-dot" data-section="s5" data-label="Build Process"></div>
+  <div class="nav-dot" data-section="s6" data-label="Quiz"></div>
+</div>
+
+<!-- HEADER -->
+<header id="s0">
+  <div class="chap-badge">CHAPITRE II — VERSION BÉBÉ 👶</div>
+  <div style="font-size:5rem;animation:float 3s ease-in-out infinite;display:inline-block;filter:drop-shadow(0 0 20px var(--green))">🤖</div>
+  <h1>OUTILS DE DÉVELOPPEMENT ANDROID</h1>
+  <p class="subtitle">[ Clique partout · Tout s'explique ]</p>
+  <p class="intro-text">
+    Tu as pas tout compris au cours ? Pas de panique 😅<br>
+    Clique sur les éléments, fais défiler la page — tout s'explique avec des exemples simples.<br>
+    <strong style="color:var(--green)">Promis, même un enfant de 10 ans peut comprendre. 🎯</strong>
+  </p>
+</header>
+
+<!-- ══════════════════════════════ SECTION 1 : PILE D'OUTILS ══════════════════════════════ -->
+<section class="section" id="s1">
+  <div class="reveal">
+    <h2 class="section-title">⚙️ La Pile d'Outils</h2>
+    <p class="section-sub">Clique sur chaque bloc pour comprendre à quoi il sert</p>
+
+    <div class="baby-box reveal">
+      <span class="emoji-big">🏠</span>
+      <strong>Imagine que tu veux construire une maison.</strong><br>
+      Tu as besoin de plusieurs outils : une perceuse, du ciment, des briques…<br>
+      Pour faire une appli Android, c'est pareil. Tu as besoin d'une <strong>"pile d'outils"</strong>.
+      Chaque outil a un rôle précis. On va voir ça ensemble !
+    </div>
+
+    <!-- JDK -->
+    <div class="analogy reveal">
+      <div class="toggle-hint">+</div>
+      <div class="analogy-header">
+        <div class="analogy-icon">☕</div>
+        <div>
+          <div class="analogy-title">JDK / JRE — Le moteur</div>
+          <div class="analogy-teaser">Java Development Kit · Clique pour comprendre !</div>
+        </div>
+      </div>
+      <div class="analogy-body">
+        <div class="analogy-body-inner">
+          <div class="baby-box">
+            <span class="emoji-big">🚗</span>
+            <strong>C'est comme le moteur d'une voiture.</strong><br>
+            Sans moteur → la voiture ne démarre pas.<br>
+            Sans JDK → ton code Java ne peut pas tourner.<br><br>
+            <strong>JDK</strong> = la boîte à outils complète (compilateur + moteur + bibliothèques)<br>
+            <strong>JRE</strong> = juste le moteur (pour faire tourner, pas pour développer)
+          </div>
+          <div class="code-wrap" style="margin-top:1rem;">
+            <div class="code-label">Ce que fait le JDK</div>
+<pre>
+<span class="cmt">// Ton code Java (MonActivite.java)</span>
+<span class="kw">public class</span> <span class="cls">MonActivite</span> { ... }
+
+     ↓  <span class="cmt">javac compile ton code</span>
+
+<span class="str">MonActivite.class</span>  <span class="cmt">← bytecode (le moteur comprend ça)</span>
+</pre>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SDK -->
+    <div class="analogy reveal">
+      <div class="toggle-hint">+</div>
+      <div class="analogy-header">
+        <div class="analogy-icon">📦</div>
+        <div>
+          <div class="analogy-title">SDK Android — La boîte à outils Android</div>
+          <div class="analogy-teaser">Software Development Kit · Clique pour comprendre !</div>
+        </div>
+      </div>
+      <div class="analogy-body">
+        <div class="analogy-body-inner">
+          <div class="baby-box">
+            <span class="emoji-big">🧰</span>
+            <strong>C'est comme une boîte à outils IKEA.</strong><br>
+            Elle contient tout ce dont tu as besoin pour monter ton meuble.<br>
+            Le SDK contient tout ce dont tu as besoin pour faire ton appli Android !
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;margin-top:1.2rem;">
+            <div style="background:rgba(0,0,0,.4);border-left:3px solid var(--green);padding:.8rem;border-radius:0 8px 8px 0;font-size:.8rem;">
+              <div style="color:var(--green);font-weight:bold;margin-bottom:.3rem;">AAPT</div>
+              <div style="color:rgba(255,255,255,.7);">Compile les ressources (images, XML) en un format qu'Android comprend</div>
+            </div>
+            <div style="background:rgba(0,0,0,.4);border-left:3px solid var(--pink);padding:.8rem;border-radius:0 8px 8px 0;font-size:.8rem;">
+              <div style="color:var(--pink);font-weight:bold;margin-bottom:.3rem;">AVD</div>
+              <div style="color:rgba(255,255,255,.7);">Un téléphone virtuel sur ton PC pour tester sans vrai téléphone</div>
+            </div>
+            <div style="background:rgba(0,0,0,.4);border-left:3px solid var(--cyan);padding:.8rem;border-radius:0 8px 8px 0;font-size:.8rem;">
+              <div style="color:var(--cyan);font-weight:bold;margin-bottom:.3rem;">ADB</div>
+              <div style="color:rgba(255,255,255,.7);">Fait le lien entre ton PC et l'émulateur (ou vrai téléphone)</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Gradle -->
+    <div class="analogy reveal">
+      <div class="toggle-hint">+</div>
+      <div class="analogy-header">
+        <div class="analogy-icon">🐘</div>
+        <div>
+          <div class="analogy-title">Gradle — Le robot cuisinier</div>
+          <div class="analogy-teaser">Automatise tout le processus de construction · Clique !</div>
+        </div>
+      </div>
+      <div class="analogy-body">
+        <div class="analogy-body-inner">
+          <div class="baby-box">
+            <span class="emoji-big">👨‍🍳</span>
+            <strong>Gradle c'est comme un robot cuisinier (Thermomix).</strong><br>
+            Tu lui donnes les ingrédients (ton code, tes images, tes fichiers XML)…<br>
+            Il fait tout tout seul : il compile, il assemble, il génère le fichier final (.apk) !<br><br>
+            Tu n'as pas à taper des dizaines de commandes à la main. Gradle s'en occupe automatiquement 🤖
+          </div>
+          <div class="code-wrap" style="margin-top:1rem;">
+            <div class="code-label">build.gradle</div>
+<pre>
+android {
+  <span class="str">compileSdk</span> 35         <span class="cmt">← version Android cible</span>
+  defaultConfig {
+    <span class="str">applicationId</span> <span class="val">"com.exemple.monapp"</span>
+    <span class="str">minSdk</span> 21             <span class="cmt">← Android 5.0 minimum</span>
+    <span class="str">versionName</span> <span class="val">"1.0"</span>
+  }
+}
+dependencies {
+  <span class="cmt">// Gradle télécharge ces biblio auto !</span>
+  implementation <span class="val">"androidx.appcompat:appcompat:1.6.1"</span>
+}
+</pre>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Android Studio -->
+    <div class="analogy reveal">
+      <div class="toggle-hint">+</div>
+      <div class="analogy-header">
+        <div class="analogy-icon">💻</div>
+        <div>
+          <div class="analogy-title">Android Studio — L'atelier</div>
+          <div class="analogy-teaser">L'IDE où tu écris ton code · Clique !</div>
+        </div>
+      </div>
+      <div class="analogy-body">
+        <div class="analogy-body-inner">
+          <div class="baby-box">
+            <span class="emoji-big">🎨</span>
+            <strong>Android Studio c'est ton atelier de travail.</strong><br>
+            Comme Word pour écrire du texte, Android Studio c'est pour écrire du code.<br>
+            Mais en plus il te corrige, t'aide, et te montre à quoi ressemble ton appli en direct !<br><br>
+            Avant → Eclipse (vieux, compliqué)<br>
+            Maintenant → <strong style="color:var(--green)">Android Studio</strong> (moderne, recommandé par Google ✅)
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════ SECTION 2 : LES FICHIERS ══════════════════════════════ -->
+<section class="section" id="s2">
+  <div class="reveal">
+    <h2 class="section-title">📁 Les Fichiers Créés par Défaut</h2>
+    <p class="section-sub">Clique sur chaque fichier pour comprendre son rôle</p>
+
+    <div class="baby-box reveal">
+      <span class="emoji-big">🏘️</span>
+      <strong>Imagine ton projet Android comme un quartier.</strong><br>
+      Chaque dossier / fichier a sa maison et son rôle précis.<br>
+      Quand tu crées un projet, Android Studio génère tout ça <strong>automatiquement</strong> pour toi !
+    </div>
+
+    <div class="files-grid">
+
+      <div class="file-card reveal" onclick="toggleCard(this)">
+        <div class="open-badge">+</div>
+        <span class="file-icon">📝</span>
+        <div class="file-name">MonActivite.java</div>
+        <div class="file-short">src/main/java/... → Ton code</div>
+        <div class="file-detail">
+          <div class="file-detail-inner">
+            <strong>C'est ton code Java.</strong> C'est ici que tu écris la logique de ton appli.<br><br>
+            <strong>Analogie 🎭</strong> : C'est le scénario d'un film. Il dit quoi faire, comment réagir quand on clique.<br><br>
+            Chaque "écran" de ton appli = 1 fichier .java (Activity)
+          </div>
+        </div>
+      </div>
+
+      <div class="file-card reveal" onclick="toggleCard(this)" style="animation-delay:.1s;">
+        <div class="open-badge">+</div>
+        <span class="file-icon">🗺️</span>
+        <div class="file-name">activity_main.xml</div>
+        <div class="file-short">res/layout/ → L'interface visuelle</div>
+        <div class="file-detail">
+          <div class="file-detail-inner">
+            <strong>C'est le design de ton écran.</strong> Il décrit où sont les boutons, les textes, les images.<br><br>
+            <strong>Analogie 🏠</strong> : C'est le plan d'architecte de ta maison. Il dit où est la porte, les fenêtres…<br><br>
+            <div class="code-wrap" style="margin-top:.8rem;font-size:.75rem;">
+<pre><span class="tag">&lt;Button</span>
+  <span class="attr">android:text</span>=<span class="val">"Clique moi !"</span>
+  <span class="attr">android:layout_width</span>=<span class="val">"wrap_content"</span>
+<span class="tag">/&gt;</span></pre>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="file-card reveal" onclick="toggleCard(this)" style="animation-delay:.2s;">
+        <div class="open-badge">+</div>
+        <span class="file-icon">🔤</span>
+        <div class="file-name">strings.xml</div>
+        <div class="file-short">res/values/ → Les textes de l'appli</div>
+        <div class="file-detail">
+          <div class="file-detail-inner">
+            <strong>Tous les textes de ton appli sont ici.</strong><br><br>
+            <strong>Pourquoi pas directement dans le code ?</strong><br>
+            Parce que si tu veux traduire l'appli en arabe ou en anglais, tu changes juste ce fichier ! 🌍<br><br>
+            <div class="code-wrap" style="margin-top:.8rem;font-size:.75rem;">
+<pre><span class="tag">&lt;string</span> <span class="attr">name</span>=<span class="val">"app_name"</span><span class="tag">&gt;</span>Mon Appli<span class="tag">&lt;/string&gt;</span>
+<span class="tag">&lt;string</span> <span class="attr">name</span>=<span class="val">"bouton_ok"</span><span class="tag">&gt;</span>Valider<span class="tag">&lt;/string&gt;</span></pre>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="file-card reveal" onclick="toggleCard(this)" style="animation-delay:.3s;">
+        <div class="open-badge">+</div>
+        <span class="file-icon">🖼️</span>
+        <div class="file-name">ic_launcher.png</div>
+        <div class="file-short">res/mipmap/ → L'icône de l'appli</div>
+        <div class="file-detail">
+          <div class="file-detail-inner">
+            <strong>C'est l'icône qui apparaît sur l'écran du téléphone.</strong><br><br>
+            Il y en a plusieurs tailles (hdpi, xhdpi, xxhdpi…) pour s'adapter à tous les écrans.<br><br>
+            <strong>Analogie 📸</strong> : Comme une photo en différentes résolutions pour différents usages.
+          </div>
+        </div>
+      </div>
+
+      <div class="file-card reveal" onclick="toggleCard(this)" style="animation-delay:.4s;border-color:rgba(255,0,110,.3);">
+        <div class="open-badge">+</div>
+        <span class="file-icon">📋</span>
+        <div class="file-name">AndroidManifest.xml</div>
+        <div class="file-short">→ La carte d'identité de l'appli</div>
+        <div class="file-detail">
+          <div class="file-detail-inner">
+            <strong>LE fichier le plus important de tout ton projet.</strong><br><br>
+            Il dit à Android : qui je suis, quelles permissions j'ai besoin, quels écrans j'ai.<br><br>
+            <strong>Analogie 🪪</strong> : C'est la carte d'identité de ton appli !<br>
+            Sans lui → l'appli ne peut pas s'installer.
+          </div>
+        </div>
+      </div>
+
+      <div class="file-card reveal" onclick="toggleCard(this)" style="animation-delay:.5s;border-color:rgba(0,245,255,.3);">
+        <div class="open-badge">+</div>
+        <span class="file-icon">⚙️</span>
+        <div class="file-name">R.java</div>
+        <div class="file-short">gen/ → Auto-généré ! Ne pas modifier</div>
+        <div class="file-detail">
+          <div class="file-detail-inner">
+            <strong>Généré automatiquement par Android Studio. Ne JAMAIS modifier à la main !</strong><br><br>
+            Il fait le lien entre ton code Java et tes ressources (images, layouts, textes).<br><br>
+            On explique ça en détail dans la section suivante 👇
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════ SECTION 3 : CLASSE R ══════════════════════════════ -->
+<section class="section" id="s3">
+  <div class="reveal">
+    <h2 class="section-title">🗝️ La Classe R.java</h2>
+    <p class="section-sub">Le concept le plus mystérieux — expliqué simplement</p>
+
+    <div class="baby-box reveal">
+      <span class="emoji-big">🗝️</span>
+      <strong>R.java c'est comme un annuaire téléphonique automatique.</strong><br>
+      Tu as des ressources (images, boutons, textes)… mais ton code Java ne sait pas où elles sont !<br>
+      <strong>R.java</strong> donne un <strong>numéro unique</strong> (comme un ID) à chaque ressource.<br>
+      Ton code Java utilise ces numéros pour trouver les ressources. <span style="color:var(--green)">Malin non ? 😏</span>
+    </div>
+
+    <div class="r-demo reveal">
+      <div class="r-grid">
+        <div class="r-panel">
+          <div class="r-panel-title">🗂️ Tes Ressources</div>
+          <div class="r-item" onclick="showRLink(this,'layout','interface','0x7f030000','Le fichier XML de ton interface utilisateur (l\'écran principal)')">
+            📐 res/layout/<span style="color:var(--green)">interface.xml</span>
+            <span class="r-item-id">layout</span>
+          </div>
+          <div class="r-item" onclick="showRLink(this,'string','nom_app','0x7f040000','Le nom de ton application affiché en haut de l\'écran')">
+            🔤 strings.xml → <span style="color:var(--green)">nom_app</span>
+            <span class="r-item-id">string</span>
+          </div>
+          <div class="r-item" onclick="showRLink(this,'string','titre_activite','0x7f040001','Le titre affiché dans la barre de l\'activité')">
+            🔤 strings.xml → <span style="color:var(--green)">titre_activite</span>
+            <span class="r-item-id">string</span>
+          </div>
+          <div class="r-item" onclick="showRLink(this,'mipmap','ic_launcher','0x7f020000','L\'icône de ton application sur l\'écran d\'accueil')">
+            🖼️ mipmap/<span style="color:var(--green)">ic_launcher</span>
+            <span class="r-item-id">mipmap</span>
+          </div>
+        </div>
+
+        <div class="r-panel">
+          <div class="r-panel-title">⚡ Ce que génère R.java</div>
+          <div id="rResult" class="r-result" style="min-height:220px;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.3);font-size:.8rem;">
+            ← Clique sur une ressource pour voir son ID dans R.java
+          </div>
+        </div>
+      </div>
+
+      <div class="baby-box reveal" style="margin-top:2rem;">
+        <span class="emoji-big">💡</span>
+        <strong>Comment l'utiliser dans ton code Java ?</strong><br><br>
+        <div class="code-wrap" style="margin-top:.8rem;">
+<pre>
+<span class="cmt">// Charger l'interface XML dans ton activité :</span>
+setContentView(<span class="cls">R</span>.layout.<span class="str">interface</span>);
+<span class="cmt">//              ↑    ↑       ↑</span>
+<span class="cmt">//          classe  type  nom du fichier sans .xml</span>
+
+<span class="cmt">// Récupérer un texte :</span>
+getString(<span class="cls">R</span>.string.<span class="str">nom_app</span>);
+
+<span class="cmt">// Récupérer une image :</span>
+getDrawable(<span class="cls">R</span>.mipmap.<span class="str">ic_launcher</span>);
+</pre>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════ SECTION 4 : MANIFEST ══════════════════════════════ -->
+<section class="section" id="s4">
+  <div class="reveal">
+    <h2 class="section-title">📋 AndroidManifest.xml</h2>
+    <p class="section-sub">Clique sur chaque ligne pour comprendre ce qu'elle fait</p>
+
+    <div class="baby-box reveal">
+      <span class="emoji-big">🪪</span>
+      <strong>C'est la carte d'identité + le règlement intérieur de ton appli.</strong><br>
+      Il dit au système Android : comment je m'appelle, quels droits j'ai besoin,
+      quels écrans j'ai, lequel se lance en premier.
+    </div>
+
+    <div class="manifest-interactive reveal">
+      <div class="manifest-code">
+        <div class="code-wrap">
+<pre id="manifestCode">
+<span class="code-line" data-key="manifest" onclick="explainManifest(this,'manifest')"><span class="tag">&lt;manifest</span> <span class="attr">package</span>=<span class="val">"com.exemple.bonjour"</span></span>
+<span class="code-line" data-key="version" onclick="explainManifest(this,'version')">    <span class="attr">android:versionName</span>=<span class="val">"1.0"</span><span class="tag">&gt;</span></span>
+
+<span class="code-line" data-key="permission" onclick="explainManifest(this,'permission')">  <span class="tag">&lt;uses-permission</span> <span class="attr">android:name</span>=<span class="val">"android.permission.INTERNET"</span> <span class="tag">/&gt;</span></span>
+
+<span class="code-line" data-key="application" onclick="explainManifest(this,'application')">  <span class="tag">&lt;application</span></span>
+<span class="code-line" data-key="icon" onclick="explainManifest(this,'icon')">    <span class="attr">android:icon</span>=<span class="val">"@mipmap/ic_launcher"</span></span>
+<span class="code-line" data-key="label" onclick="explainManifest(this,'label')">    <span class="attr">android:label</span>=<span class="val">"@string/nom_app"</span><span class="tag">&gt;</span></span>
+
+<span class="code-line" data-key="activity" onclick="explainManifest(this,'activity')">    <span class="tag">&lt;activity</span> <span class="attr">android:name</span>=<span class="val">".MonActivite"</span></span>
+<span class="code-line" data-key="actlabel" onclick="explainManifest(this,'actlabel')">      <span class="attr">android:label</span>=<span class="val">"@string/titre_mon_activite"</span><span class="tag">&gt;</span></span>
+
+<span class="code-line" data-key="intentfilter" onclick="explainManifest(this,'intentfilter')">      <span class="tag">&lt;intent-filter&gt;</span></span>
+<span class="code-line" data-key="main" onclick="explainManifest(this,'main')">        <span class="tag">&lt;action</span> <span class="attr">android:name</span>=<span class="val">"android.intent.action.MAIN"</span><span class="tag">/&gt;</span></span>
+<span class="code-line" data-key="launcher" onclick="explainManifest(this,'launcher')">        <span class="tag">&lt;category</span> <span class="attr">android:name</span>=<span class="val">"android.intent.category.LAUNCHER"</span><span class="tag">/&gt;</span></span>
+<span class="code-line">      <span class="tag">&lt;/intent-filter&gt;</span></span>
+<span class="code-line">    <span class="tag">&lt;/activity&gt;</span></span>
+<span class="code-line">  <span class="tag">&lt;/application&gt;</span></span>
+<span class="code-line"><span class="tag">&lt;/manifest&gt;</span></span>
+</pre>
+        </div>
+      </div>
+
+      <div class="manifest-explain">
+        <div id="manifestExplain">
+          <div class="placeholder">👆 Clique sur n'importe quelle ligne du code pour l'expliquer</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════ SECTION 5 : BUILD PROCESS ══════════════════════════════ -->
+<section class="section" id="s5">
+  <div class="reveal">
+    <h2 class="section-title">🏭 Comment se Construit une Appli ?</h2>
+    <p class="section-sub">Clique sur chaque étape pour comprendre</p>
+
+    <div class="baby-box reveal">
+      <span class="emoji-big">🍕</span>
+      <strong>Imagine que tu fais une pizza.</strong><br>
+      Tu prends la pâte, la sauce, le fromage → tu les assembles → tu mets au four → tu livres !<br>
+      Une appli Android c'est pareil : plusieurs ingrédients, plusieurs étapes, un résultat final : le <strong style="color:var(--green)">.apk</strong>
+    </div>
+
+    <div class="build-steps-interactive reveal">
+
+      <!-- LEFT: pipeline -->
+      <div class="build-pipeline">
+
+        <div class="build-node" onclick="explainBuild(this,0)">
+          <span class="build-node-icon">📝</span>
+          <div><div class="build-node-name">1. Code Source</div>
+          <div class="build-node-ext">MonActivite.java + res/ + Manifest</div></div>
+          <div class="step-num">ÉTAPE 1</div>
+        </div>
+
+        <div class="arrow-connector">↓</div>
+
+        <div class="build-node" onclick="explainBuild(this,1)">
+          <span class="build-node-icon">⚡</span>
+          <div><div class="build-node-name">2. AAPT</div>
+          <div class="build-node-ext">Ressources compilées → R.java</div></div>
+          <div class="step-num">ÉTAPE 2</div>
+        </div>
+
+        <div class="arrow-connector">↓</div>
+
+        <div class="build-node" onclick="explainBuild(this,2)">
+          <span class="build-node-icon">☕</span>
+          <div><div class="build-node-name">3. javac</div>
+          <div class="build-node-ext">.java → .class (bytecode JVM)</div></div>
+          <div class="step-num">ÉTAPE 3</div>
+        </div>
+
+        <div class="arrow-connector">↓</div>
+
+        <div class="build-node" onclick="explainBuild(this,3)" style="border-color:rgba(0,245,255,.4);">
+          <span class="build-node-icon">🔄</span>
+          <div><div class="build-node-name">4. dx (Dalvik)</div>
+          <div class="build-node-ext">.class → .dex (bytecode Android)</div></div>
+          <div class="step-num">ÉTAPE 4</div>
+        </div>
+
+        <div class="arrow-connector">↓</div>
+
+        <div class="build-node" onclick="explainBuild(this,4)" style="border-color:rgba(255,0,110,.4);">
+          <span class="build-node-icon">📦</span>
+          <div><div class="build-node-name">5. APKBuilder / Gradle</div>
+          <div class="build-node-ext">Assemble tout → .apk</div></div>
+          <div class="step-num">ÉTAPE 5</div>
+        </div>
+
+        <div class="arrow-connector">↓</div>
+
+        <div class="build-node" onclick="explainBuild(this,5)" style="border-color:rgba(66,133,244,.4);">
+          <span class="build-node-icon">✍️</span>
+          <div><div class="build-node-name">6. Signature</div>
+          <div class="build-node-ext">Certifie l'appli</div></div>
+          <div class="step-num">ÉTAPE 6</div>
+        </div>
+
+        <div class="arrow-connector">↓</div>
+
+        <div class="build-node" onclick="explainBuild(this,6)" style="border-color:rgba(61,220,132,.7);background:rgba(61,220,132,.06);">
+          <span class="build-node-icon">🚀</span>
+          <div><div class="build-node-name">7. ADB — Installation</div>
+          <div class="build-node-ext">Appareil ou Émulateur</div></div>
+          <div class="step-num">ÉTAPE 7</div>
+        </div>
+
+      </div>
+
+      <!-- RIGHT: explanation -->
+      <div class="build-explain-panel">
+        <div id="buildExplain">
+          <div class="panel-placeholder">
+            <span class="icon">👈</span>
+            Clique sur une étape à gauche<br>pour voir son explication ici !
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════ SECTION 6 : QUIZ ══════════════════════════════ -->
+<section class="section" id="s6">
+  <div class="reveal">
+    <h2 class="section-title">🎯 Quiz Rapide</h2>
+    <p class="section-sub">Teste-toi pour voir si t'as tout compris !</p>
+
+    <div class="quiz-section">
+      <div class="quiz-title">🧠 5 Questions · Réponds en cliquant !</div>
+
+      <div class="quiz-q">
+        <p>1. 🔑 À quoi sert le fichier <strong style="color:var(--cyan)">R.java</strong> ?</p>
+        <div class="quiz-opts">
+          <div class="quiz-opt" onclick="answer(this,'wrong','R.java contient le code de ton activité principale')">Il contient le code de l'activité</div>
+          <div class="quiz-opt" onclick="answer(this,'correct','✅ Exact ! R.java donne un ID numérique unique à chaque ressource pour que ton code Java puisse les retrouver')">Il associe un ID à chaque ressource</div>
+          <div class="quiz-opt" onclick="answer(this,'wrong','R.java ne contient pas les images, il contient juste leurs identifiants')">Il stocke les images</div>
+          <div class="quiz-opt" onclick="answer(this,'wrong','Gradle s\'occupe de la compilation, pas R.java')">Il compile le code</div>
+        </div>
+        <div class="quiz-feedback" id="qf0"></div>
+      </div>
+
+      <div class="quiz-q">
+        <p>2. 🗂️ Dans quel dossier met-on les fichiers de <strong style="color:var(--cyan)">mise en page (interface)</strong> ?</p>
+        <div class="quiz-opts">
+          <div class="quiz-opt" onclick="answer(this,'wrong','res/values contient les constantes texte, pas les interfaces')">res/values/</div>
+          <div class="quiz-opt" onclick="answer(this,'correct','✅ Exact ! Les fichiers XML qui décrivent l\'interface visuelle vont dans res/layout/')">res/layout/</div>
+          <div class="quiz-opt" onclick="answer(this,'wrong','res/mipmap contient les icônes, pas les layouts')">res/mipmap/</div>
+          <div class="quiz-opt" onclick="answer(this,'wrong','src/ contient le code Java, pas les fichiers XML')">src/java/</div>
+        </div>
+        <div class="quiz-feedback" id="qf1"></div>
+      </div>
+
+      <div class="quiz-q">
+        <p>3. 🐘 Quel outil <strong style="color:var(--cyan)">génère automatiquement le fichier APK</strong> ?</p>
+        <div class="quiz-opts">
+          <div class="quiz-opt" onclick="answer(this,'wrong','javac compile le code Java en .class, pas en APK')">javac</div>
+          <div class="quiz-opt" onclick="answer(this,'wrong','ADB installe l\'APK, il ne le génère pas')">ADB</div>
+          <div class="quiz-opt" onclick="answer(this,'correct','✅ Correct ! Gradle automatise toute la construction et génère le fichier APK final')">Gradle</div>
+          <div class="quiz-opt" onclick="answer(this,'wrong','AAPT compile les ressources, mais c\'est Gradle qui orchestre tout')">AAPT</div>
+        </div>
+        <div class="quiz-feedback" id="qf2"></div>
+      </div>
+
+      <div class="quiz-q">
+        <p>4. 📋 Quel fichier déclare les <strong style="color:var(--cyan)">permissions</strong> (ex: accès Internet) ?</p>
+        <div class="quiz-opts">
+          <div class="quiz-opt" onclick="answer(this,'wrong','strings.xml contient les textes, pas les permissions')">strings.xml</div>
+          <div class="quiz-opt" onclick="answer(this,'wrong','build.gradle configure la construction, pas les permissions Android')">build.gradle</div>
+          <div class="quiz-opt" onclick="answer(this,'correct','✅ Bravo ! AndroidManifest.xml contient les &lt;uses-permission&gt; qui déclarent les droits de l\'appli')">AndroidManifest.xml</div>
+          <div class="quiz-opt" onclick="answer(this,'wrong','R.java est auto-généré et ne contient que les IDs des ressources')">R.java</div>
+        </div>
+        <div class="quiz-feedback" id="qf3"></div>
+      </div>
+
+      <div class="quiz-q">
+        <p>5. 🔄 Que fait l'outil <strong style="color:var(--cyan)">dx (Dalvik)</strong> ?</p>
+        <div class="quiz-opts">
+          <div class="quiz-opt" onclick="answer(this,'wrong','javac compile le code Java en .class, ce n\'est pas le rôle de dx')">Compile le code Java</div>
+          <div class="quiz-opt" onclick="answer(this,'correct','✅ Exactement ! dx convertit le bytecode JVM (.class) en bytecode Dalvik (.dex), optimisé pour Android')">Convertit .class en .dex</div>
+          <div class="quiz-opt" onclick="answer(this,'wrong','AAPT compile les ressources, pas dx')">Compile les ressources XML</div>
+          <div class="quiz-opt" onclick="answer(this,'wrong','La signature est une étape séparée, après la génération du APK')">Signe l'APK</div>
+        </div>
+        <div class="quiz-feedback" id="qf4"></div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<footer>
+  Développement d'Applications Mobiles — <span>3ème Année LMD Informatique 2024-2025</span><br>
+  A. Hammache · UMMTO
+</footer>
+
+<script>
+// ── Progress Bar
+window.addEventListener('scroll',()=>{
+  const h=document.documentElement,b=document.body;
+  const st=h.scrollTop||b.scrollTop,sh=h.scrollHeight-h.clientHeight;
+  document.getElementById('progressBar').style.width=(st/sh*100)+'%';
+});
+
+// ── Scroll Reveal
+const obs=new IntersectionObserver((entries)=>{
+  entries.forEach(e=>{
+    if(e.isIntersecting)e.target.classList.add('active');
+  });
+},{threshold:.1});
+document.querySelectorAll('.reveal,.reveal-left,.reveal-right').forEach(el=>obs.observe(el));
+
+// ── Nav Dots
+const sections=['s0','s1','s2','s3','s4','s5','s6'];
+const dots=document.querySelectorAll('.nav-dot');
+dots.forEach((dot,i)=>{
+  dot.addEventListener('click',()=>{
+    document.getElementById(sections[i]).scrollIntoView({behavior:'smooth'});
+  });
+});
+window.addEventListener('scroll',()=>{
+  let cur=0;
+  sections.forEach((id,i)=>{
+    const el=document.getElementById(id);
+    if(el&&window.scrollY>=el.offsetTop-200)cur=i;
+  });
+  dots.forEach((d,i)=>d.classList.toggle('active',i===cur));
+});
+
+// ── Toggle analogy cards
+document.querySelectorAll('.analogy').forEach(a=>{
+  a.addEventListener('click',()=>a.classList.toggle('open'));
+});
+
+// ── Toggle file cards
+function toggleCard(el){el.classList.toggle('open');}
+
+// ── R.java interactive
+function showRLink(el,type,name,id,desc){
+  document.querySelectorAll('.r-item').forEach(i=>i.classList.remove('active'));
+  el.classList.add('active');
+  const html=`<pre><span class="kw">public static final class</span> <span class="cls">${type}</span> {
+  <span class="kw">public static final int</span>
+    <span class="str">${name}</span> = <span style="color:var(--pink)">${id}</span>;
+}</pre>
+<div style="margin-top:.8rem;padding:.6rem;background:rgba(0,245,255,.08);border-radius:8px;font-size:.75rem;color:rgba(255,255,255,.8);">
+💡 <strong style="color:var(--cyan)">Traduction :</strong> "${desc}"<br><br>
+Dans ton code Java tu écris :<br>
+<span style="color:var(--green)">R.${type}.${name}</span> → Android sait que c'est l'ID <span style="color:var(--pink)">${id}</span>
+</div>`;
+  document.getElementById('rResult').innerHTML=html;
+}
+
+// ── Manifest explanations
+const manifestData={
+  manifest:{title:'📦 &lt;manifest&gt;',text:'Déclare le <strong>nom du package</strong> de ton appli. C\'est comme le nom de domaine inversé. Exemple : com.exemple.bonjour signifie que c\'est le package "bonjour" de l\'entreprise "exemple.com". Chaque appli sur Google Play doit avoir un package unique au monde !'},
+  version:{title:'🔢 versionName',text:'Le numéro de version de ton appli que les utilisateurs voient (ex: "1.0", "2.3.1"). Il y a aussi <strong>versionCode</strong> (un entier que Google Play utilise en interne pour savoir si une mise à jour est plus récente).'},
+  permission:{title:'🔐 &lt;uses-permission&gt;',text:'Demande une <strong>permission</strong> au système. Ici INTERNET = l\'appli a besoin d\'accéder à internet.<br><br>⚠️ Sans cette ligne → ton appli plantera si elle essaie de faire une requête réseau !<br><br>Autres exemples :<br>• CAMERA → accès à l\'appareil photo<br>• READ_CONTACTS → accès aux contacts'},
+  application:{title:'📱 &lt;application&gt;',text:'Balise principale qui contient toute la configuration de l\'appli : son icône, son nom, son thème visuel. Tout ce qui est déclaré ici s\'applique à toute l\'application.'},
+  icon:{title:'🖼️ android:icon',text:'L\'icône de l\'appli qui s\'affiche sur l\'écran d\'accueil du téléphone.<br><br><strong>@mipmap/ic_launcher</strong> signifie :<br>• <strong>@</strong> → "va chercher dans les ressources"<br>• <strong>mipmap</strong> → le dossier res/mipmap/<br>• <strong>ic_launcher</strong> → le nom du fichier image'},
+  label:{title:'🏷️ android:label',text:'Le nom affiché sous l\'icône de l\'appli et en haut de l\'écran.<br><br><strong>@string/nom_app</strong> signifie :<br>• Va chercher dans res/values/strings.xml<br>• La chaîne qui s\'appelle "nom_app"<br><br>On évite de mettre le texte directement ici pour pouvoir facilement <strong>traduire l\'appli</strong> 🌍'},
+  activity:{title:'🎭 &lt;activity&gt;',text:'Déclare un écran de l\'appli.<br><br><strong>Très important :</strong> toute Activity que tu crées en Java DOIT être déclarée ici, sinon Android ne la connaît pas et l\'appli plantera en essayant d\'y accéder !<br><br>android:name=".MonActivite" → le point signifie "dans le même package"'},
+  actlabel:{title:'🏷️ Label de l\'activité',text:'Le titre affiché dans la barre en haut de cet écran spécifique.<br><br>Chaque activité peut avoir son propre titre, différent du nom de l\'appli.'},
+  intentfilter:{title:'🎯 &lt;intent-filter&gt;',text:'Définit <strong>comment</strong> cette activité peut être démarrée. C\'est comme annoncer ses capacités au système Android.<br><br>Sans intent-filter → l\'activité existe mais personne ne peut la lancer directement.'},
+  main:{title:'🚀 action.MAIN',text:'Déclare que cette activité est le <strong>point d\'entrée principal</strong> de l\'appli.<br><br>C\'est comme la fonction main() en C ou Java standard.<br>Quand l\'appli démarre → c\'est cette activité qui se lance en premier.'},
+  launcher:{title:'📲 category.LAUNCHER',text:'Indique que l\'appli doit apparaître dans le <strong>lanceur d\'applications</strong> (la liste de toutes les applis du téléphone).<br><br>Sans ça → l\'appli est installée mais invisible ! On ne peut pas la lancer depuis l\'écran d\'accueil.'}
+};
+
+let currentManifestLine=null;
+function explainManifest(el,key){
+  const data=manifestData[key];
+  if(!data)return;
+  document.querySelectorAll('.code-line').forEach(l=>l.classList.remove('selected'));
+  el.classList.add('selected');
+  const box=document.getElementById('manifestExplain');
+  box.innerHTML=`<h3>${data.title}</h3><p>${data.text}</p>`;
+}
+
+// ── Build explanations
+const buildData=[
+  {title:'📝 Les Ingrédients de Départ',text:'Ton code Java (<strong>MonActivite.java</strong>) + tes ressources (<strong>images, XML, strings</strong>) + le Manifest. C\'est tout ce que tu as écrit. Ces fichiers ne sont pas encore compréhensibles par un téléphone Android.'},
+  {title:'⚡ AAPT — Android Asset Packaging Tool',text:'AAPT prend toutes tes ressources (images, layouts XML, strings) et les <strong>compile en un format optimisé</strong>. Au passage, il génère automatiquement le fichier <strong>R.java</strong> avec les IDs de toutes tes ressources.<br><br>🍕 Analogie : AAPT prépare et pré-cuit les ingrédients.'},
+  {title:'☕ javac — Le compilateur Java',text:'javac transforme ton code source Java (.java) en <strong>bytecode JVM</strong> (.class).<br><br>Problème : ce bytecode est fait pour la JVM standard (PC), pas pour Android !<br><br>🍕 Analogie : javac mélange la pâte et la sauce.'},
+  {title:'🔄 dx — Compilation Dalvik',text:'L\'outil <strong>dx</strong> convertit le bytecode JVM (.class) en <strong>bytecode Dalvik (.dex)</strong>, spécialement optimisé pour les téléphones Android.<br><br>💡 Le bytecode Dalvik utilise <strong>30% d\'instructions en moins</strong> → l\'appli prend moins de place et tourne plus vite !<br><br>🍕 Analogie : dx enfourne la pizza au four Android.'},
+  {title:'📦 APKBuilder / Gradle',text:'Assemble tout dans un seul fichier : <strong>.apk (Android Package)</strong>.<br><br>Ce fichier contient :<br>• Les fichiers .dex (ton code compilé)<br>• Les ressources compilées (.arsc)<br>• Les ressources non compilées (images brutes)<br>• Le AndroidManifest.xml<br><br>🍕 Analogie : La pizza est cuite et emballée dans la boîte.'},
+  {title:'✍️ Signature',text:'L\'APK est <strong>signé numériquement</strong> avec un certificat. C\'est comme un tampon officiel qui prouve que c\'est vraiment TOI l\'auteur de l\'appli.<br><br>Google Play vérifie cette signature. Chaque mise à jour doit être signée avec le même certificat sinon elle est rejetée.<br><br>🍕 Analogie : L\'étiquette avec ton nom sur la boîte à pizza.'},
+  {title:'🚀 ADB — Installation sur l\'appareil',text:'<strong>ADB (Android Debug Bridge)</strong> envoie le fichier .apk signé vers ton téléphone ou émulateur et l\'installe.<br><br>ADB c\'est le câble de communication entre ton PC et le téléphone. Il permet aussi de lire les logs, prendre des screenshots, etc.<br><br>🍕 Analogie : Le livreur de pizza qui amène la boîte chez toi ! 🛵'}
+];
+
+function explainBuild(el,index){
+  document.querySelectorAll('.build-node').forEach(n=>n.classList.remove('active'));
+  el.classList.add('active');
+  const data=buildData[index];
+  // extract pizza line if present
+  const pizzaMatch=data.text.match(/(🍕[^<]+)/);
+  const pizzaTag=pizzaMatch?`<div class="pizza-tag">${pizzaMatch[1].trim()}</div>`:'';
+  const cleanText=data.text.replace(/(🍕[^<]+)/,'');
+  document.getElementById('buildExplain').innerHTML=
+    `<div class="explain-card">
+       <div class="explain-card-title">${data.title}</div>
+       <p>${cleanText}</p>
+       ${pizzaTag}
+     </div>`;
+  // scroll panel into view on mobile
+  if(window.innerWidth<768){
+    document.getElementById('buildExplain').scrollIntoView({behavior:'smooth',block:'nearest'});
+  }
+}
+
+// ── Quiz
+const qfIds=['qf0','qf1','qf2','qf3','qf4'];
+let answered=[false,false,false,false,false];
+let qIndex=0;
+function answer(el,type,msg){
+  const parent=el.closest('.quiz-q');
+  const opts=parent.querySelectorAll('.quiz-opt');
+  const allQs=document.querySelectorAll('.quiz-q');
+  let qi=[...allQs].indexOf(parent);
+  if(answered[qi])return;
+  answered[qi]=true;
+  opts.forEach(o=>o.style.pointerEvents='none');
+  el.classList.add(type);
+  const fb=parent.querySelector('.quiz-feedback');
+  fb.textContent=msg;
+  fb.className='quiz-feedback show '+(type==='correct'?'ok':'ko');
+}
+
+// ── Float anim (header)
+const style=document.createElement('style');
+style.textContent=`@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-18px)}}`;
+document.head.appendChild(style);
+</script>
+</body>
+</html>

@@ -1,0 +1,1727 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chapitres 01–02 – Données Semi-Structurées</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0a0e17;
+      --surface: #111827;
+      --surface2: #1a2234;
+      --border: #1e2d45;
+      --cyan: #00d4ff;
+      --cyan-dim: rgba(0,212,255,0.12);
+      --green: #00ff99;
+      --green-dim: rgba(0,255,153,0.1);
+      --amber: #ffb740;
+      --amber-dim: rgba(255,183,64,0.1);
+      --red: #ff4d6d;
+      --red-dim: rgba(255,77,109,0.1);
+      --purple: #a78bfa;
+      --purple-dim: rgba(167,139,250,0.1);
+      --text: #e2e8f0;
+      --text-muted: #64748b;
+      --text-dim: #94a3b8;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Syne', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.7;
+      overflow-x: hidden;
+    }
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--cyan); border-radius: 10px; }
+
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background-image:
+        linear-gradient(rgba(0,212,255,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,212,255,0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none; z-index: 0;
+    }
+
+    nav {
+      position: fixed; top: 0; left: 0; right: 0;
+      background: rgba(10,14,23,0.9);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      z-index: 100; padding: 0 2rem;
+      display: flex; align-items: center; justify-content: space-between;
+      height: 60px;
+    }
+    .nav-brand { font-family: 'Space Mono', monospace; font-size: .85rem; color: var(--cyan); }
+    .nav-links { display: flex; gap: .5rem; }
+    .nav-links a {
+      font-size: .72rem; font-family: 'Space Mono', monospace;
+      color: var(--text-muted); text-decoration: none;
+      padding: .35rem .7rem; border-radius: 4px; border: 1px solid transparent;
+      transition: all .2s;
+    }
+    .nav-links a:hover { color: var(--cyan); border-color: var(--cyan); background: var(--cyan-dim); }
+
+    #progress-bar {
+      position: fixed; top: 60px; left: 0; height: 2px;
+      background: linear-gradient(90deg, var(--cyan), var(--green));
+      width: 0%; transition: width .1s linear; z-index: 101;
+    }
+
+    .page { position: relative; z-index: 1; max-width: 1100px; margin: 0 auto; padding: 80px 2rem 4rem; }
+
+    .hero { text-align: center; padding: 5rem 0 4rem; }
+    .hero-badge {
+      display: inline-block; font-family: 'Space Mono', monospace;
+      font-size: .7rem; color: var(--cyan); border: 1px solid var(--cyan);
+      padding: .3rem 1rem; border-radius: 20px; margin-bottom: 1.5rem;
+      animation: fadeDown .6s ease both; letter-spacing: 2px;
+    }
+    .hero h1 { font-size: clamp(2.5rem, 6vw, 4.5rem); font-weight: 800; line-height: 1.1; animation: fadeDown .7s .1s ease both; }
+    .hero h1 span { color: var(--cyan); }
+    .hero p { margin-top: 1rem; color: var(--text-dim); font-size: 1.1rem; max-width: 600px; margin-inline: auto; animation: fadeDown .7s .2s ease both; }
+    .hero-tags { display: flex; flex-wrap: wrap; gap: .5rem; justify-content: center; margin-top: 2rem; animation: fadeDown .7s .3s ease both; }
+
+    .tag { font-family: 'JetBrains Mono', monospace; font-size: .72rem; padding: .3rem .8rem; border-radius: 4px; border: 1px solid; }
+    .tag-cyan { color: var(--cyan); border-color: var(--cyan); background: var(--cyan-dim); }
+    .tag-green { color: var(--green); border-color: var(--green); background: var(--green-dim); }
+    .tag-amber { color: var(--amber); border-color: var(--amber); background: var(--amber-dim); }
+    .tag-purple { color: var(--purple); border-color: var(--purple); background: var(--purple-dim); }
+    .tag-red { color: var(--red); border-color: var(--red); background: var(--red-dim); }
+
+    section {
+      margin-bottom: 5rem; opacity: 0; transform: translateY(30px);
+      transition: opacity .6s ease, transform .6s ease;
+    }
+    section.visible { opacity: 1; transform: translateY(0); }
+
+    .section-header {
+      display: flex; align-items: center; gap: 1rem; margin-bottom: 2rem;
+      padding-bottom: 1rem; border-bottom: 1px solid var(--border);
+    }
+    .section-num {
+      font-family: 'Space Mono', monospace; font-size: .65rem;
+      color: var(--cyan); background: var(--cyan-dim); border: 1px solid var(--cyan);
+      padding: .25rem .6rem; border-radius: 4px; white-space: nowrap;
+    }
+    .section-header h2 { font-size: 1.6rem; font-weight: 700; }
+
+    .cards-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; }
+    .card {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem;
+      transition: transform .25s, border-color .25s, box-shadow .25s;
+      position: relative; overflow: hidden;
+    }
+    .card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+      background: linear-gradient(90deg, var(--accent1), var(--accent2)); opacity: 0; transition: opacity .25s;
+    }
+    .card:hover { transform: translateY(-4px); box-shadow: 0 12px 40px rgba(0,212,255,0.08); border-color: var(--accent1, var(--cyan)); }
+    .card:hover::before { opacity: 1; }
+    .card-icon { font-size: 1.8rem; margin-bottom: .75rem; }
+    .card h3 { font-size: 1rem; font-weight: 700; margin-bottom: .5rem; font-family: 'Space Mono', monospace; }
+    .card p, .card li { font-size: .9rem; color: var(--text-dim); line-height: 1.6; }
+    .card ul { list-style: none; }
+    .card li::before { content: '→ '; color: var(--cyan); }
+
+    .code-block { background: #070d1a; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin: 1.5rem 0; }
+    .code-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: .6rem 1rem; background: var(--surface); border-bottom: 1px solid var(--border);
+    }
+    .code-dots { display: flex; gap: .4rem; }
+    .code-dots span { width: 10px; height: 10px; border-radius: 50%; }
+    .code-dots span:nth-child(1) { background: #ff5f57; }
+    .code-dots span:nth-child(2) { background: #ffbd2e; }
+    .code-dots span:nth-child(3) { background: #28c840; }
+    .code-title { font-family: 'Space Mono', monospace; font-size: .65rem; color: var(--text-muted); }
+    .code-copy {
+      background: none; border: 1px solid var(--border); color: var(--text-muted);
+      font-family: 'Space Mono', monospace; font-size: .65rem; padding: .2rem .5rem;
+      border-radius: 4px; cursor: pointer; transition: all .2s;
+    }
+    .code-copy:hover { color: var(--cyan); border-color: var(--cyan); }
+    pre { padding: 1.5rem; overflow-x: auto; font-family: 'JetBrains Mono', monospace; font-size: .82rem; line-height: 1.8; }
+
+    .xml-tag { color: #4fc3f7; } .xml-attr { color: #81c784; } .xml-val { color: var(--amber); }
+    .xml-comment { color: #546e7a; font-style: italic; } .xml-pi { color: var(--purple); }
+    .xml-content { color: var(--text); } .xml-entity { color: var(--red); }
+    .json-key { color: var(--cyan); } .json-str { color: var(--green); }
+    .json-num { color: var(--amber); } .json-bool { color: var(--purple); }
+
+    .table-wrap { overflow-x: auto; border-radius: 10px; border: 1px solid var(--border); }
+    table { width: 100%; border-collapse: collapse; font-size: .88rem; }
+    th {
+      background: var(--surface); color: var(--cyan); font-family: 'Space Mono', monospace;
+      font-size: .7rem; font-weight: 700; padding: .75rem 1rem; text-align: left;
+      border-bottom: 1px solid var(--border); letter-spacing: 1px;
+    }
+    td { padding: .75rem 1rem; border-bottom: 1px solid var(--border); color: var(--text-dim); vertical-align: top; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: var(--surface2); }
+    td:first-child { color: var(--text); font-weight: 600; }
+
+    .alert { border-radius: 10px; padding: 1.25rem 1.5rem; margin: 1.5rem 0; border-left: 4px solid; font-size: .9rem; }
+    .alert-cyan { background: var(--cyan-dim); border-color: var(--cyan); }
+    .alert-green { background: var(--green-dim); border-color: var(--green); }
+    .alert-amber { background: var(--amber-dim); border-color: var(--amber); }
+    .alert-red { background: var(--red-dim); border-color: var(--red); }
+    .alert-purple { background: var(--purple-dim); border-color: var(--purple); }
+    .alert-label { font-family: 'Space Mono', monospace; font-size: .65rem; font-weight: 700; letter-spacing: 1.5px; margin-bottom: .5rem; }
+    .alert-cyan .alert-label { color: var(--cyan); } .alert-green .alert-label { color: var(--green); }
+    .alert-amber .alert-label { color: var(--amber); } .alert-red .alert-label { color: var(--red); }
+    .alert-purple .alert-label { color: var(--purple); }
+
+    .timeline { position: relative; padding-left: 2rem; }
+    .timeline::before {
+      content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 2px;
+      background: linear-gradient(to bottom, var(--cyan), var(--green), var(--amber));
+    }
+    .timeline-item {
+      position: relative; margin-bottom: 2.5rem; padding: 1.5rem;
+      background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+    }
+    .timeline-item::before {
+      content: ''; position: absolute; left: -2.6rem; top: 1.5rem;
+      width: 14px; height: 14px; border-radius: 50%;
+      background: var(--bg); border: 2px solid var(--cyan);
+    }
+    .timeline-item:nth-child(2)::before { border-color: var(--green); }
+    .timeline-item:nth-child(3)::before { border-color: var(--amber); }
+    .timeline-item:nth-child(4)::before { border-color: var(--purple); }
+    .timeline-year { font-family: 'Space Mono', monospace; font-size: .7rem; color: var(--cyan); margin-bottom: .5rem; }
+    .timeline-item:nth-child(2) .timeline-year { color: var(--green); }
+    .timeline-item:nth-child(3) .timeline-year { color: var(--amber); }
+    .timeline-item:nth-child(4) .timeline-year { color: var(--purple); }
+    .timeline-item h3 { font-size: 1.05rem; margin-bottom: .5rem; }
+
+    .accordion { border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+    .acc-item { border-bottom: 1px solid var(--border); }
+    .acc-item:last-child { border-bottom: none; }
+    .acc-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 1rem 1.5rem; cursor: pointer; background: var(--surface); transition: background .2s; user-select: none;
+    }
+    .acc-header:hover { background: var(--surface2); }
+    .acc-header h3 { font-size: .95rem; font-weight: 600; display: flex; align-items: center; gap: .75rem; }
+    .acc-icon { font-family: 'Space Mono', monospace; font-size: .8rem; color: var(--cyan); transition: transform .3s; }
+    .acc-item.open .acc-icon { transform: rotate(45deg); }
+    .acc-body { max-height: 0; overflow: hidden; transition: max-height .4s ease; background: var(--bg); }
+    .acc-body-inner { padding: 1.5rem; }
+
+    .tabs { margin: 1.5rem 0; }
+    .tab-headers { display: flex; gap: .5rem; margin-bottom: 0; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+    .tab-btn {
+      font-family: 'Space Mono', monospace; font-size: .72rem; padding: .6rem 1rem;
+      background: none; border: none; color: var(--text-muted); cursor: pointer;
+      border-bottom: 2px solid transparent; transition: all .2s; position: relative; bottom: -1px;
+    }
+    .tab-btn:hover { color: var(--text); }
+    .tab-btn.active { color: var(--cyan); border-bottom-color: var(--cyan); }
+    .tab-content { display: none; padding: 1.5rem 0; }
+    .tab-content.active { display: block; animation: fadeIn .3s ease; }
+
+    .rules-list { list-style: none; }
+    .rules-list li {
+      display: flex; align-items: flex-start; gap: 1rem; padding: .85rem 1rem;
+      border-radius: 8px; margin-bottom: .5rem; background: var(--surface);
+      border: 1px solid var(--border); font-size: .9rem; transition: border-color .2s;
+    }
+    .rules-list li:hover { border-color: var(--cyan); }
+    .rule-num {
+      flex-shrink: 0; width: 26px; height: 26px; display: flex; align-items: center; justify-content: center;
+      border-radius: 50%; background: var(--cyan-dim); border: 1px solid var(--cyan);
+      font-family: 'Space Mono', monospace; font-size: .65rem; color: var(--cyan);
+    }
+    .rule-valid { color: var(--green); font-family: 'JetBrains Mono', monospace; font-size: .82rem; }
+    .rule-invalid { color: var(--red); font-family: 'JetBrains Mono', monospace; font-size: .82rem; }
+
+    .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin: 2rem 0; }
+    .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1.25rem; text-align: center; }
+    .stat-value { font-family: 'Space Mono', monospace; font-size: 2rem; font-weight: 700; color: var(--cyan); display: block; }
+    .stat-label { font-size: .8rem; color: var(--text-muted); margin-top: .25rem; }
+
+    .compare-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+    @media (max-width: 640px) { .compare-grid { grid-template-columns: 1fr; } }
+    .compare-box { border-radius: 10px; padding: 1.5rem; border: 1px solid; }
+    .compare-box.struct-box { border-color: var(--red); background: var(--red-dim); }
+    .compare-box.semi-box { border-color: var(--cyan); background: var(--cyan-dim); }
+    .compare-box.non-box { border-color: var(--green); background: var(--green-dim); }
+    .compare-box.html-box { border-color: var(--amber); background: var(--amber-dim); }
+    .compare-box.xml-box { border-color: var(--cyan); background: var(--cyan-dim); }
+    .compare-box h3 { font-family: 'Space Mono', monospace; font-size: .85rem; margin-bottom: 1rem; }
+    .compare-box.struct-box h3 { color: var(--red); }
+    .compare-box.semi-box h3 { color: var(--cyan); }
+    .compare-box.non-box h3 { color: var(--green); }
+    .compare-box.html-box h3 { color: var(--amber); }
+    .compare-box.xml-box h3 { color: var(--cyan); }
+
+    .tech-wheel { display: flex; flex-wrap: wrap; gap: .75rem; justify-content: center; padding: 2rem; }
+    .tech-pill {
+      font-family: 'JetBrains Mono', monospace; font-size: .78rem; padding: .5rem 1.1rem;
+      border-radius: 20px; border: 1px solid; cursor: default; transition: transform .2s, box-shadow .2s; text-align: center;
+    }
+    .tech-pill:hover { transform: scale(1.05) translateY(-2px); }
+    .tp-cyan { color: var(--cyan); border-color: var(--cyan); background: var(--cyan-dim); }
+    .tp-cyan:hover { box-shadow: 0 4px 20px rgba(0,212,255,0.25); }
+    .tp-green { color: var(--green); border-color: var(--green); background: var(--green-dim); }
+    .tp-green:hover { box-shadow: 0 4px 20px rgba(0,255,153,0.2); }
+    .tp-amber { color: var(--amber); border-color: var(--amber); background: var(--amber-dim); }
+    .tp-amber:hover { box-shadow: 0 4px 20px rgba(255,183,64,0.2); }
+    .tp-purple { color: var(--purple); border-color: var(--purple); background: var(--purple-dim); }
+    .tp-purple:hover { box-shadow: 0 4px 20px rgba(167,139,250,0.2); }
+    .tp-red { color: var(--red); border-color: var(--red); background: var(--red-dim); }
+
+    .quiz { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 2rem; }
+    .quiz-q { font-size: 1rem; font-weight: 600; margin-bottom: 1.25rem; }
+    .quiz-options { display: grid; gap: .5rem; }
+    .quiz-opt {
+      display: flex; align-items: center; gap: .75rem; padding: .85rem 1rem;
+      border: 1px solid var(--border); border-radius: 8px; cursor: pointer;
+      font-size: .9rem; background: var(--bg); transition: all .2s;
+    }
+    .quiz-opt:hover { border-color: var(--cyan); background: var(--cyan-dim); }
+    .quiz-opt.correct { border-color: var(--green) !important; background: var(--green-dim) !important; }
+    .quiz-opt.wrong { border-color: var(--red) !important; background: var(--red-dim) !important; }
+    .quiz-opt-icon {
+      width: 22px; height: 22px; border-radius: 50%; border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Space Mono', monospace; font-size: .65rem; flex-shrink: 0;
+    }
+    .quiz-feedback { margin-top: 1rem; padding: .85rem 1rem; border-radius: 8px; font-size: .9rem; display: none; }
+    .quiz-nav { display: flex; justify-content: space-between; align-items: center; margin-top: 1.25rem; }
+    .quiz-progress { font-family: 'Space Mono', monospace; font-size: .7rem; color: var(--text-muted); }
+    .btn {
+      font-family: 'Space Mono', monospace; font-size: .72rem; padding: .5rem 1.25rem;
+      border-radius: 6px; cursor: pointer; border: 1px solid var(--cyan);
+      background: var(--cyan-dim); color: var(--cyan); transition: all .2s;
+    }
+    .btn:hover { background: var(--cyan); color: var(--bg); }
+    .btn:disabled { opacity: .4; cursor: not-allowed; }
+
+    .entity-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: .75rem; }
+    .entity-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: .85rem; text-align: center; }
+    .entity-char { font-size: 1.6rem; font-weight: 700; color: var(--amber); display: block; margin-bottom: .25rem; }
+    .entity-code { font-family: 'JetBrains Mono', monospace; font-size: .75rem; color: var(--green); display: block; }
+    .entity-name { font-size: .72rem; color: var(--text-muted); }
+
+    footer { text-align: center; padding: 3rem 1rem; border-top: 1px solid var(--border); color: var(--text-muted); font-size: .8rem; font-family: 'Space Mono', monospace; }
+    footer span { color: var(--cyan); }
+
+    @keyframes fadeDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes pulse-glow { 0%, 100% { box-shadow: 0 0 0 rgba(0,212,255,0); } 50% { box-shadow: 0 0 20px rgba(0,212,255,0.3); } }
+    .glow { animation: pulse-glow 2.5s infinite; }
+
+    [data-tip] { position: relative; cursor: help; }
+    [data-tip]::after {
+      content: attr(data-tip); position: absolute; bottom: calc(100% + 6px); left: 50%; transform: translateX(-50%);
+      background: var(--surface2); border: 1px solid var(--border); padding: .35rem .75rem;
+      border-radius: 6px; font-size: .72rem; font-family: 'Space Mono', monospace; white-space: nowrap;
+      opacity: 0; pointer-events: none; transition: opacity .2s; color: var(--text); z-index: 10;
+    }
+    [data-tip]:hover::after { opacity: 1; }
+
+    .divider { height: 1px; background: linear-gradient(90deg, transparent, var(--border), transparent); margin: 3rem 0; }
+
+    /* 3-col grid spécifique */
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; }
+    @media(max-width:768px){ .grid-3{ grid-template-columns:1fr; } nav { padding: 0 1rem; } .nav-links { display: none; } .page { padding: 70px 1rem 3rem; } }
+
+    /* highlight box */
+    .highlight-box {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+      padding: 1.5rem; margin: 1rem 0;
+    }
+    .hb-label {
+      font-family: 'Space Mono', monospace; font-size: .65rem; font-weight: 700;
+      letter-spacing: 2px; text-transform: uppercase; margin-bottom: .75rem;
+      display: flex; align-items: center; gap: .5rem;
+    }
+
+    /* Type cards clickable */
+    .type-card {
+      border-radius: 12px; padding: 1.5rem; border: 1px solid var(--border);
+      transition: all .3s; cursor: pointer; position: relative; overflow: hidden;
+    }
+    .type-card:hover { transform: translateY(-6px); }
+    .type-card-struct { background: linear-gradient(135deg, rgba(255,77,109,.08) 0%, rgba(255,77,109,.03) 100%); }
+    .type-card-struct:hover { border-color: var(--red); box-shadow: 0 12px 40px rgba(255,77,109,.12); }
+    .type-card-semi { background: linear-gradient(135deg, rgba(0,212,255,.08) 0%, rgba(0,212,255,.03) 100%); }
+    .type-card-semi:hover { border-color: var(--cyan); box-shadow: 0 12px 40px rgba(0,212,255,.12); }
+    .type-card-non { background: linear-gradient(135deg, rgba(0,255,153,.08) 0%, rgba(0,255,153,.03) 100%); }
+    .type-card-non:hover { border-color: var(--green); box-shadow: 0 12px 40px rgba(0,255,153,.12); }
+    .type-badge {
+      font-family: 'Space Mono', monospace; font-size: .65rem; font-weight: 700;
+      letter-spacing: 2px; text-transform: uppercase; margin-bottom: .75rem;
+      padding: .2rem .6rem; border-radius: 4px; display: inline-block;
+    }
+    .badge-red { color: var(--red); background: var(--red-dim); border: 1px solid var(--red); }
+    .badge-cyan { color: var(--cyan); background: var(--cyan-dim); border: 1px solid var(--cyan); }
+    .badge-green { color: var(--green); background: var(--green-dim); border: 1px solid var(--green); }
+    .type-title { font-size: 1.15rem; font-weight: 700; margin-bottom: .75rem; font-family: 'Space Mono', monospace; }
+    .pros-cons { display: flex; flex-direction: column; gap: .4rem; margin-top: .75rem; }
+    .pro { color: var(--green); font-size: .85rem; }
+    .pro::before { content: '✓ '; }
+    .con { color: var(--red); font-size: .85rem; }
+    .con::before { content: '✗ '; }
+
+    /* modal pour les type-cards */
+    .modal-overlay {
+      position: fixed; inset: 0; z-index: 200;
+      background: rgba(0,0,0,.85); backdrop-filter: blur(12px);
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; pointer-events: none; transition: opacity .3s;
+      padding: 1rem;
+    }
+    .modal-overlay.open { opacity: 1; pointer-events: all; }
+    .modal-box {
+      background: var(--surface); border: 1px solid var(--cyan); border-radius: 16px;
+      max-width: 640px; width: 100%; max-height: 90vh; overflow-y: auto;
+      transform: scale(.92) translateY(20px); transition: transform .35s cubic-bezier(.34,1.56,.64,1);
+      box-shadow: 0 40px 120px rgba(0,0,0,.8), 0 0 0 1px rgba(0,212,255,.08);
+    }
+    .modal-overlay.open .modal-box { transform: scale(1) translateY(0); }
+    .modal-head {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border);
+    }
+    .modal-title { font-family: 'Space Mono', monospace; font-size: 1rem; font-weight: 700; }
+    .modal-close {
+      background: none; border: 1px solid var(--border); color: var(--text-muted);
+      width: 30px; height: 30px; border-radius: 50%; cursor: pointer;
+      font-size: .9rem; display: flex; align-items: center; justify-content: center;
+      transition: all .2s;
+    }
+    .modal-close:hover { border-color: var(--red); color: var(--red); }
+    .modal-body { padding: 1.5rem; }
+  </style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-brand">&lt;DSS&gt; Chapitres 01–02</div>
+  <div class="nav-links">
+    <a href="#ch1-intro">1.1 Intro</a>
+    <a href="#ch1-types">1.2 Types</a>
+    <a href="#ch1-limites">1.3 Limites SQL</a>
+    <a href="#ch2-docs">2.1 Documents</a>
+    <a href="#ch2-evol">2.2 Évolution</a>
+    <a href="#ch2-apps">2.3 Applications</a>
+    <a href="#quiz">Quiz</a>
+  </div>
+</nav>
+
+<div id="progress-bar"></div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modal" onclick="closeModal(event)">
+  <div class="modal-box" id="modal-box">
+    <div class="modal-head">
+      <div class="modal-title" id="modal-title"></div>
+      <button class="modal-close" onclick="closeModal(null,true)">✕</button>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+  </div>
+</div>
+
+<div class="page">
+
+  <!-- HERO -->
+  <header class="hero">
+    <div class="hero-badge">CHAPITRES 01 & 02 · DONNÉES SEMI-STRUCTURÉES</div>
+    <h1>Introduction<br><span>Semi-Structurées</span></h1>
+    <p>Classification des données, limites du modèle relationnel, documents, hyperdocuments et évolution vers XML — les fondations du cours.</p>
+    <div class="hero-tags">
+      <span class="tag tag-cyan">Données Structurées</span>
+      <span class="tag tag-purple">Semi-Structurées</span>
+      <span class="tag tag-green">Non Structurées</span>
+      <span class="tag tag-amber">SGML → HTML → XML</span>
+      <span class="tag tag-red">Limites Relationnelles</span>
+    </div>
+  </header>
+
+  <!-- STATS -->
+  <div class="stats-row" style="animation:fadeDown .8s .4s ease both;opacity:0;animation-fill-mode:forwards;">
+    <div class="stat-card">
+      <span class="stat-value" data-count="80">80</span>
+      <div class="stat-label">% des données mondiales sont semi ou non-structurées</div>
+    </div>
+    <div class="stat-card">
+      <span class="stat-value" data-count="3">3</span>
+      <div class="stat-label">Types de données : Structurées · Semi · Non</div>
+    </div>
+    <div class="stat-card">
+      <span class="stat-value" data-count="1998">1998</span>
+      <div class="stat-label">Naissance de XML (W3C)</div>
+    </div>
+    <div class="stat-card">
+      <span class="stat-value" data-count="12">12+</span>
+      <div class="stat-label">Ans séparent SGML d'HTML</div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- ══════════════════ CHAPITRE 1 ══════════════════ -->
+
+  <!-- 1.1 Contexte & Problématique -->
+  <section id="ch1-intro">
+    <div class="section-header">
+      <span class="section-num">1.1</span>
+      <h2>Contexte et Problématique</h2>
+    </div>
+
+    <div class="alert alert-cyan">
+      <div class="alert-label">POURQUOI CE COURS ?</div>
+      Le Web génère des données <strong>hétérogènes, évolutives, hiérarchiques</strong>. Les bases de données relationnelles (SQL) ne suffisent plus à les gérer efficacement. Il faut des modèles plus flexibles — c'est le domaine des <strong>données semi-structurées</strong>.
+    </div>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><span></span><span></span><span></span></div>
+        <span class="code-title">instagram_post.json — Cas concret : pourquoi pas SQL ?</span>
+        <button class="code-copy" onclick="copyCode(this)">COPIER</button>
+      </div>
+      <pre><span class="json-key">{</span>
+  <span class="json-key">"user"</span>: <span class="json-str">"sara_tech"</span>,           <span class="xml-comment">// ✓ toujours présent</span>
+  <span class="json-key">"date"</span>: <span class="json-str">"2025-10-21"</span>,          <span class="xml-comment">// ✓ toujours présent</span>
+  <span class="json-key">"text"</span>: <span class="json-str">"Learning XML is fun!"</span>,   <span class="xml-comment">// ? optionnel — certains posts ont juste une image</span>
+  <span class="json-key">"hashtags"</span>: [<span class="json-str">"#Data"</span>, <span class="json-str">"#XML"</span>, <span class="json-str">"#Tech"</span>],  <span class="xml-comment">// ? nombre variable : 0 à 30 !</span>
+  <span class="json-key">"likes"</span>: <span class="json-num">125</span>,
+  <span class="json-key">"media"</span>: {
+    <span class="json-key">"type"</span>: <span class="json-str">"image"</span>,             <span class="xml-comment">// ? parfois vidéo, parfois carousel</span>
+    <span class="json-key">"url"</span>: <span class="json-str">"photo.jpg"</span>
+  <span class="json-key">}</span>,
+  <span class="json-key">"comments"</span>: [                    <span class="xml-comment">// ? nombre illimité + réponses imbriquées</span>
+    <span class="json-key">{</span>
+      <span class="json-key">"user"</span>: <span class="json-str">"ali"</span>,
+      <span class="json-key">"text"</span>: <span class="json-str">"Great post!"</span>,
+      <span class="json-key">"replies"</span>: [<span class="json-key">{</span> <span class="json-key">"user"</span>: <span class="json-str">"sara_tech"</span>, <span class="json-key">"text"</span>: <span class="json-str">"Thanks 😊"</span> <span class="json-key">}</span>]
+    <span class="json-key">}</span>
+  ]
+<span class="json-key">}</span></pre>
+    </div>
+
+    <div class="alert alert-amber">
+      <div class="alert-label">PROBLÈME SQL</div>
+      En SQL, chaque ligne d'une table a exactement le même nombre de colonnes. Comment créer une table <code>posts</code> si chaque post peut avoir 0 à 30 hashtags, 0 à ∞ commentaires et plusieurs types de médias ? <strong>C'est impossible proprement avec un schéma fixe.</strong>
+    </div>
+
+    <div class="accordion" style="margin-top:1.5rem;">
+      <div class="acc-item">
+        <div class="acc-header" onclick="toggleAcc(this)">
+          <h3><span class="tag tag-red" style="font-size:.65rem;">Problème</span> Tentative naïve en SQL — Pourquoi ça échoue</h3>
+          <span class="acc-icon">+</span>
+        </div>
+        <div class="acc-body">
+          <div class="acc-body-inner">
+            <div class="code-block">
+              <div class="code-header">
+                <div class="code-dots"><span></span><span></span><span></span></div>
+                <span class="code-title">posts_naive.sql — Le problème des colonnes variables</span>
+              </div>
+              <pre><span class="xml-comment">-- Tentative naïve : colonnes fixes</span>
+CREATE TABLE posts (
+  id          INT PRIMARY KEY,
+  user        VARCHAR(50),
+  date        DATE,
+  text        TEXT,        <span class="xml-comment">-- NULL si pas de texte</span>
+  hashtag1    VARCHAR(50), <span class="xml-comment">-- Et s'il y en a 20 ?</span>
+  hashtag2    VARCHAR(50), <span class="xml-comment">-- On crée 30 colonnes ? 99% NULL !</span>
+  hashtag3    VARCHAR(50),
+  <span class="xml-comment">-- ... jusqu'à hashtag30 ?</span>
+  comment1    TEXT,        <span class="xml-comment">-- Idem pour les commentaires</span>
+  comment2    TEXT,        <span class="xml-comment">-- Et les réponses aux commentaires ?</span>
+  media_type  VARCHAR(10)  <span class="xml-comment">-- 'image' | 'video' | 'carousel'</span>
+);
+
+<span class="xml-comment">-- Problèmes :</span>
+<span class="xml-comment">-- ❌ 90% des cellules seraient NULL (gaspillage)</span>
+<span class="xml-comment">-- ❌ Impossible de stocker des commentaires imbriqués</span>
+<span class="xml-comment">-- ❌ ALTER TABLE nécessaire pour chaque nouvelle feature</span>
+<span class="xml-comment">-- ❌ Jointures complexes pour les données hiérarchiques</span></pre>
+            </div>
+            <div class="alert alert-green" style="margin-top:1rem;">
+              <div class="alert-label">SOLUTION</div>
+              Utiliser un format <strong>semi-structuré</strong> (XML ou JSON) qui autorise une structure flexible et hiérarchique. Les balises/clés portent le sens des données, et chaque document peut avoir sa propre structure.
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="acc-item">
+        <div class="acc-header" onclick="toggleAcc(this)">
+          <h3><span class="tag tag-cyan" style="font-size:.65rem;">Concept</span> Qu'est-ce qu'une donnée semi-structurée ?</h3>
+          <span class="acc-icon">+</span>
+        </div>
+        <div class="acc-body">
+          <div class="acc-body-inner">
+            <div class="cards-grid">
+              <div class="card" style="--accent1:var(--cyan);--accent2:var(--green);">
+                <div class="card-icon">🏷️</div>
+                <h3>Auto-descriptive</h3>
+                <p>Les données <em>portent leur propre description</em>. Les balises XML ou les clés JSON expliquent directement ce que signifie chaque valeur, sans schéma externe obligatoire.</p>
+              </div>
+              <div class="card" style="--accent1:var(--green);--accent2:var(--amber);">
+                <div class="card-icon">🌳</div>
+                <h3>Hiérarchique</h3>
+                <p>Modèle en <em>arbre</em> (nœuds, feuilles). Permet l'imbrication naturelle : un livre contient des chapitres qui contiennent des sections — impossible avec un tableau plat.</p>
+              </div>
+              <div class="card" style="--accent1:var(--amber);--accent2:var(--purple);">
+                <div class="card-icon">🔀</div>
+                <h3>Flexible</h3>
+                <p>Pas de schéma obligatoire défini à l'avance. On peut ajouter de nouveaux champs sans migration de base de données. Idéal pour les données <em>évolutives</em>.</p>
+              </div>
+              <div class="card" style="--accent1:var(--purple);--accent2:var(--cyan);">
+                <div class="card-icon">📡</div>
+                <h3>Portable</h3>
+                <p>Format texte universel, lisible par n'importe quel langage (Java, Python, JS, PHP...) et n'importe quelle plateforme. Le format standard d'échange sur le Web.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- 1.2 Les 3 Types -->
+  <section id="ch1-types">
+    <div class="section-header">
+      <span class="section-num">1.2</span>
+      <h2>Les 3 Types de Données</h2>
+    </div>
+
+    <p style="color:var(--text-dim);font-size:.95rem;margin-bottom:1.5rem;">
+      Toutes les données ne se ressemblent pas. On distingue trois grandes familles selon leur degré de structure.
+      <strong style="color:var(--text)">Cliquez sur chaque carte</strong> pour explorer les détails.
+    </p>
+
+    <div class="grid-3" style="margin-bottom:2rem;">
+
+      <div class="type-card type-card-struct" onclick="openModal('struct')">
+        <div class="type-badge badge-red">Structurées</div>
+        <div class="type-title" style="color:var(--red);">🗄️ Structurées</div>
+        <p style="font-size:.88rem;color:var(--text-dim);line-height:1.6;">Schéma fixe défini à l'avance. Chaque enregistrement a exactement les mêmes champs.</p>
+        <div class="pros-cons">
+          <span class="pro">Cohérence garantie</span>
+          <span class="pro">Requêtes SQL puissantes</span>
+          <span class="con">Rigide, difficile à évoluer</span>
+          <span class="con">Pas adapté aux données hétérogènes</span>
+        </div>
+        <div style="margin-top:1rem;font-family:'JetBrains Mono',monospace;font-size:.72rem;color:var(--red);opacity:.7;">
+          Ex : Table SQL, CSV, Excel
+        </div>
+      </div>
+
+      <div class="type-card type-card-semi" onclick="openModal('semi')" style="border-color:rgba(0,212,255,.3);">
+        <div class="type-badge badge-cyan">FOCUS DU COURS ★</div>
+        <div class="type-title" style="color:var(--cyan);">🌳 Semi-Structurées</div>
+        <p style="font-size:.88rem;color:var(--text-dim);line-height:1.6;">Structure flexible et hiérarchique. Schéma optionnel. Chaque document peut avoir sa propre organisation.</p>
+        <div class="pros-cons">
+          <span class="pro">Flexibilité maximale</span>
+          <span class="pro">Auto-descriptif</span>
+          <span class="pro">Idéal pour le Web</span>
+          <span class="con">Requêtes plus complexes (XPath, XQuery)</span>
+        </div>
+        <div style="margin-top:1rem;font-family:'JetBrains Mono',monospace;font-size:.72rem;color:var(--cyan);opacity:.7;">
+          Ex : XML, JSON, YAML, HTML
+        </div>
+      </div>
+
+      <div class="type-card type-card-non" onclick="openModal('non')">
+        <div class="type-badge badge-green">Non Structurées</div>
+        <div class="type-title" style="color:var(--green);">📄 Non Structurées</div>
+        <p style="font-size:.88rem;color:var(--text-dim);line-height:1.6;">Aucun schéma formel. Le contenu est du texte libre, des images, des vidéos — pas d'organisation prédéfinie.</p>
+        <div class="pros-cons">
+          <span class="pro">Liberté totale de format</span>
+          <span class="con">Difficile à analyser automatiquement</span>
+          <span class="con">Besoin d'IA / NLP pour traiter</span>
+        </div>
+        <div style="margin-top:1rem;font-family:'JetBrains Mono',monospace;font-size:.72rem;color:var(--green);opacity:.7;">
+          Ex : PDF, Images, Vidéos, emails bruts
+        </div>
+      </div>
+
+    </div>
+
+    <h3 style="font-size:1.1rem;margin-bottom:1rem;">📋 Tableau Comparatif Détaillé</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Aspect</th>
+            <th>Structurées</th>
+            <th>Semi-Structurées ★</th>
+            <th>Non Structurées</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Schéma</td>
+            <td>Défini à l'avance, rigide</td>
+            <td><span style="color:var(--cyan)">Optionnel, évolutif</span></td>
+            <td>Aucun</td>
+          </tr>
+          <tr>
+            <td>Modèle de données</td>
+            <td>Plat (lignes / colonnes)</td>
+            <td><span style="color:var(--cyan)">Hiérarchique (arbre)</span></td>
+            <td>N/A</td>
+          </tr>
+          <tr>
+            <td>Flexibilité</td>
+            <td>Faible</td>
+            <td><span style="color:var(--cyan)">Élevée</span></td>
+            <td>Maximale</td>
+          </tr>
+          <tr>
+            <td>Auto-descriptif</td>
+            <td>Non — schéma externe</td>
+            <td><span style="color:var(--green)">✓ Oui — balises/clés</span></td>
+            <td>Non</td>
+          </tr>
+          <tr>
+            <td>Langage de requête</td>
+            <td>SQL</td>
+            <td><span style="color:var(--cyan)">XPath, XQuery, JSONPath</span></td>
+            <td>Recherche plein texte, NLP</td>
+          </tr>
+          <tr>
+            <td>Évolution du schéma</td>
+            <td>Coûteuse (ALTER TABLE)</td>
+            <td><span style="color:var(--green)">✓ Facile (ajout balises)</span></td>
+            <td>N/A</td>
+          </tr>
+          <tr>
+            <td>Interopérabilité</td>
+            <td>Dépend du SGBD</td>
+            <td><span style="color:var(--green)">✓ Format texte universel</span></td>
+            <td>Selon format</td>
+          </tr>
+          <tr>
+            <td>Exemples</td>
+            <td>MySQL, PostgreSQL, Oracle</td>
+            <td><span style="color:var(--cyan)">XML, JSON, YAML, RDF</span></td>
+            <td>PDF, JPEG, MP4, DOC</td>
+          </tr>
+          <tr>
+            <td>Cas d'usage</td>
+            <td>Comptabilité, ERP, banque</td>
+            <td><span style="color:var(--cyan)">Web, APIs, échange, config</span></td>
+            <td>Médias, archives, emails</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="alert alert-purple" style="margin-top:1.5rem;">
+      <div class="alert-label">STATISTIQUE CLÉ</div>
+      Selon les estimations, plus de <strong>80% des données</strong> générées dans le monde sont semi-structurées ou non-structurées (réseaux sociaux, emails, fichiers multimédia, logs applicatifs). Le SQL traditionnel ne peut pas tout gérer.
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- 1.3 Limites des BDD relationnelles -->
+  <section id="ch1-limites">
+    <div class="section-header">
+      <span class="section-num">1.3</span>
+      <h2>Limites des Bases de Données Relationnelles</h2>
+    </div>
+
+    <div class="alert alert-amber">
+      <div class="alert-label">CONTEXTE</div>
+      Les SGBD relationnels (SQL) ont dominé l'informatique depuis les années 70. Excellents pour des données stables et uniformes, ils montrent leurs limites face aux besoins du Web moderne.
+    </div>
+
+    <div class="accordion">
+
+      <div class="acc-item">
+        <div class="acc-header" onclick="toggleAcc(this)">
+          <h3>🔒 Rigidité du Schéma — ALTER TABLE, le cauchemar</h3>
+          <span class="acc-icon">+</span>
+        </div>
+        <div class="acc-body">
+          <div class="acc-body-inner">
+            <div class="compare-grid">
+              <div>
+                <p style="font-size:.9rem;color:var(--text-dim);margin-bottom:1rem;">Ajouter un champ <code>couleur_yeux</code> à une table de <strong>1 million d'utilisateurs</strong> :</p>
+                <div class="code-block">
+                  <div class="code-header">
+                    <div class="code-dots"><span></span><span></span><span></span></div>
+                    <span class="code-title">SQL — Opération lourde</span>
+                  </div>
+                  <pre><span class="xml-comment">-- SQL : modification lourde et risquée</span>
+ALTER TABLE utilisateurs
+  ADD COLUMN couleur_yeux VARCHAR(20);
+
+<span class="xml-comment">-- Conséquences :</span>
+<span class="xml-comment">-- ❌ Verrouillage de la table pendant l'opération</span>
+<span class="xml-comment">-- ❌ 1 000 000 lignes avec couleur_yeux = NULL</span>
+<span class="xml-comment">-- ❌ Temps d'arrêt potentiel du service</span>
+<span class="xml-comment">-- ❌ Migration de données nécessaire</span></pre>
+                </div>
+              </div>
+              <div>
+                <p style="font-size:.9rem;color:var(--text-dim);margin-bottom:1rem;">Même chose en XML :</p>
+                <div class="code-block">
+                  <div class="code-header">
+                    <div class="code-dots"><span></span><span></span><span></span></div>
+                    <span class="code-title">XML — Simple et non-disruptif</span>
+                  </div>
+                  <pre><span class="xml-comment">&lt;!-- Anciens docs : inchangés --&gt;</span>
+<span class="xml-tag">&lt;utilisateur&gt;</span>
+  <span class="xml-tag">&lt;nom&gt;</span><span class="xml-content">Dupont</span><span class="xml-tag">&lt;/nom&gt;</span>
+<span class="xml-tag">&lt;/utilisateur&gt;</span>
+
+<span class="xml-comment">&lt;!-- Nouveau doc : champ ajouté librement --&gt;</span>
+<span class="xml-tag">&lt;utilisateur&gt;</span>
+  <span class="xml-tag">&lt;nom&gt;</span><span class="xml-content">Martin</span><span class="xml-tag">&lt;/nom&gt;</span>
+  <span class="xml-tag">&lt;couleur_yeux&gt;</span><span class="xml-content">bleus</span><span class="xml-tag">&lt;/couleur_yeux&gt;</span>
+<span class="xml-tag">&lt;/utilisateur&gt;</span>
+<span class="xml-comment">&lt;!-- ✓ 0 impact sur les anciens documents --&gt;</span></pre>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="acc-item">
+        <div class="acc-header" onclick="toggleAcc(this)">
+          <h3>🛒 Données Hétérogènes — Le problème e-commerce</h3>
+          <span class="acc-icon">+</span>
+        </div>
+        <div class="acc-body">
+          <div class="acc-body-inner">
+            <div class="alert alert-red">
+              <div class="alert-label">SCÉNARIO</div>
+              Un site e-commerce vend des <strong>livres</strong> ET des <strong>vêtements</strong>. Leurs attributs sont complètement différents.
+            </div>
+            <div class="compare-grid">
+              <div class="compare-box struct-box">
+                <h3>// SQL — Solution bancale</h3>
+                <div class="code-block"><pre style="padding:.75rem;"><span class="xml-comment">-- Table produits avec colonnes NULL</span>
+CREATE TABLE produits (
+  id          INT,
+  nom         VARCHAR(100),
+  prix        DECIMAL,
+  -- Attributs livres (NULL pour vêtements)
+  auteur      VARCHAR(100), -- NULL
+  isbn        VARCHAR(20),  -- NULL
+  nb_pages    INT,          -- NULL
+  -- Attributs vêtements (NULL pour livres)
+  taille      VARCHAR(10),  -- NULL
+  couleur     VARCHAR(30),  -- NULL
+  matiere     VARCHAR(50)   -- NULL
+)
+<span class="xml-comment">-- Résultat : 50% de NULL, structure confuse !</span></pre></div>
+              </div>
+              <div class="compare-box semi-box">
+                <h3>// XML — Chaque produit = sa structure</h3>
+                <div class="code-block"><pre style="padding:.75rem;"><span class="xml-tag">&lt;livre&gt;</span>
+  <span class="xml-tag">&lt;nom&gt;</span><span class="xml-content">XML Masterclass</span><span class="xml-tag">&lt;/nom&gt;</span>
+  <span class="xml-tag">&lt;prix&gt;</span><span class="xml-content">45.00</span><span class="xml-tag">&lt;/prix&gt;</span>
+  <span class="xml-tag">&lt;auteur&gt;</span><span class="xml-content">Jean Dupont</span><span class="xml-tag">&lt;/auteur&gt;</span>
+  <span class="xml-tag">&lt;isbn&gt;</span><span class="xml-content">978-3-16-148410-0</span><span class="xml-tag">&lt;/isbn&gt;</span>
+<span class="xml-tag">&lt;/livre&gt;</span>
+
+<span class="xml-tag">&lt;vetement&gt;</span>
+  <span class="xml-tag">&lt;nom&gt;</span><span class="xml-content">T-shirt Premium</span><span class="xml-tag">&lt;/nom&gt;</span>
+  <span class="xml-tag">&lt;prix&gt;</span><span class="xml-content">29.99</span><span class="xml-tag">&lt;/prix&gt;</span>
+  <span class="xml-tag">&lt;taille&gt;</span><span class="xml-content">M</span><span class="xml-tag">&lt;/taille&gt;</span>
+  <span class="xml-tag">&lt;couleur&gt;</span><span class="xml-content">noir</span><span class="xml-tag">&lt;/couleur&gt;</span>
+<span class="xml-tag">&lt;/vetement&gt;</span></pre></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="acc-item">
+        <div class="acc-header" onclick="toggleAcc(this)">
+          <h3>🔗 Échange de Données — L'interopérabilité</h3>
+          <span class="acc-icon">+</span>
+        </div>
+        <div class="acc-body">
+          <div class="acc-body-inner">
+            <div class="cards-grid">
+              <div class="card" style="--accent1:var(--red);">
+                <h3>❌ Export SQL</h3>
+                <p>Format propriétaire dépendant du SGBD. Un export MySQL n'est pas directement lisible par Oracle ou SQL Server. Nécessite des outils de conversion.</p>
+              </div>
+              <div class="card" style="--accent1:var(--green);">
+                <h3>✅ Export XML / JSON</h3>
+                <p>Format texte universel. Lisible par <strong>n'importe quel langage</strong> (Java, Python, JavaScript, PHP...) et <strong>n'importe quelle plateforme</strong>. C'est le standard du Web.</p>
+              </div>
+            </div>
+            <div class="alert alert-green" style="margin-top:1rem;">
+              <div class="alert-label">INTEROPÉRABILITÉ XML</div>
+              XML a été conçu comme l'<strong>Intermédiaire Universel</strong> des données. Java parle à PHP, Python parle à .NET, tous via XML. C'est pourquoi les APIs Web, SOAP, RSS et la configuration logicielle utilisent XML ou JSON.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="acc-item">
+        <div class="acc-header" onclick="toggleAcc(this)">
+          <h3>🌐 Données Hiérarchiques — L'impossibilité des arbres en SQL</h3>
+          <span class="acc-icon">+</span>
+        </div>
+        <div class="acc-body">
+          <div class="acc-body-inner">
+            <div class="code-block">
+              <div class="code-header">
+                <div class="code-dots"><span></span><span></span><span></span></div>
+                <span class="code-title">catalogue.xml — Données naturellement hiérarchiques</span>
+              </div>
+              <pre><span class="xml-pi">&lt;?xml version="1.0" encoding="UTF-8"?&gt;</span>
+<span class="xml-tag">&lt;bibliotheque&gt;</span>
+  <span class="xml-tag">&lt;rayon <span class="xml-attr">genre</span>=<span class="xml-val">"roman"</span>&gt;</span>
+    <span class="xml-tag">&lt;livre&gt;</span>
+      <span class="xml-tag">&lt;titre&gt;</span><span class="xml-content">Les Misérables</span><span class="xml-tag">&lt;/titre&gt;</span>
+      <span class="xml-tag">&lt;auteur&gt;</span>
+        <span class="xml-tag">&lt;prenom&gt;</span><span class="xml-content">Victor</span><span class="xml-tag">&lt;/prenom&gt;</span>
+        <span class="xml-tag">&lt;nom&gt;</span><span class="xml-content">Hugo</span><span class="xml-tag">&lt;/nom&gt;</span>
+        <span class="xml-tag">&lt;nationalite&gt;</span><span class="xml-content">Française</span><span class="xml-tag">&lt;/nationalite&gt;</span>
+      <span class="xml-tag">&lt;/auteur&gt;</span>
+      <span class="xml-tag">&lt;chapitres&gt;</span>
+        <span class="xml-tag">&lt;chapitre <span class="xml-attr">num</span>=<span class="xml-val">"1"</span>&gt;</span><span class="xml-content">Fantine</span><span class="xml-tag">&lt;/chapitre&gt;</span>
+        <span class="xml-tag">&lt;chapitre <span class="xml-attr">num</span>=<span class="xml-val">"2"</span>&gt;</span><span class="xml-content">Cosette</span><span class="xml-tag">&lt;/chapitre&gt;</span>
+      <span class="xml-tag">&lt;/chapitres&gt;</span>
+    <span class="xml-tag">&lt;/livre&gt;</span>
+  <span class="xml-tag">&lt;/rayon&gt;</span>
+<span class="xml-tag">&lt;/bibliotheque&gt;</span>
+
+<span class="xml-comment">&lt;!-- En SQL : il faudrait 4 tables (bibliotheque, rayon, livre, chapitre)
+     + 3 JOIN pour reconstituer cette hiérarchie simple ! --&gt;</span></pre>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ══════════════════ CHAPITRE 2 ══════════════════ -->
+
+  <!-- 2.1 Documents & Hyperdocuments -->
+  <section id="ch2-docs">
+    <div class="section-header">
+      <span class="section-num">2.1</span>
+      <h2>Documents et Hyperdocuments Multimédias</h2>
+    </div>
+
+    <div class="alert alert-purple">
+      <div class="alert-label">CONTEXTE</div>
+      Avant d'étudier XML, il faut comprendre ce qu'est un <strong>document numérique</strong>, comment les documents sont devenus des <strong>hyperdocuments</strong> liés entre eux, et pourquoi le Web a eu besoin d'un format de données structuré universel.
+    </div>
+
+    <div class="tabs">
+      <div class="tab-headers">
+        <button class="tab-btn active" onclick="switchTab(this,'tab-doc')">Document</button>
+        <button class="tab-btn" onclick="switchTab(this,'tab-hyper')">Hyperdocument</button>
+        <button class="tab-btn" onclick="switchTab(this,'tab-media')">Multimédia</button>
+        <button class="tab-btn" onclick="switchTab(this,'tab-sep')">Séparation Contenu/Forme</button>
+      </div>
+
+      <div id="tab-doc" class="tab-content active">
+        <div class="alert alert-cyan">
+          <div class="alert-label">DÉFINITION — DOCUMENT</div>
+          Un <strong>document</strong> est une entité informationnelle destinée à être lue, consultée ou traitée par des humains ou des machines. Il contient de l'<em>information structurée</em> avec un sens précis.
+        </div>
+        <div class="cards-grid">
+          <div class="card" style="--accent1:var(--cyan);">
+            <div class="card-icon">📋</div>
+            <h3>Types de Documents</h3>
+            <ul>
+              <li>Rapports et articles scientifiques</li>
+              <li>Contrats et documents légaux</li>
+              <li>Catalogues produits</li>
+              <li>Pages web (HTML)</li>
+              <li>Fichiers de configuration</li>
+            </ul>
+          </div>
+          <div class="card" style="--accent1:var(--green);">
+            <div class="card-icon">🏗️</div>
+            <h3>Structure d'un Document</h3>
+            <ul>
+              <li>Contenu : l'information elle-même</li>
+              <li>Structure : organisation logique (titres, sections)</li>
+              <li>Présentation : rendu visuel (police, couleur)</li>
+              <li>Métadonnées : auteur, date, mots-clés</li>
+            </ul>
+          </div>
+          <div class="card" style="--accent1:var(--purple);">
+            <div class="card-icon">💡</div>
+            <h3>Principe de Séparation</h3>
+            <p>XML sépare rigoureusement le <strong>contenu</strong> (ce qu'on dit) de la <strong>présentation</strong> (comment on l'affiche). Un même document XML peut être rendu en HTML, PDF, ou traité par une machine.</p>
+          </div>
+        </div>
+      </div>
+
+      <div id="tab-hyper" class="tab-content">
+        <div class="alert alert-purple">
+          <div class="alert-label">DÉFINITION — HYPERDOCUMENT</div>
+          Un <strong>hyperdocument</strong> est un document enrichi de <em>liens (hyperliens)</em> permettant une navigation <strong>non-linéaire</strong> entre différents contenus. C'est la base du Web — HTML est un langage d'hyperdocument.
+        </div>
+        <div class="code-block">
+          <div class="code-header">
+            <div class="code-dots"><span></span><span></span><span></span></div>
+            <span class="code-title">mooc.xml — Exemple : MOOC avec navigation non-linéaire</span>
+          </div>
+          <pre><span class="xml-tag">&lt;cours <span class="xml-attr">id</span>=<span class="xml-val">"DSS101"</span>&gt;</span>
+  <span class="xml-tag">&lt;titre&gt;</span><span class="xml-content">Données Semi-Structurées</span><span class="xml-tag">&lt;/titre&gt;</span>
+  <span class="xml-tag">&lt;module <span class="xml-attr">id</span>=<span class="xml-val">"m1"</span>&gt;</span>
+    <span class="xml-tag">&lt;video <span class="xml-attr">url</span>=<span class="xml-val">"intro.mp4"</span>/&gt;</span>
+    <span class="xml-tag">&lt;lien <span class="xml-attr">href</span>=<span class="xml-val">"quiz.xml"</span>&gt;</span><span class="xml-content">→ Quiz d'auto-évaluation</span><span class="xml-tag">&lt;/lien&gt;</span>
+    <span class="xml-tag">&lt;lien <span class="xml-attr">href</span>=<span class="xml-val">"ressources.xml"</span>&gt;</span><span class="xml-content">→ Ressources complémentaires</span><span class="xml-tag">&lt;/lien&gt;</span>
+    <span class="xml-tag">&lt;lien <span class="xml-attr">href</span>=<span class="xml-val">"forum.xml"</span>&gt;</span><span class="xml-content">→ Forum de discussion</span><span class="xml-tag">&lt;/lien&gt;</span>
+  <span class="xml-tag">&lt;/module&gt;</span>
+<span class="xml-tag">&lt;/cours&gt;</span></pre>
+        </div>
+        <div class="cards-grid">
+          <div class="card" style="--accent1:var(--purple);">
+            <h3>✅ Avantages</h3>
+            <ul>
+              <li>Navigation personnalisée</li>
+              <li>Interactivité et engagement</li>
+              <li>Collaboration entre utilisateurs</li>
+              <li>Mise à jour centralisée</li>
+            </ul>
+          </div>
+          <div class="card" style="--accent1:var(--amber);">
+            <h3>📚 Technologies associées</h3>
+            <ul>
+              <li>XLink / XPointer — liens XML</li>
+              <li>HTML — hyperdocument web</li>
+              <li>URI / URL — identification</li>
+              <li>RDF — liens sémantiques</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div id="tab-media" class="tab-content">
+        <div class="alert alert-green">
+          <div class="alert-label">MULTIMÉDIA</div>
+          Un document <strong>multimédia</strong> combine plusieurs types de médias : texte, images, sons, vidéos, animations. XML permet de <em>structurer</em> et de <em>référencer</em> ces différents types de contenus.
+        </div>
+        <div class="cards-grid">
+          <div class="card" style="--accent1:var(--cyan);">
+            <div class="card-icon">📝</div>
+            <h3>Texte</h3>
+            <p>Le contenu principal, structuré avec des balises XML. Peut inclure des métadonnées comme la langue, l'auteur, la date.</p>
+          </div>
+          <div class="card" style="--accent1:var(--green);">
+            <div class="card-icon">🖼️</div>
+            <h3>Images</h3>
+            <p>Référencées via des attributs XML. SVG (Scalable Vector Graphics) est lui-même un langage XML pour les graphiques vectoriels.</p>
+          </div>
+          <div class="card" style="--accent1:var(--amber);">
+            <div class="card-icon">🎵</div>
+            <h3>Audio / Vidéo</h3>
+            <p>Métadonnées stockées en XML (titre, durée, codec). Les playlists et catalogues médias sont souvent en XML.</p>
+          </div>
+          <div class="card" style="--accent1:var(--purple);">
+            <div class="card-icon">🎯</div>
+            <h3>Exemples concrets</h3>
+            <ul>
+              <li>Podcasts : flux RSS en XML</li>
+              <li>YouTube Data API : XML/JSON</li>
+              <li>SVG : graphiques XML natifs</li>
+              <li>EPUB : livres en XML + HTML</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div id="tab-sep" class="tab-content">
+        <div class="alert alert-cyan">
+          <div class="alert-label">PRINCIPE FONDAMENTAL</div>
+          XML implémente rigoureusement la <strong>séparation entre le Contenu et la Présentation</strong>. C'est l'un de ses apports les plus importants par rapport à HTML.
+        </div>
+        <div class="compare-grid">
+          <div class="compare-box xml-box">
+            <h3>📄 Le Contenu (XML)</h3>
+            <p style="font-size:.88rem;color:var(--text-dim);margin-bottom:1rem;">Ce que les données <em>signifient</em> — indépendant de tout affichage.</p>
+            <div class="code-block">
+              <pre style="padding:.75rem;"><span class="xml-tag">&lt;article&gt;</span>
+  <span class="xml-tag">&lt;titre&gt;</span><span class="xml-content">XML Fondamental</span><span class="xml-tag">&lt;/titre&gt;</span>
+  <span class="xml-tag">&lt;auteur&gt;</span><span class="xml-content">Jean Dupont</span><span class="xml-tag">&lt;/auteur&gt;</span>
+  <span class="xml-tag">&lt;texte&gt;</span><span class="xml-content">XML est...</span><span class="xml-tag">&lt;/texte&gt;</span>
+<span class="xml-tag">&lt;/article&gt;</span>
+<span class="xml-comment">&lt;!-- Pas de couleur, taille, police ici ! --&gt;</span></pre>
+            </div>
+          </div>
+          <div class="compare-box html-box">
+            <h3>🎨 La Présentation (XSL/CSS)</h3>
+            <p style="font-size:.88rem;color:var(--text-dim);margin-bottom:1rem;">Comment <em>afficher</em> — séparé des données.</p>
+            <div class="code-block">
+              <pre style="padding:.75rem;"><span class="xml-comment">/* CSS ou XSL */</span>
+article titre {
+  font-size: 2rem;
+  color: #333;
+  font-weight: bold;
+}
+article auteur {
+  font-style: italic;
+  color: gray;
+}
+<span class="xml-comment">/* Le même XML = 10 rendus différents ! */</span></pre>
+            </div>
+          </div>
+        </div>
+        <div class="alert alert-green">
+          <div class="alert-label">AVANTAGE CLÉ</div>
+          Un seul fichier XML peut être transformé en <strong>page web</strong> (via XSLT), en <strong>PDF</strong> (via XSL-FO), en <strong>données JSON</strong> (via transformation), ou traité directement par une machine. C'est la puissance de la séparation contenu/présentation.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- 2.2 Évolution SGML → HTML → XML -->
+  <section id="ch2-evol">
+    <div class="section-header">
+      <span class="section-num">2.2</span>
+      <h2>Évolution : SGML → HTML → XML</h2>
+    </div>
+
+    <div class="alert alert-amber">
+      <div class="alert-label">FILIATION</div>
+      XML n'a pas été inventé de nulle part. Il descend directement de SGML (1986), qui avait engendré HTML (1991). XML (1998) est une simplification de SGML adaptée au Web.
+    </div>
+
+    <div class="timeline">
+
+      <div class="timeline-item">
+        <div class="timeline-year">1986 — ISO 8879</div>
+        <h3>SGML — Standard Generalized Markup Language</h3>
+        <p style="color:var(--text-dim);font-size:.9rem;margin-bottom:1rem;">Philosophie : <em>"Je peux décrire n'importe quelle structure de document"</em></p>
+        <div class="cards-grid">
+          <div class="card" style="--accent1:var(--cyan);">
+            <h3>📌 Principe</h3>
+            <p>Métalangage de balisage standardisé (ISO). Permet de définir des <em>langages de balisage</em> personnalisés. HTML et XML en sont des sous-ensembles.</p>
+          </div>
+          <div class="card" style="--accent1:var(--amber);">
+            <h3>⚙️ Usages</h3>
+            <ul>
+              <li>Documentation technique (Boeing, Airbus)</li>
+              <li>Édition électronique professionnelle</li>
+              <li>Standard industriel pour grands groupes</li>
+            </ul>
+          </div>
+          <div class="card" style="--accent1:var(--red);">
+            <h3>❌ Problèmes</h3>
+            <ul>
+              <li>Trop complexe pour un usage quotidien</li>
+              <li>Outils très coûteux</li>
+              <li>Difficile à implémenter dans les navigateurs</li>
+            </ul>
+          </div>
+        </div>
+        <div class="code-block" style="margin-top:1rem;">
+          <div class="code-header">
+            <div class="code-dots"><span></span><span></span><span></span></div>
+            <span class="code-title">SGML — Exemple de déclaration</span>
+          </div>
+          <pre><span class="xml-comment">&lt;!-- Définition d'un type de document en SGML --&gt;</span>
+<span class="xml-comment">&lt;!DOCTYPE livre [</span>
+<span class="xml-comment">  &lt;!ELEMENT livre (titre, auteur, chapitre+)&gt;</span>
+<span class="xml-comment">  &lt;!ELEMENT titre (#PCDATA)&gt;</span>
+<span class="xml-comment">  &lt;!ELEMENT auteur (#PCDATA)&gt;</span>
+<span class="xml-comment">  &lt;!ELEMENT chapitre (para*)&gt;</span>
+<span class="xml-comment">]&gt;</span>
+<span class="xml-comment">&lt;!-- HTML et XML utilisent une syntaxe DTD similaire --&gt;</span></pre>
+        </div>
+      </div>
+
+      <div class="timeline-item">
+        <div class="timeline-year">1991 — Tim Berners-Lee / W3C</div>
+        <h3>HTML — HyperText Markup Language</h3>
+        <p style="color:var(--text-dim);font-size:.9rem;margin-bottom:1rem;">Philosophie : <em>"Je décris comment afficher l'information"</em></p>
+        <div class="compare-grid">
+          <div>
+            <div class="code-block">
+              <div class="code-header">
+                <div class="code-dots"><span></span><span></span><span></span></div>
+                <span class="code-title">HTML — Présentation, balises fixes</span>
+              </div>
+              <pre><span class="xml-tag">&lt;html&gt;</span>
+  <span class="xml-tag">&lt;body&gt;</span>
+    <span class="xml-tag">&lt;h1&gt;</span><span class="xml-content">Java et Internet</span><span class="xml-tag">&lt;/h1&gt;</span>
+    <span class="xml-tag">&lt;p&gt;</span><span class="xml-content">Par Gilles Roussel</span><span class="xml-tag">&lt;/p&gt;</span>
+    <span class="xml-tag">&lt;b&gt;</span><span class="xml-content">Éditeur :</span><span class="xml-tag">&lt;/b&gt;</span> Vuibert
+    <span class="xml-tag">&lt;br/&gt;</span>600 pages
+  <span class="xml-tag">&lt;/body&gt;</span>
+<span class="xml-tag">&lt;/html&gt;</span>
+
+<span class="xml-comment">&lt;!-- &lt;h1&gt;, &lt;p&gt;, &lt;b&gt; = balises prédéfinies,
+     fixes, impossibles à personnaliser --&gt;</span></pre>
+            </div>
+          </div>
+          <div>
+            <div class="alert alert-red">
+              <div class="alert-label">LIMITES HTML</div>
+              <ul style="list-style:none;font-size:.88rem;">
+                <li style="margin:.3rem 0;">❌ Balises <strong>fixes</strong> — impossible d'ajouter <code>&lt;livre&gt;</code></li>
+                <li style="margin:.3rem 0;">❌ Mélange contenu + présentation</li>
+                <li style="margin:.3rem 0;">❌ Pas de validation de structure</li>
+                <li style="margin:.3rem 0;">❌ Pas adapté à l'échange de données</li>
+                <li style="margin:.3rem 0;">❌ Pas extensible</li>
+              </ul>
+            </div>
+            <div class="alert alert-green">
+              <div class="alert-label">ATOUTS HTML</div>
+              <ul style="list-style:none;font-size:.88rem;">
+                <li style="margin:.3rem 0;">✓ Simple à apprendre</li>
+                <li style="margin:.3rem 0;">✓ Supporté par tous les navigateurs</li>
+                <li style="margin:.3rem 0;">✓ Idéal pour l'affichage web</li>
+                <li style="margin:.3rem 0;">✓ Liens hypertextes natifs</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="timeline-item">
+        <div class="timeline-year">1998 — W3C (Recommandation Officielle)</div>
+        <h3>XML — eXtensible Markup Language</h3>
+        <p style="color:var(--text-dim);font-size:.9rem;margin-bottom:1rem;">Philosophie : <em>"I provide meaning"</em> — Je décris ce que les données <strong>signifient</strong></p>
+        <div class="compare-grid">
+          <div>
+            <div class="code-block">
+              <div class="code-header">
+                <div class="code-dots"><span></span><span></span><span></span></div>
+                <span class="code-title">XML — Sémantique, balises libres</span>
+              </div>
+              <pre><span class="xml-pi">&lt;?xml version="1.0" encoding="UTF-8"?&gt;</span>
+<span class="xml-tag">&lt;livre&gt;</span>
+  <span class="xml-tag">&lt;titre&gt;</span><span class="xml-content">Java et Internet</span><span class="xml-tag">&lt;/titre&gt;</span>
+  <span class="xml-tag">&lt;auteur&gt;</span>
+    <span class="xml-tag">&lt;prenom&gt;</span><span class="xml-content">Gilles</span><span class="xml-tag">&lt;/prenom&gt;</span>
+    <span class="xml-tag">&lt;nom&gt;</span><span class="xml-content">Roussel</span><span class="xml-tag">&lt;/nom&gt;</span>
+  <span class="xml-tag">&lt;/auteur&gt;</span>
+  <span class="xml-tag">&lt;editeur&gt;</span><span class="xml-content">Vuibert</span><span class="xml-tag">&lt;/editeur&gt;</span>
+  <span class="xml-tag">&lt;nb_pages&gt;</span><span class="xml-content">600</span><span class="xml-tag">&lt;/nb_pages&gt;</span>
+<span class="xml-tag">&lt;/livre&gt;</span>
+
+<span class="xml-comment">&lt;!-- Balises définies par l'utilisateur !
+     La structure = le sens --&gt;</span></pre>
+            </div>
+          </div>
+          <div>
+            <div class="alert alert-cyan">
+              <div class="alert-label">APPORTS XML</div>
+              <ul style="list-style:none;font-size:.88rem;">
+                <li style="margin:.3rem 0;">✓ Balises <strong>libres</strong> — vous définissez votre langage</li>
+                <li style="margin:.3rem 0;">✓ <strong>Séparation</strong> contenu / présentation</li>
+                <li style="margin:.3rem 0;">✓ <strong>Validation</strong> via DTD ou XML Schema</li>
+                <li style="margin:.3rem 0;">✓ <strong>Extensible</strong> sans limite</li>
+                <li style="margin:.3rem 0;">✓ <strong>Interopérable</strong> — standard W3C/ISO</li>
+                <li style="margin:.3rem 0;">✓ Lisible par <strong>humains</strong> et <strong>machines</strong></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="timeline-item">
+        <div class="timeline-year">2000+ — Aujourd'hui</div>
+        <h3>JSON, YAML, GraphQL — La famille continue</h3>
+        <p style="color:var(--text-dim);font-size:.9rem;margin-bottom:1rem;">XML a inspiré d'autres formats semi-structurés plus légers pour les APIs web.</p>
+        <div class="cards-grid">
+          <div class="card" style="--accent1:var(--amber);">
+            <div class="card-icon">📦</div>
+            <h3>JSON</h3>
+            <p>Basé sur la syntaxe JavaScript. Plus léger que XML pour les APIs REST. Moins de verbosité, mais sans validation native ni namespaces.</p>
+          </div>
+          <div class="card" style="--accent1:var(--green);">
+            <div class="card-icon">📋</div>
+            <h3>YAML</h3>
+            <p>Lisible par les humains. Utilisé pour la configuration (Docker Compose, Kubernetes, CI/CD pipelines).</p>
+          </div>
+          <div class="card" style="--accent1:var(--purple);">
+            <div class="card-icon">🔗</div>
+            <h3>GraphQL</h3>
+            <p>Langage de requête pour APIs. Permet de récupérer exactement les données nécessaires, ni plus ni moins.</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <h3 style="font-size:1.1rem;margin:2rem 0 1rem;">⚖️ XML vs HTML — La différence fondamentale</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Critère</th><th>HTML</th><th>XML</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Objectif</td><td>Affichage dans le navigateur</td><td>Structurer et transporter des données</td></tr>
+          <tr><td>Balises</td><td>Prédéfinies et fixes (<code>&lt;h1&gt;</code>, <code>&lt;p&gt;</code>...)</td><td>Définies par l'utilisateur (<code>&lt;livre&gt;</code>, <code>&lt;etudiant&gt;</code>...)</td></tr>
+          <tr><td>Extensibilité</td><td>Non extensible</td><td>Totalement extensible</td></tr>
+          <tr><td>Validation</td><td>Permissif (balises non fermées tolérées)</td><td>Strict (bien formé obligatoire)</td></tr>
+          <tr><td>Sensible à la casse</td><td>Non (<code>&lt;DIV&gt;</code> = <code>&lt;div&gt;</code>)</td><td>Oui (<code>&lt;Titre&gt;</code> ≠ <code>&lt;titre&gt;</code>)</td></tr>
+          <tr><td>Cible principale</td><td>Navigateurs web</td><td>Toute application, toute plateforme</td></tr>
+          <tr><td>Séparation contenu/forme</td><td>Partielle (mélange historique)</td><td>Totale (XSL/CSS pour la présentation)</td></tr>
+          <tr><td>Descendant de</td><td>SGML</td><td>SGML (sous-ensemble simplifié)</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- 2.3 Applications -->
+  <section id="ch2-apps">
+    <div class="section-header">
+      <span class="section-num">2.3</span>
+      <h2>Domaines d'Application et Écosystème</h2>
+    </div>
+
+    <div class="alert alert-green">
+      <div class="alert-label">XML EST PARTOUT</div>
+      XML est le format de données structurées le plus répandu dans l'industrie logicielle. Même si JSON a pris sa place dans les APIs REST, XML reste incontournable dans de nombreux domaines.
+    </div>
+
+    <div class="cards-grid">
+      <div class="card" style="--accent1:var(--cyan);--accent2:var(--green);">
+        <div class="card-icon">🔄</div>
+        <h3>Échange de Données</h3>
+        <p>Protocoles SOAP (Web Services), flux RSS/Atom (actualités, podcasts), APIs B2B entre entreprises.</p>
+      </div>
+      <div class="card" style="--accent1:var(--green);--accent2:var(--cyan);">
+        <div class="card-icon">🗄️</div>
+        <h3>Stockage Natif XML</h3>
+        <p>Bases XML natives : <strong>eXist-db</strong>, <strong>MarkLogic</strong>, <strong>BaseX</strong>. Stockent et requêtent du XML directement avec XQuery.</p>
+      </div>
+      <div class="card" style="--accent1:var(--amber);--accent2:var(--green);">
+        <div class="card-icon">⚙️</div>
+        <h3>Configuration Logicielle</h3>
+        <p><code>web.xml</code> (Java EE), <code>pom.xml</code> (Maven), <code>AndroidManifest.xml</code>, Spring Framework, configurations Tomcat...</p>
+      </div>
+      <div class="card" style="--accent1:var(--purple);--accent2:var(--amber);">
+        <div class="card-icon">📄</div>
+        <h3>Formats de Documents</h3>
+        <p>OOXML (Word/Excel/PowerPoint), <strong>EPUB</strong> (livres numériques), DocBook (documentation technique), <strong>SVG</strong> (graphiques vectoriels).</p>
+      </div>
+      <div class="card" style="--accent1:var(--red);--accent2:var(--purple);">
+        <div class="card-icon">🤖</div>
+        <h3>Machine Learning / IA</h3>
+        <p>Datasets annotés pour la vision (PASCAL VOC en XML), corpus NLP, configuration de modèles TensorFlow, annotations d'images.</p>
+      </div>
+      <div class="card" style="--accent1:var(--cyan);--accent2:var(--amber);">
+        <div class="card-icon">📚</div>
+        <h3>Métadonnées et Web Sémantique</h3>
+        <p>Dublin Core (bibliothèques), RDF/XML (Web sémantique), OWL (ontologies), ATOM (syndication de contenu).</p>
+      </div>
+    </div>
+
+    <h3 style="font-size:1.1rem;margin:2rem 0 1rem;">⚙️ L'Écosystème XML — Technologies associées</h3>
+    <div class="tech-wheel">
+      <div class="tech-pill tp-cyan" data-tip="Transformation et formatage de documents XML">XSL / XSLT</div>
+      <div class="tech-pill tp-green" data-tip="Navigation et sélection dans un arbre XML">XPath</div>
+      <div class="tech-pill tp-amber" data-tip="Langage de requête XML = SQL pour XML">XQuery</div>
+      <div class="tech-pill tp-purple" data-tip="Document Object Model — API de manipulation">DOM</div>
+      <div class="tech-pill tp-cyan" data-tip="Simple API for XML — lecture événementielle">SAX</div>
+      <div class="tech-pill tp-green" data-tip="Validation avancée avec typage fort">XML Schema (XSD)</div>
+      <div class="tech-pill tp-amber" data-tip="Définition de type de document (legacy)">DTD</div>
+      <div class="tech-pill tp-purple" data-tip="Liens hypertextes dans les documents XML">XLink / XPointer</div>
+      <div class="tech-pill tp-cyan" data-tip="Graphiques vectoriels en XML">SVG</div>
+      <div class="tech-pill tp-green" data-tip="Web services basés sur XML">SOAP</div>
+      <div class="tech-pill tp-amber" data-tip="Formules mathématiques en XML">MathML</div>
+      <div class="tech-pill tp-red" data-tip="Feuilles de style CSS applicables au XML">CSS</div>
+    </div>
+
+    <div class="alert alert-purple">
+      <div class="alert-label">AVANTAGES DE XML EN RÉSUMÉ</div>
+      <strong>Interopérabilité</strong> : échange entre Java, .NET, PHP, Python &nbsp;·&nbsp;
+      <strong>Neutralité</strong> : indépendant des langages et SGBD &nbsp;·&nbsp;
+      <strong>Standardisation</strong> : W3C / ISO reconnu mondialement &nbsp;·&nbsp;
+      <strong>Extensibilité</strong> : vous définissez vos propres balises &nbsp;·&nbsp;
+      <strong>Validation</strong> : DTD et XML Schema garantissent la qualité des données
+    </div>
+
+    <!-- Récapitulatif visuel -->
+    <h3 style="font-size:1.1rem;margin:2rem 0 1rem;">🎯 Points Clés à Retenir</h3>
+    <ul class="rules-list">
+      <li>
+        <div class="rule-num">1</div>
+        <div>
+          <strong>3 types de données</strong> — Structurées (SQL), Semi-Structurées (XML/JSON) ← focus du cours, Non-Structurées (PDF, images).
+        </div>
+      </li>
+      <li>
+        <div class="rule-num">2</div>
+        <div>
+          <strong>Limites SQL</strong> — Rigidité du schéma, données hétérogènes difficiles, échange inter-systèmes compliqué, hiérarchies impossibles proprement.
+        </div>
+      </li>
+      <li>
+        <div class="rule-num">3</div>
+        <div>
+          <strong>Évolution des langages</strong> — SGML (1986, complexe) → HTML (1991, affichage) → XML (1998, données + extensible).
+        </div>
+      </li>
+      <li>
+        <div class="rule-num">4</div>
+        <div>
+          <strong>XML vs HTML</strong> — HTML décrit <em>comment afficher</em> (balises fixes). XML décrit <em>ce que ça signifie</em> (balises libres, sémantique).
+        </div>
+      </li>
+      <li>
+        <div class="rule-num">5</div>
+        <div>
+          <strong>Séparation contenu/présentation</strong> — Le fichier XML contient les données pures. XSL/CSS s'occupent du rendu visuel. Un même XML = 10 rendus différents.
+        </div>
+      </li>
+      <li>
+        <div class="rule-num">6</div>
+        <div>
+          <strong>Écosystème riche</strong> — XPath, XQuery, XSLT, DOM, SAX, DTD, XML Schema, XLink... XML est bien plus qu'un simple format de fichier.
+        </div>
+      </li>
+    </ul>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- QUIZ -->
+  <section id="quiz">
+    <div class="section-header">
+      <span class="section-num">✦</span>
+      <h2>Quiz de Révision</h2>
+    </div>
+
+    <div class="quiz" id="quiz-container">
+      <div class="quiz-q" id="quiz-question">Chargement…</div>
+      <div class="quiz-options" id="quiz-options"></div>
+      <div class="quiz-feedback alert" id="quiz-feedback" style="display:none;"></div>
+      <div class="quiz-nav">
+        <span class="quiz-progress" id="quiz-prog">Question 1 / 10</span>
+        <button class="btn" id="quiz-next" onclick="nextQuestion()" disabled>SUIVANT →</button>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<footer>
+  Chapitres 01 & 02 — Données Semi-Structurées &nbsp;·&nbsp; <span>Introduction & Documents</span><br>
+  Université Mouloud MAMMERI – Tizi Ouzou &nbsp;·&nbsp; M. Belkebir
+</footer>
+
+<!-- MODAL DATA -->
+<script>
+const modalData = {
+  struct: {
+    title: '🗄️ Données Structurées — Détail',
+    body: `
+      <div class="alert alert-red"><div class="alert-label">DÉFINITION</div>Les données structurées ont un schéma <strong>fixe et rigide</strong> défini avant l'insertion des données. Chaque enregistrement possède exactement les mêmes attributs.</div>
+      <div class="code-block"><div class="code-header"><div class="code-dots"><span></span><span></span><span></span></div><span class="code-title">Exemple SQL</span></div>
+      <pre><span class="xml-comment">-- Structure fixe obligatoire</span>
+CREATE TABLE etudiant (
+  id       INT PRIMARY KEY,
+  nom      VARCHAR(100) NOT NULL,
+  age      INT,
+  filiere  VARCHAR(50)
+);
+
+INSERT INTO etudiant VALUES (1, 'Sara', 20, 'Informatique');
+INSERT INTO etudiant VALUES (2, 'Ali',  22, 'Mathématiques');
+<span class="xml-comment">-- Chaque étudiant A EXACTEMENT les mêmes colonnes.</span>
+<span class="xml-comment">-- Si on veut ajouter "ville" → ALTER TABLE obligatoire !</span></pre></div>
+      <div class="cards-grid" style="margin-top:1rem;">
+        <div class="card" style="--accent1:var(--green);"><h3>✅ Avantages</h3><ul><li>Cohérence et intégrité garanties</li><li>Requêtes SQL optimisées</li><li>ACID (transactions fiables)</li><li>Outils matures (depuis 50 ans)</li></ul></div>
+        <div class="card" style="--accent1:var(--red);"><h3>❌ Limites</h3><ul><li>Rigide face aux changements</li><li>Données hétérogènes difficiles</li><li>Hiérarchies complexes → nombreuses JOIN</li><li>Peu adapté au Web moderne</li></ul></div>
+      </div>`
+  },
+  semi: {
+    title: '🌳 Données Semi-Structurées — Détail',
+    body: `
+      <div class="alert alert-cyan"><div class="alert-label">DÉFINITION</div>Les données semi-structurées ont une structure <strong>flexible et hiérarchique</strong>. Le schéma est optionnel et évolutif. Les données portent leur propre description (auto-descriptives).</div>
+      <div class="code-block"><div class="code-header"><div class="code-dots"><span></span><span></span><span></span></div><span class="code-title">Exemple XML</span></div>
+      <pre><span class="xml-comment">&lt;!-- Chaque étudiant peut avoir SA propre structure --&gt;</span>
+<span class="xml-tag">&lt;etudiants&gt;</span>
+  <span class="xml-tag">&lt;etudiant <span class="xml-attr">id</span>=<span class="xml-val">"1"</span>&gt;</span>
+    <span class="xml-tag">&lt;nom&gt;</span><span class="xml-content">Sara</span><span class="xml-tag">&lt;/nom&gt;</span>
+    <span class="xml-tag">&lt;age&gt;</span><span class="xml-content">20</span><span class="xml-tag">&lt;/age&gt;</span>
+    <span class="xml-tag">&lt;specialites&gt;</span>  <span class="xml-comment">&lt;!-- Champ optionnel --&gt;</span>
+      <span class="xml-tag">&lt;specialite&gt;</span><span class="xml-content">XML</span><span class="xml-tag">&lt;/specialite&gt;</span>
+      <span class="xml-tag">&lt;specialite&gt;</span><span class="xml-content">Python</span><span class="xml-tag">&lt;/specialite&gt;</span>
+    <span class="xml-tag">&lt;/specialites&gt;</span>
+  <span class="xml-tag">&lt;/etudiant&gt;</span>
+  <span class="xml-tag">&lt;etudiant <span class="xml-attr">id</span>=<span class="xml-val">"2"</span>&gt;</span>
+    <span class="xml-tag">&lt;nom&gt;</span><span class="xml-content">Ali</span><span class="xml-tag">&lt;/nom&gt;</span>
+    <span class="xml-comment">&lt;!-- Pas d'âge, pas de spécialités = aucun problème ! --&gt;</span>
+  <span class="xml-tag">&lt;/etudiant&gt;</span>
+<span class="xml-tag">&lt;/etudiants&gt;</span></pre></div>
+      <div class="alert alert-green"><div class="alert-label">CARACTÉRISTIQUES</div><strong>Auto-descriptives</strong> · <strong>Hiérarchiques</strong> (arbre) · <strong>Flexibles</strong> (schéma optionnel) · <strong>Portables</strong> (format texte) · <strong>Interopérables</strong> (tous langages)</div>`
+  },
+  non: {
+    title: '📄 Données Non Structurées — Détail',
+    body: `
+      <div class="alert alert-green"><div class="alert-label">DÉFINITION</div>Les données non structurées n'ont <strong>aucune organisation formelle</strong>. Le contenu est du texte libre, des images, des vidéos — pas de schéma, pas de balises, pas de clés.</div>
+      <div class="cards-grid" style="margin-top:1rem;">
+        <div class="card" style="--accent1:var(--green);"><h3>📁 Exemples</h3><ul><li>Fichiers PDF scannés</li><li>Images JPEG / PNG</li><li>Vidéos MP4</li><li>Emails en texte libre</li><li>Messages sur réseaux sociaux</li><li>Enregistrements audio</li></ul></div>
+        <div class="card" style="--accent1:var(--amber);"><h3>🤖 Traitement</h3><ul><li>OCR (reconnaissance de texte)</li><li>NLP (Natural Language Processing)</li><li>Computer Vision</li><li>Transcription automatique (audio)</li><li>Large Language Models (GPT, Claude...)</li></ul></div>
+      </div>
+      <div class="alert alert-purple"><div class="alert-label">ENJEU BIG DATA</div>~80% des données mondiales sont non-structurées. La valeur cachée dans ces données (emails, posts sociaux, documents scanнés) est un enjeu majeur du Big Data et de l'IA actuelle.</div>`
+  }
+};
+
+function openModal(key) {
+  const d = modalData[key]; if(!d) return;
+  document.getElementById('modal-title').textContent = d.title;
+  document.getElementById('modal-body').innerHTML = d.body;
+  document.getElementById('modal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeModal(e, force) {
+  if(force || e?.target === document.getElementById('modal')) {
+    document.getElementById('modal').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+}
+document.addEventListener('keydown', e => { if(e.key==='Escape') closeModal(null,true); });
+
+// PROGRESS BAR
+window.addEventListener('scroll', () => {
+  const el = document.documentElement;
+  document.getElementById('progress-bar').style.width = (el.scrollTop / (el.scrollHeight - el.clientHeight) * 100) + '%';
+});
+
+// SCROLL REVEAL
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(e => { if(e.isIntersecting) e.target.classList.add('visible'); });
+}, { threshold: 0.08 });
+document.querySelectorAll('section').forEach(s => observer.observe(s));
+
+// COUNTER
+function animateCounter(el) {
+  const val = el.getAttribute('data-count');
+  if(!val) return;
+  const isPlus = val.includes('+');
+  const target = parseInt(val);
+  let current = 0;
+  const step = target / 40;
+  const timer = setInterval(() => {
+    current = Math.min(current + step, target);
+    el.textContent = Math.floor(current) + (isPlus ? '+' : '');
+    if(current >= target) clearInterval(timer);
+  }, 30);
+}
+const cntObs = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if(e.isIntersecting) {
+      e.target.querySelectorAll('[data-count]').forEach(animateCounter);
+      cntObs.unobserve(e.target);
+    }
+  });
+}, { threshold: .3 });
+document.querySelectorAll('.stats-row').forEach(s => cntObs.observe(s));
+
+// ACCORDION
+function toggleAcc(header) {
+  const item = header.parentElement;
+  const body = item.querySelector('.acc-body');
+  const isOpen = item.classList.contains('open');
+  document.querySelectorAll('.acc-item.open').forEach(i => {
+    i.classList.remove('open');
+    i.querySelector('.acc-body').style.maxHeight = '0';
+  });
+  if(!isOpen) {
+    item.classList.add('open');
+    body.style.maxHeight = body.scrollHeight + 'px';
+  }
+}
+
+// TABS
+function switchTab(btn, id) {
+  const parent = btn.closest('.tabs');
+  parent.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  parent.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById(id).classList.add('active');
+}
+
+// COPY CODE
+function copyCode(btn) {
+  const pre = btn.closest('.code-block').querySelector('pre');
+  navigator.clipboard.writeText(pre.innerText).then(() => {
+    btn.textContent = 'COPIÉ ✓';
+    setTimeout(() => btn.textContent = 'COPIER', 2000);
+  });
+}
+
+// QUIZ
+const questions = [
+  {
+    q: "Quel est le principal problème d'un schéma SQL fixe face aux données web hétérogènes ?",
+    opts: ["SQL est trop lent pour le Web", "Ajouter un champ nécessite un ALTER TABLE coûteux, et chaque entité doit avoir les mêmes colonnes", "SQL ne peut pas stocker du texte", "SQL ne supporte pas les nombres"],
+    correct: 1,
+    explain: "L'ALTER TABLE peut bloquer une table de millions de lignes. De plus, des entités différentes (livre vs vêtement) auraient de nombreuses colonnes NULL dans un schéma fixe."
+  },
+  {
+    q: "Parmi ces formats, lequel est un exemple de données SEMI-STRUCTURÉES ?",
+    opts: ["Une table MySQL avec 5 colonnes fixes", "Un fichier PDF scanné", "Un document XML avec des balises libres", "Une image JPEG"],
+    correct: 2,
+    explain: "XML est semi-structuré : structure hiérarchique et flexible, balises auto-descriptives, schéma optionnel. MySQL = structuré. PDF/JPEG = non-structuré."
+  },
+  {
+    q: "XML est un sous-ensemble simplifié de quel langage ?",
+    opts: ["HTML", "JSON", "SGML", "SQL"],
+    correct: 2,
+    explain: "XML (1998) est un sous-ensemble simplifié de SGML (1986). HTML est aussi un descendant de SGML, mais avec des balises fixes pour l'affichage."
+  },
+  {
+    q: "Quelle est la différence fondamentale entre XML et HTML ?",
+    opts: [
+      "HTML est plus récent que XML",
+      "XML décrit le SENS des données, HTML décrit COMMENT les afficher",
+      "XML ne peut pas contenir de texte",
+      "HTML utilise des guillemets, XML des apostrophes"
+    ],
+    correct: 1,
+    explain: "XML = sémantique / données (balises libres comme <livre>, <etudiant>). HTML = présentation / affichage (balises fixes comme <h1>, <p>, <b>)."
+  },
+  {
+    q: "Pourquoi dit-on que les données XML sont 'auto-descriptives' ?",
+    opts: [
+      "Parce que XML génère automatiquement de la documentation",
+      "Parce que les noms des balises portent directement le sens des données, sans schéma externe obligatoire",
+      "Parce qu'XML se décrit lui-même en SQL",
+      "Parce que XML contient toujours un commentaire explicatif"
+    ],
+    correct: 1,
+    explain: "<titre>Les Misérables</titre> — la balise 'titre' explique ce que contient la donnée. On n'a pas besoin d'un schéma séparé pour comprendre."
+  },
+  {
+    q: "SGML date de 1986, HTML de 1991. Quelle est la bonne filiation ?",
+    opts: ["HTML → SGML → XML", "XML → HTML → SGML", "SGML → HTML + XML", "JSON → XML → SGML"],
+    correct: 2,
+    explain: "SGML (1986) est le parent. Il a engendré HTML (1991, pour le Web) et plus tard XML (1998, sous-ensemble simplifié pour les données)."
+  },
+  {
+    q: "Un document XML peut être rendu en page web, PDF, ou traité par une machine. Quel principe cela illustre-t-il ?",
+    opts: [
+      "La redondance des données",
+      "La séparation contenu / présentation",
+      "La validation par DTD",
+      "L'héritage de classe"
+    ],
+    correct: 1,
+    explain: "XML sépare le CONTENU (données pures) de la PRÉSENTATION (rendu visuel). XSL ou CSS s'occupent du rendu. Un seul fichier XML = multiples rendus possibles."
+  },
+  {
+    q: "Quel pourcentage approximatif des données mondiales sont semi ou non-structurées ?",
+    opts: ["20%", "50%", "80%", "95%"],
+    correct: 2,
+    explain: "Environ 80% des données mondiales (réseaux sociaux, emails, documents, logs, médias) sont semi ou non-structurées. C'est pourquoi SQL seul ne suffit plus."
+  },
+  {
+    q: "Parmi ces technologies, laquelle est l'équivalent de SQL pour interroger des documents XML ?",
+    opts: ["XLink", "XPath", "XQuery", "XSLT"],
+    correct: 2,
+    explain: "XQuery est le langage de requête pour XML, comparable à SQL pour les bases relationnelles. XPath navigue dans l'arbre, XSLT transforme, XLink crée des liens."
+  },
+  {
+    q: "Qu'est-ce qu'un hyperdocument ?",
+    opts: [
+      "Un document très long",
+      "Un document enrichi de liens permettant une navigation non-linéaire",
+      "Un document XML valide",
+      "Un document avec des images"
+    ],
+    correct: 1,
+    explain: "Un hyperdocument contient des hyperliens permettant de naviguer non-linéairement entre différents contenus. Le Web entier est un hyperdocument ! HTML = HyperText Markup Language."
+  }
+];
+
+let qIndex = 0, score = 0, answered = false;
+
+function loadQuestion() {
+  const q = questions[qIndex];
+  document.getElementById('quiz-question').textContent = (qIndex + 1) + '. ' + q.q;
+  document.getElementById('quiz-prog').textContent = `Question ${qIndex + 1} / ${questions.length}`;
+  const container = document.getElementById('quiz-options');
+  container.innerHTML = '';
+  answered = false;
+  document.getElementById('quiz-next').disabled = true;
+  const fb = document.getElementById('quiz-feedback');
+  fb.style.display = 'none';
+  q.opts.forEach((opt, i) => {
+    const letters = ['A', 'B', 'C', 'D'];
+    const btn = document.createElement('div');
+    btn.className = 'quiz-opt';
+    btn.innerHTML = `<div class="quiz-opt-icon">${letters[i]}</div><span>${opt}</span>`;
+    btn.onclick = () => checkAnswer(i, btn, q);
+    container.appendChild(btn);
+  });
+}
+
+function checkAnswer(idx, btn, q) {
+  if(answered) return;
+  answered = true;
+  const opts = document.querySelectorAll('.quiz-opt');
+  opts.forEach((o, i) => {
+    if(i === q.correct) o.classList.add('correct');
+    else if(i === idx && idx !== q.correct) o.classList.add('wrong');
+  });
+  const fb = document.getElementById('quiz-feedback');
+  if(idx === q.correct) {
+    score++;
+    fb.className = 'quiz-feedback alert alert-green';
+    fb.innerHTML = '<div class="alert-label">CORRECT ✓</div>' + q.explain;
+  } else {
+    fb.className = 'quiz-feedback alert alert-red';
+    fb.innerHTML = '<div class="alert-label">INCORRECT ✗</div>' + q.explain;
+  }
+  fb.style.display = 'block';
+  document.getElementById('quiz-next').disabled = false;
+}
+
+function nextQuestion() {
+  qIndex++;
+  if(qIndex < questions.length) {
+    loadQuestion();
+  } else {
+    const pct = Math.round((score / questions.length) * 100);
+    document.getElementById('quiz-container').innerHTML = `
+      <div style="text-align:center;padding:2rem;">
+        <div style="font-size:3rem;margin-bottom:1rem;">${pct>=70?'🏆':'📚'}</div>
+        <div style="font-family:'Space Mono',monospace;font-size:2.5rem;color:var(--cyan);margin-bottom:.5rem;">${score}/${questions.length}</div>
+        <div style="font-size:1.1rem;color:var(--text-dim);margin-bottom:2rem;">${pct}% — ${pct>=80?'Excellent ! Tu es prêt pour le chapitre 3.':pct>=60?'Bien, quelques révisions utiles.':'Relis les chapitres 1 et 2 attentivement.'}</div>
+        <button class="btn glow" onclick="qIndex=0;score=0;initQuiz();">RECOMMENCER</button>
+      </div>`;
+  }
+}
+
+function initQuiz() {
+  const c = document.getElementById('quiz-container');
+  c.innerHTML = `
+    <div class="quiz-q" id="quiz-question">Chargement…</div>
+    <div class="quiz-options" id="quiz-options"></div>
+    <div class="quiz-feedback alert" id="quiz-feedback" style="display:none;"></div>
+    <div class="quiz-nav">
+      <span class="quiz-progress" id="quiz-prog">Question 1 / 10</span>
+      <button class="btn" id="quiz-next" onclick="nextQuestion()" disabled>SUIVANT →</button>
+    </div>`;
+  loadQuestion();
+}
+initQuiz();
+</script>
+</body>
+</html>

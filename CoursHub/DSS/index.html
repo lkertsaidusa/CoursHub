@@ -1,0 +1,1503 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Données Semi-Structurées — Cours Complet</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0a0e17;
+      --surface: #111827;
+      --surface2: #1a2234;
+      --border: #1e2d45;
+      --cyan: #00d4ff;
+      --cyan-dim: rgba(0,212,255,0.12);
+      --green: #00ff99;
+      --green-dim: rgba(0,255,153,0.1);
+      --amber: #ffb740;
+      --amber-dim: rgba(255,183,64,0.1);
+      --red: #ff4d6d;
+      --red-dim: rgba(255,77,109,0.1);
+      --purple: #a78bfa;
+      --purple-dim: rgba(167,139,250,0.1);
+      --text: #e2e8f0;
+      --text-muted: #64748b;
+      --text-dim: #94a3b8;
+    }
+
+    * { margin:0; padding:0; box-sizing:border-box; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Syne', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.7;
+      overflow-x: hidden;
+    }
+
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--cyan); border-radius: 10px; }
+
+    body::before {
+      content:'';
+      position: fixed; inset:0;
+      background-image:
+        linear-gradient(rgba(0,212,255,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,212,255,0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed; top:0; left:0; right:0;
+      background: rgba(10,14,23,0.95);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      z-index: 100;
+      padding: 0 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 60px;
+      gap: 1rem;
+    }
+
+    .nav-brand {
+      font-family: 'Space Mono', monospace;
+      font-size: .85rem;
+      color: var(--cyan);
+      white-space: nowrap;
+    }
+
+    /* ── CHAPTER SWITCHER ── */
+    .chapter-switcher {
+      display: flex;
+      gap: .4rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: .3rem;
+    }
+
+    .ch-btn {
+      font-family: 'Space Mono', monospace;
+      font-size: .7rem;
+      padding: .4rem 1rem;
+      border-radius: 5px;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all .25s;
+      white-space: nowrap;
+      letter-spacing: .5px;
+    }
+
+    .ch-btn:hover { color: var(--text); }
+
+    .ch-btn.active {
+      background: var(--cyan);
+      color: var(--bg);
+      font-weight: 700;
+    }
+
+    .nav-links { display:flex; gap:.4rem; flex-wrap:wrap; }
+    .nav-links a {
+      font-size:.68rem; font-family:'Space Mono',monospace;
+      color:var(--text-muted); text-decoration:none;
+      padding:.3rem .6rem; border-radius:4px;
+      border:1px solid transparent; transition:all .2s;
+    }
+    .nav-links a:hover { color:var(--cyan); border-color:var(--cyan); background:var(--cyan-dim); }
+
+    #progress-bar {
+      position: fixed; top:60px; left:0;
+      height:2px;
+      background: linear-gradient(90deg, var(--cyan), var(--green));
+      width:0%; transition:width .1s linear; z-index:101;
+    }
+
+    /* ── CHAPTER PANELS ── */
+    .chapter-panel { display: none; }
+    .chapter-panel.active { display: block; }
+
+    /* ── LAYOUT ── */
+    .page {
+      position: relative; z-index:1;
+      max-width: 1100px; margin:0 auto;
+      padding: 80px 2rem 4rem;
+    }
+
+    /* ── HERO ── */
+    .hero { text-align:center; padding:5rem 0 4rem; }
+
+    .hero-badge {
+      display: inline-block;
+      font-family:'Space Mono',monospace; font-size:.7rem;
+      color:var(--cyan); border:1px solid var(--cyan);
+      padding:.3rem 1rem; border-radius:20px;
+      margin-bottom:1.5rem;
+      animation:fadeDown .6s ease both;
+      letter-spacing:2px;
+    }
+
+    .hero h1 {
+      font-size:clamp(2.2rem,6vw,4rem);
+      font-weight:800; line-height:1.1;
+      animation:fadeDown .7s .1s ease both;
+    }
+    .hero h1 span { color:var(--cyan); }
+
+    .hero p {
+      margin-top:1rem; color:var(--text-dim);
+      font-size:1.05rem; max-width:600px; margin-inline:auto;
+      animation:fadeDown .7s .2s ease both;
+    }
+
+    .hero-tags {
+      display:flex; flex-wrap:wrap; gap:.5rem;
+      justify-content:center; margin-top:2rem;
+      animation:fadeDown .7s .3s ease both;
+    }
+
+    .tag {
+      font-family:'JetBrains Mono',monospace; font-size:.72rem;
+      padding:.3rem .8rem; border-radius:4px; border:1px solid;
+    }
+    .tag-cyan   { color:var(--cyan);   border-color:var(--cyan);   background:var(--cyan-dim);   }
+    .tag-green  { color:var(--green);  border-color:var(--green);  background:var(--green-dim);  }
+    .tag-amber  { color:var(--amber);  border-color:var(--amber);  background:var(--amber-dim);  }
+    .tag-purple { color:var(--purple); border-color:var(--purple); background:var(--purple-dim); }
+    .tag-red    { color:var(--red);    border-color:var(--red);    background:var(--red-dim);    }
+
+    /* ── STATS ── */
+    .stats-row {
+      display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
+      gap:1rem; margin:3rem 0;
+    }
+    .stat-box {
+      background:var(--surface); border:1px solid var(--border);
+      border-radius:10px; padding:1.25rem; text-align:center;
+      transition:border-color .25s;
+    }
+    .stat-box:hover { border-color:var(--cyan); }
+    .stat-num {
+      font-family:'Space Mono',monospace; font-size:2rem;
+      font-weight:700; color:var(--cyan); display:block;
+    }
+    .stat-label { font-size:.78rem; color:var(--text-muted); }
+
+    /* ── SECTIONS ── */
+    section {
+      margin-bottom:5rem;
+    }
+
+    .section-header {
+      display:flex; align-items:center; gap:1rem;
+      margin-bottom:2rem; padding-bottom:1rem;
+      border-bottom:1px solid var(--border);
+    }
+    .section-num {
+      font-family:'Space Mono',monospace; font-size:.65rem;
+      color:var(--cyan); background:var(--cyan-dim);
+      border:1px solid var(--cyan); padding:.25rem .6rem;
+      border-radius:4px; white-space:nowrap;
+    }
+    .section-header h2 { font-size:1.6rem; font-weight:700; }
+
+    /* ── CARDS ── */
+    .cards-grid {
+      display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+      gap:1.5rem;
+    }
+    .card {
+      background:var(--surface); border:1px solid var(--border);
+      border-radius:12px; padding:1.5rem;
+      transition:transform .25s, border-color .25s, box-shadow .25s;
+      position:relative; overflow:hidden;
+    }
+    .card::before {
+      content:''; position:absolute; top:0; left:0; right:0; height:3px;
+      background:linear-gradient(90deg, var(--accent1,var(--cyan)), var(--accent2,var(--green)));
+      opacity:0; transition:opacity .25s;
+    }
+    .card:hover { transform:translateY(-4px); box-shadow:0 12px 40px rgba(0,212,255,0.08); }
+    .card:hover { border-color:var(--accent1,var(--cyan)); }
+    .card:hover::before { opacity:1; }
+    .card-icon { font-size:1.8rem; margin-bottom:.75rem; }
+    .card h3 {
+      font-size:1rem; font-weight:700; margin-bottom:.5rem;
+      font-family:'Space Mono',monospace;
+    }
+    .card p, .card li { font-size:.9rem; color:var(--text-dim); line-height:1.6; }
+    .card ul { list-style:none; }
+    .card li::before { content:'→ '; color:var(--cyan); }
+
+    /* ── CODE BLOCK ── */
+    .code-block {
+      background:#070d1a; border:1px solid var(--border);
+      border-radius:10px; overflow:hidden; margin:1.5rem 0;
+    }
+    .code-header {
+      display:flex; align-items:center; justify-content:space-between;
+      padding:.6rem 1rem; background:var(--surface);
+      border-bottom:1px solid var(--border);
+    }
+    .code-dots { display:flex; gap:.4rem; }
+    .code-dots span { width:10px; height:10px; border-radius:50%; }
+    .code-dots span:nth-child(1) { background:#ff5f57; }
+    .code-dots span:nth-child(2) { background:#ffbd2e; }
+    .code-dots span:nth-child(3) { background:#28c840; }
+    .code-title { font-family:'Space Mono',monospace; font-size:.65rem; color:var(--text-muted); }
+    .code-copy {
+      background:none; border:1px solid var(--border);
+      color:var(--text-muted); font-family:'Space Mono',monospace;
+      font-size:.65rem; padding:.2rem .5rem; border-radius:4px;
+      cursor:pointer; transition:all .2s;
+    }
+    .code-copy:hover { color:var(--cyan); border-color:var(--cyan); }
+
+    pre {
+      padding:1.5rem; overflow-x:auto;
+      font-family:'JetBrains Mono',monospace;
+      font-size:.82rem; line-height:1.8;
+    }
+
+    .kw   { color:#4fc3f7; }
+    .str  { color:var(--amber); }
+    .com  { color:#546e7a; font-style:italic; }
+    .num  { color:var(--green); }
+    .key  { color:var(--purple); }
+    .val  { color:#81c784; }
+
+    .xml-tag { color:#4fc3f7; }
+    .xml-attr { color:#81c784; }
+    .xml-val { color:var(--amber); }
+    .xml-comment { color:#546e7a; font-style:italic; }
+    .xml-pi { color:var(--purple); }
+    .xml-content { color:var(--text); }
+    .xml-entity { color:var(--red); }
+
+    /* ── TABLE ── */
+    .table-wrap { overflow-x:auto; border-radius:10px; border:1px solid var(--border); }
+    table { width:100%; border-collapse:collapse; font-size:.88rem; }
+    th {
+      background:var(--surface); color:var(--cyan);
+      font-family:'Space Mono',monospace; font-size:.7rem;
+      font-weight:700; padding:.75rem 1rem; text-align:left;
+      border-bottom:1px solid var(--border); letter-spacing:1px;
+    }
+    td {
+      padding:.75rem 1rem; border-bottom:1px solid var(--border);
+      color:var(--text-dim); vertical-align:top;
+    }
+    tr:last-child td { border-bottom:none; }
+    tr:hover td { background:var(--surface2); }
+    td:first-child { color:var(--text); font-weight:600; }
+
+    /* ── ALERT BOXES ── */
+    .alert {
+      border-radius:10px; padding:1.25rem 1.5rem;
+      margin:1.5rem 0; border-left:4px solid; font-size:.9rem;
+    }
+    .alert-cyan   { background:var(--cyan-dim);   border-color:var(--cyan);   }
+    .alert-green  { background:var(--green-dim);  border-color:var(--green);  }
+    .alert-amber  { background:var(--amber-dim);  border-color:var(--amber);  }
+    .alert-red    { background:var(--red-dim);    border-color:var(--red);    }
+    .alert-purple { background:var(--purple-dim); border-color:var(--purple); }
+    .alert-label {
+      font-family:'Space Mono',monospace; font-size:.65rem;
+      font-weight:700; letter-spacing:1.5px; margin-bottom:.5rem;
+    }
+    .alert-cyan   .alert-label { color:var(--cyan);   }
+    .alert-green  .alert-label { color:var(--green);  }
+    .alert-amber  .alert-label { color:var(--amber);  }
+    .alert-red    .alert-label { color:var(--red);    }
+    .alert-purple .alert-label { color:var(--purple); }
+
+    /* ── TIMELINE ── */
+    .timeline { position:relative; padding-left:2rem; }
+    .timeline::before {
+      content:''; position:absolute; left:0; top:0; bottom:0; width:2px;
+      background:linear-gradient(to bottom, var(--cyan), var(--green), var(--amber));
+    }
+    .timeline-item {
+      position:relative; margin-bottom:2rem; padding:1.5rem;
+      background:var(--surface); border:1px solid var(--border); border-radius:10px;
+    }
+    .timeline-item::before {
+      content:''; position:absolute; left:-2.6rem; top:1.5rem;
+      width:14px; height:14px; border-radius:50%;
+      background:var(--bg); border:2px solid var(--cyan);
+    }
+    .timeline-item:nth-child(2)::before { border-color:var(--green); }
+    .timeline-item:nth-child(3)::before { border-color:var(--amber); }
+    .timeline-year {
+      font-family:'Space Mono',monospace; font-size:.7rem; color:var(--cyan); margin-bottom:.5rem;
+    }
+    .timeline-item:nth-child(2) .timeline-year { color:var(--green); }
+    .timeline-item:nth-child(3) .timeline-year { color:var(--amber); }
+    .timeline-item h3 { font-size:1.05rem; margin-bottom:.5rem; }
+    .timeline-item p, .timeline-item li { font-size:.9rem; color:var(--text-dim); }
+    .timeline-item ul { list-style:none; margin-top:.5rem; }
+    .timeline-item li::before { content:'→ '; color:var(--cyan); }
+
+    /* ── INNER TABS (for code examples) ── */
+    .inner-tabs { margin:1.5rem 0; }
+    .inner-tab-headers {
+      display:flex; gap:.5rem; margin-bottom:0;
+      border-bottom:1px solid var(--border); flex-wrap:wrap;
+    }
+    .inner-tab-btn {
+      font-family:'Space Mono',monospace; font-size:.72rem;
+      padding:.6rem 1rem; background:none; border:none;
+      color:var(--text-muted); cursor:pointer;
+      border-bottom:2px solid transparent; transition:all .2s;
+      position:relative; bottom:-1px;
+    }
+    .inner-tab-btn:hover { color:var(--text); }
+    .inner-tab-btn.active { color:var(--cyan); border-bottom-color:var(--cyan); }
+    .inner-tab-content { display:none; padding:1.5rem 0; }
+    .inner-tab-content.active { display:block; animation:fadeIn .3s ease; }
+
+    /* ── TYPE GRID ── */
+    .type-grid {
+      display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+      gap:1.5rem; margin:1.5rem 0;
+    }
+    .type-card {
+      border-radius:12px; padding:1.5rem;
+      border:1px solid var(--border); background:var(--surface);
+      position:relative; overflow:hidden;
+      transition:transform .25s, box-shadow .25s;
+    }
+    .type-card:hover { transform:translateY(-4px); box-shadow:0 12px 40px rgba(0,212,255,0.08); }
+    .type-card.cyan   { --accent1:var(--cyan);   --accent2:var(--green);  }
+    .type-card.green  { --accent1:var(--green);  --accent2:var(--cyan);   }
+    .type-card.amber  { --accent1:var(--amber);  --accent2:var(--red);    }
+    .type-card::after {
+      content:''; position:absolute; top:0; left:0; right:0; height:3px;
+      background:linear-gradient(90deg, var(--accent1), var(--accent2));
+    }
+    .type-card h3 {
+      font-family:'Space Mono',monospace; font-size:.95rem;
+      color:var(--accent1); margin-bottom:.75rem;
+    }
+    .type-card p { font-size:.88rem; color:var(--text-dim); margin-bottom:.5rem; }
+    .type-card ul { list-style:none; }
+    .type-card li { font-size:.85rem; color:var(--text-dim); padding:.2rem 0; }
+    .type-card li.pro::before  { content:'✓ '; color:var(--green); }
+    .type-card li.con::before  { content:'✗ '; color:var(--red);   }
+
+    /* ── BENEFITS LIST ── */
+    .benefits-list { list-style:none; display:flex; flex-direction:column; gap:.6rem; }
+    .benefits-list li {
+      padding:1rem 1.25rem; background:var(--surface);
+      border:1px solid var(--border); border-radius:8px;
+      font-size:.9rem; color:var(--text-dim);
+      border-left:4px solid var(--cyan);
+      transition:border-color .2s, background .2s;
+    }
+    .benefits-list li:hover { background:var(--surface2); border-left-color:var(--green); }
+    .benefits-list li strong { color:var(--text); }
+
+    /* ── QUIZ (Ch1-2) ── */
+    .quiz-wrap { margin-top:1.5rem; }
+    .q-card {
+      background:var(--surface); border:1px solid var(--border);
+      border-radius:10px; padding:1.5rem; margin-bottom:1rem;
+    }
+    .q-text { font-size:.95rem; margin-bottom:1rem; font-weight:600; }
+    .q-options { display:flex; flex-direction:column; gap:.5rem; }
+    .q-opt {
+      background:var(--bg); border:1px solid var(--border);
+      color:var(--text-dim); padding:.7rem 1rem; border-radius:8px;
+      cursor:pointer; font-family:'Space Mono',monospace; font-size:.78rem;
+      transition:all .2s; text-align:left;
+    }
+    .q-opt:hover { border-color:var(--cyan); color:var(--text); }
+    .q-opt.correct { border-color:var(--green); background:var(--green-dim); color:var(--green); }
+    .q-opt.wrong   { border-color:var(--red);   background:var(--red-dim);   color:var(--red);   }
+    .q-feedback {
+      margin-top:.75rem; font-size:.85rem; padding:.75rem 1rem;
+      border-radius:8px; display:none;
+    }
+    .q-feedback.show { display:block; }
+    .q-feedback.ok  { background:var(--green-dim); border-left:3px solid var(--green); color:var(--green); }
+    .q-feedback.bad { background:var(--red-dim);   border-left:3px solid var(--red);   color:var(--red);   }
+    .quiz-score {
+      text-align:center; padding:2rem; background:var(--surface);
+      border:1px solid var(--border); border-radius:12px; display:none;
+    }
+    .quiz-score.show { display:block; }
+    .score-num { font-family:'Space Mono',monospace; font-size:3rem; color:var(--cyan); }
+    .score-label { color:var(--text-muted); margin-bottom:1rem; }
+    .btn-restart {
+      background:var(--cyan-dim); border:1px solid var(--cyan); color:var(--cyan);
+      font-family:'Space Mono',monospace; font-size:.78rem; padding:.6rem 1.5rem;
+      border-radius:6px; cursor:pointer; transition:all .2s;
+    }
+    .btn-restart:hover { background:var(--cyan); color:var(--bg); }
+
+    /* ── QUIZ (Ch3) ── */
+    .quiz3 {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 12px; padding: 2rem;
+    }
+    .quiz3-q { font-size:1rem; font-weight:600; margin-bottom:1.25rem; }
+    .quiz3-options { display:grid; gap:.5rem; }
+    .quiz3-opt {
+      display:flex; align-items:center; gap:.75rem;
+      padding:.85rem 1rem; border:1px solid var(--border);
+      border-radius:8px; cursor:pointer; font-size:.9rem;
+      background:var(--bg); transition:all .2s;
+    }
+    .quiz3-opt:hover { border-color:var(--cyan); background:var(--cyan-dim); }
+    .quiz3-opt.correct { border-color:var(--green) !important; background:var(--green-dim) !important; }
+    .quiz3-opt.wrong { border-color:var(--red) !important; background:var(--red-dim) !important; }
+    .quiz3-opt-icon {
+      width:22px; height:22px; border-radius:50%; border:1px solid var(--border);
+      display:flex; align-items:center; justify-content:center;
+      font-family:'Space Mono',monospace; font-size:.65rem; flex-shrink:0;
+    }
+    .quiz3-feedback { margin-top:1rem; padding:.85rem 1rem; border-radius:8px; font-size:.9rem; display:none; }
+    .quiz3-nav {
+      display:flex; justify-content:space-between; align-items:center; margin-top:1.25rem;
+    }
+    .quiz3-progress { font-family:'Space Mono',monospace; font-size:.7rem; color:var(--text-muted); }
+    .btn3 {
+      font-family:'Space Mono',monospace; font-size:.72rem;
+      padding:.5rem 1.25rem; border-radius:6px; cursor:pointer;
+      border:1px solid var(--cyan); background:var(--cyan-dim);
+      color:var(--cyan); transition:all .2s;
+    }
+    .btn3:hover { background:var(--cyan); color:var(--bg); }
+    .btn3:disabled { opacity:.4; cursor:not-allowed; }
+
+    /* ── CH3 SPECIFIC ── */
+    .stat-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 10px; padding: 1.25rem; text-align: center;
+    }
+    .stat-value {
+      font-family:'Space Mono',monospace; font-size:2rem;
+      font-weight:700; color:var(--cyan); display:block;
+    }
+    .stat-label2 { font-size:.8rem; color:var(--text-muted); margin-top:.25rem; }
+
+    .compare-grid { display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; }
+    @media (max-width:640px) { .compare-grid { grid-template-columns:1fr; } }
+    .compare-box { border-radius:10px; padding:1.5rem; border:1px solid; }
+    .compare-box.xml-box { border-color:var(--cyan); background:var(--cyan-dim); }
+    .compare-box.html-box { border-color:var(--amber); background:var(--amber-dim); }
+    .compare-box h3 { font-family:'Space Mono',monospace; font-size:.85rem; margin-bottom:1rem; }
+    .compare-box.xml-box h3 { color:var(--cyan); }
+    .compare-box.html-box h3 { color:var(--amber); }
+
+    .accordion { border:1px solid var(--border); border-radius:10px; overflow:hidden; }
+    .acc-item { border-bottom:1px solid var(--border); }
+    .acc-item:last-child { border-bottom:none; }
+    .acc-header {
+      display:flex; align-items:center; justify-content:space-between;
+      padding:1rem 1.5rem; cursor:pointer; background:var(--surface);
+      transition:background .2s; user-select:none;
+    }
+    .acc-header:hover { background:var(--surface2); }
+    .acc-header h3 { font-size:.95rem; font-weight:600; display:flex; align-items:center; gap:.75rem; }
+    .acc-icon { font-family:'Space Mono',monospace; font-size:.8rem; color:var(--cyan); transition:transform .3s; }
+    .acc-item.open .acc-icon { transform:rotate(45deg); }
+    .acc-body { max-height:0; overflow:hidden; transition:max-height .4s ease; background:var(--bg); }
+    .acc-body-inner { padding:1.5rem; }
+
+    .rules-list { list-style:none; }
+    .rules-list li {
+      display:flex; align-items:flex-start; gap:1rem;
+      padding:.85rem 1rem; border-radius:8px; margin-bottom:.5rem;
+      background:var(--surface); border:1px solid var(--border);
+      font-size:.9rem; transition:border-color .2s;
+    }
+    .rules-list li:hover { border-color:var(--cyan); }
+    .rule-num {
+      flex-shrink:0; width:26px; height:26px;
+      display:flex; align-items:center; justify-content:center;
+      border-radius:50%; background:var(--cyan-dim); border:1px solid var(--cyan);
+      font-family:'Space Mono',monospace; font-size:.65rem; color:var(--cyan);
+    }
+    .rule-valid { color:var(--green); font-family:'JetBrains Mono',monospace; font-size:.82rem; }
+    .rule-invalid { color:var(--red); font-family:'JetBrains Mono',monospace; font-size:.82rem; }
+
+    .entity-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:.75rem; }
+    .entity-card { background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:.85rem; text-align:center; }
+    .entity-char { font-size:1.6rem; font-weight:700; color:var(--amber); display:block; margin-bottom:.25rem; }
+    .entity-code { font-family:'JetBrains Mono',monospace; font-size:.75rem; color:var(--green); display:block; }
+    .entity-name { font-size:.72rem; color:var(--text-muted); }
+
+    .tech-wheel { display:flex; flex-wrap:wrap; gap:.75rem; justify-content:center; padding:2rem; }
+    .tech-pill {
+      font-family:'JetBrains Mono',monospace; font-size:.78rem;
+      padding:.5rem 1.1rem; border-radius:20px; border:1px solid;
+      cursor:default; transition:transform .2s, box-shadow .2s; text-align:center;
+    }
+    .tech-pill:hover { transform:scale(1.05) translateY(-2px); }
+    .tp-cyan { color:var(--cyan); border-color:var(--cyan); background:var(--cyan-dim); }
+    .tp-cyan:hover { box-shadow:0 4px 20px rgba(0,212,255,0.25); }
+    .tp-green { color:var(--green); border-color:var(--green); background:var(--green-dim); }
+    .tp-green:hover { box-shadow:0 4px 20px rgba(0,255,153,0.2); }
+    .tp-amber { color:var(--amber); border-color:var(--amber); background:var(--amber-dim); }
+    .tp-amber:hover { box-shadow:0 4px 20px rgba(255,183,64,0.2); }
+    .tp-purple { color:var(--purple); border-color:var(--purple); background:var(--purple-dim); }
+    .tp-purple:hover { box-shadow:0 4px 20px rgba(167,139,250,0.2); }
+
+    [data-tip] { position:relative; cursor:help; }
+    [data-tip]::after {
+      content:attr(data-tip); position:absolute; bottom:calc(100% + 6px); left:50%;
+      transform:translateX(-50%); background:var(--surface2); border:1px solid var(--border);
+      padding:.35rem .75rem; border-radius:6px; font-size:.72rem;
+      font-family:'Space Mono',monospace; white-space:nowrap; opacity:0;
+      pointer-events:none; transition:opacity .2s; color:var(--text); z-index:10;
+    }
+    [data-tip]:hover::after { opacity:1; }
+
+    .divider { height:1px; background:linear-gradient(90deg,transparent,var(--border),transparent); margin:3rem 0; }
+
+    /* ── AUDIO BTN ── */
+    .audio-fab {
+      position:fixed; bottom:2rem; right:2rem;
+      background:var(--surface); border:1px solid var(--cyan);
+      color:var(--cyan); width:52px; height:52px;
+      border-radius:50%; cursor:pointer; font-size:1.2rem;
+      display:flex; align-items:center; justify-content:center;
+      box-shadow:0 0 20px rgba(0,212,255,.15);
+      transition:all .2s; z-index:200;
+    }
+    .audio-fab:hover { background:var(--cyan-dim); }
+    .audio-fab.playing { animation:pulse-glow 1.5s infinite; }
+
+    /* ── FOOTER ── */
+    footer {
+      position:relative; z-index:1; text-align:center;
+      padding:3rem 2rem; border-top:1px solid var(--border);
+      color:var(--text-muted); font-size:.85rem; font-family:'Space Mono',monospace;
+    }
+    footer span { color:var(--cyan); }
+
+    /* ── ANIMATIONS ── */
+    @keyframes fadeDown { from{opacity:0;transform:translateY(-20px)} to{opacity:1;transform:translateY(0)} }
+    @keyframes fadeIn   { from{opacity:0} to{opacity:1} }
+    @keyframes pulse-glow {
+      0%,100%{box-shadow:0 0 20px rgba(0,212,255,.15)}
+      50%{box-shadow:0 0 40px rgba(0,212,255,.5)}
+    }
+    @keyframes glow { 0%,100%{box-shadow:0 0 0 rgba(0,212,255,0)} 50%{box-shadow:0 0 20px rgba(0,212,255,.3)} }
+    .glow { animation:glow 2.5s infinite; }
+
+    /* Chapter transition */
+    .chapter-panel { animation:fadeIn .35s ease; }
+
+    @media (max-width:768px) {
+      .nav-links { display:none; }
+      .nav-brand { display:none; }
+      .compare-grid { grid-template-columns:1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── UNIFIED NAV ── -->
+<nav>
+  <div class="nav-brand">DSS // COURS COMPLET</div>
+
+  <!-- Chapter Switcher -->
+  <div class="chapter-switcher">
+    <button class="ch-btn active" id="ch-btn-1" onclick="switchChapter(1)">Chapitres 1 &amp; 2</button>
+    <button class="ch-btn" id="ch-btn-3" onclick="switchChapter(3)">Chapitre 3</button>
+  </div>
+
+  <!-- Dynamic nav links -->
+  <div class="nav-links" id="nav-links">
+    <a href="#contexte">Contexte</a>
+    <a href="#types">3 Types</a>
+    <a href="#exemples">Exemples</a>
+    <a href="#evolution">Évolution</a>
+    <a href="#limites">Limites</a>
+    <a href="#documents">Documents</a>
+    <a href="#recap">Récap</a>
+    <a href="#quiz">Quiz</a>
+  </div>
+</nav>
+
+<div id="progress-bar"></div>
+<button class="audio-fab" id="audioBtn" onclick="toggleAudio()" title="Lire le contenu">🔊</button>
+
+<!-- ════════════════════════════════════════════════════════════ -->
+<!--  CHAPITRE 1 & 2                                             -->
+<!-- ════════════════════════════════════════════════════════════ -->
+<div class="chapter-panel active" id="panel-ch12">
+<div class="page">
+
+  <div class="hero">
+    <div class="hero-badge">DONNÉES SEMI-STRUCTURÉES</div>
+    <h1>Résumé <span>Interactif</span><br>Chapitres 1 &amp; 2</h1>
+    <p>Contexte, problématique, types de données et évolution des langages de balisage</p>
+    <div class="hero-tags">
+      <span class="tag tag-cyan">XML</span>
+      <span class="tag tag-green">JSON</span>
+      <span class="tag tag-amber">SQL</span>
+      <span class="tag tag-purple">SGML</span>
+      <span class="tag tag-red">HTML</span>
+      <span class="tag tag-cyan">Semi-Structuré</span>
+      <span class="tag tag-green">Hiérarchique</span>
+    </div>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-box"><span class="stat-num" data-target="3">0</span><span class="stat-label">Types de données</span></div>
+    <div class="stat-box"><span class="stat-num" data-target="1998">0</span><span class="stat-label">Naissance XML</span></div>
+    <div class="stat-box"><span class="stat-num" data-target="80">0</span><span class="stat-label">% données non-structurées</span></div>
+    <div class="stat-box"><span class="stat-num" data-target="6">0</span><span class="stat-label">Limites des SGBD relationnels</span></div>
+  </div>
+
+  <section id="contexte">
+    <div class="section-header"><span class="section-num">01</span><h2>Contexte et Problématique</h2></div>
+    <div class="alert alert-cyan">
+      <div class="alert-label">💡 POURQUOI LES DONNÉES SEMI-STRUCTURÉES ?</div>
+      <p>Les systèmes relationnels classiques peinent à gérer des données hétérogènes et en perpétuelle évolution. Le Web a besoin de formats plus flexibles.</p>
+    </div>
+    <div class="cards-grid">
+      <div class="card" style="--accent1:var(--cyan);--accent2:var(--green)">
+        <div class="card-icon">📱</div><h3>Cas : Instagram</h3>
+        <ul>
+          <li>Nom d'utilisateur (toujours présent)</li>
+          <li>Texte du post (optionnel)</li>
+          <li>Hashtags (0 à N, variable)</li>
+          <li>Médias (photo ou vidéo)</li>
+          <li>Commentaires (nombre illimité)</li>
+        </ul>
+        <p style="margin-top:.75rem;color:var(--red);font-size:.83rem;">Impossible en SQL classique : structure variable !</p>
+      </div>
+      <div class="card" style="--accent1:var(--amber);--accent2:var(--red)">
+        <div class="card-icon">🛒</div><h3>Cas : E-Commerce</h3>
+        <ul>
+          <li>Livres → auteur, ISBN, pages</li>
+          <li>Vêtements → taille, couleur, matière</li>
+          <li>Électronique → CPU, RAM, stockage</li>
+        </ul>
+        <p style="margin-top:.75rem;color:var(--red);font-size:.83rem;">Colonnes NULL partout en relationnel !</p>
+      </div>
+      <div class="card" style="--accent1:var(--green);--accent2:var(--cyan)">
+        <div class="card-icon">✅</div><h3>Solution : Semi-Structuré</h3>
+        <ul>
+          <li>Chaque document a sa propre structure</li>
+          <li>Auto-descriptif via balises/clés</li>
+          <li>Hiérarchique et flexible</li>
+          <li>Facile à faire évoluer</li>
+          <li>Portable (format texte universel)</li>
+        </ul>
+      </div>
+    </div>
+    <div class="alert alert-amber">
+      <div class="alert-label">⚡ PRINCIPE CLÉ</div>
+      <p>Dans les données semi-structurées, <strong style="color:var(--amber)">la structure est dans les données elles-mêmes</strong> grâce aux balises (XML) ou aux clés (JSON). Pas besoin d'un schéma externe prédéfini.</p>
+    </div>
+  </section>
+
+  <section id="types">
+    <div class="section-header"><span class="section-num">02</span><h2>Les 3 Types de Données</h2></div>
+    <div class="type-grid">
+      <div class="type-card cyan">
+        <h3>🗄️ Structurées</h3><p><strong>Schéma fixe et rigide</strong></p>
+        <p style="margin-bottom:.75rem">Modèle plat (tables relationnelles)</p>
+        <ul>
+          <li class="pro">Cohérence garantie</li><li class="pro">Requêtes SQL puissantes</li>
+          <li class="con">Difficile à faire évoluer</li><li class="con">Pas adapté aux données hétérogènes</li>
+        </ul>
+        <p style="margin-top:.75rem;font-family:'JetBrains Mono',monospace;font-size:.78rem;color:var(--cyan)">Exemple : Table SQL</p>
+      </div>
+      <div class="type-card green">
+        <h3>🌳 Semi-Structurées</h3><p><strong>Schéma flexible, évolutif</strong></p>
+        <p style="margin-bottom:.75rem">Modèle hiérarchique (arbre)</p>
+        <ul>
+          <li class="pro">Flexibilité maximale</li><li class="pro">Auto-descriptif</li>
+          <li class="pro">Facile à faire évoluer</li><li class="pro">Idéal pour le Web et l'échange</li>
+        </ul>
+        <p style="margin-top:.75rem;font-family:'JetBrains Mono',monospace;font-size:.78rem;color:var(--green)">Exemple : XML, JSON ← FOCUS</p>
+      </div>
+      <div class="type-card amber">
+        <h3>📄 Non Structurées</h3><p><strong>Aucun schéma formel</strong></p>
+        <p style="margin-bottom:.75rem">Liberté totale de format</p>
+        <ul>
+          <li class="pro">Liberté totale</li>
+          <li class="con">Difficile à analyser automatiquement</li>
+          <li class="con">Besoin d'IA/NLP pour traiter</li>
+        </ul>
+        <p style="margin-top:.75rem;font-family:'JetBrains Mono',monospace;font-size:.78rem;color:var(--amber)">Exemple : PDF, Images, Vidéos</p>
+      </div>
+    </div>
+    <h3 style="margin:2rem 0 1rem;font-size:1.1rem">📋 Tableau Comparatif</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>ASPECT</th><th>STRUCTURÉES</th><th>SEMI-STRUCTURÉES</th><th>NON STRUCTURÉES</th></tr></thead>
+        <tbody>
+          <tr><td>Schéma</td><td>Défini à l'avance, rigide</td><td>Optionnel, évolutif</td><td>Aucun</td></tr>
+          <tr><td>Modèle</td><td>Plat (tables)</td><td>Hiérarchique (arbre)</td><td>N/A</td></tr>
+          <tr><td>Flexibilité</td><td>Faible</td><td>Élevée</td><td>Maximale</td></tr>
+          <tr><td>Exemple</td><td>Table SQL</td><td>Document XML/JSON</td><td>PDF, Image, Vidéo</td></tr>
+          <tr><td>Requêtage</td><td>SQL</td><td>XPath, XQuery, JSONPath</td><td>Recherche plein texte</td></tr>
+          <tr><td>Évolution</td><td>Coûteuse (ALTER TABLE)</td><td>Facile (ajout de balises)</td><td>N/A</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="exemples">
+    <div class="section-header"><span class="section-num">03</span><h2>Exemples Concrets</h2></div>
+    <div class="inner-tabs">
+      <div class="inner-tab-headers">
+        <button class="inner-tab-btn active" onclick="switchInnerTab(this,'itab-sql')">SQL (Structuré)</button>
+        <button class="inner-tab-btn" onclick="switchInnerTab(this,'itab-json')">JSON (Semi-Structuré)</button>
+        <button class="inner-tab-btn" onclick="switchInnerTab(this,'itab-instagram')">Post Instagram</button>
+      </div>
+      <div id="itab-sql" class="inner-tab-content active">
+        <div class="alert alert-red"><div class="alert-label">❌ LIMITES DU SQL</div><p>Structure fixe = beaucoup de colonnes NULL. Difficile d'ajouter de nouveaux attributs spécifiques à certains produits.</p></div>
+        <div class="code-block">
+          <div class="code-header"><div class="code-dots"><span></span><span></span><span></span></div><span class="code-title">catalogue.sql</span><button class="code-copy" onclick="copyCode(this)">COPY</button></div>
+          <pre><span class="com">-- Table Produits (rigide, structure fixe)</span>
+<span class="kw">CREATE TABLE</span> Produits (
+    id        <span class="kw">INT PRIMARY KEY</span>,
+    nom       <span class="kw">VARCHAR</span>(<span class="num">100</span>),
+    couleur   <span class="kw">VARCHAR</span>(<span class="num">30</span>),  <span class="com">-- NULL pour les livres</span>
+    taille    <span class="kw">VARCHAR</span>(<span class="num">10</span>),  <span class="com">-- NULL pour l'électronique</span>
+    isbn      <span class="kw">VARCHAR</span>(<span class="num">20</span>)   <span class="com">-- NULL pour les vêtements</span>
+);</pre>
+        </div>
+      </div>
+      <div id="itab-json" class="inner-tab-content">
+        <div class="alert alert-green"><div class="alert-label">✅ FLEXIBILITÉ JSON</div><p>Chaque produit a sa propre structure. Facile d'ajouter de nouveaux champs sans migration lourde.</p></div>
+        <div class="code-block">
+          <div class="code-header"><div class="code-dots"><span></span><span></span><span></span></div><span class="code-title">catalogue.json</span><button class="code-copy" onclick="copyCode(this)">COPY</button></div>
+          <pre>{
+  <span class="key">"produit"</span>: { <span class="key">"id"</span>: <span class="num">101</span>, <span class="key">"nom"</span>: <span class="str">"T-shirt"</span>, <span class="key">"couleurs"</span>: [<span class="str">"Noir"</span>, <span class="str">"Blanc"</span>] }
+}
+{
+  <span class="key">"produit"</span>: { <span class="key">"id"</span>: <span class="num">102</span>, <span class="key">"nom"</span>: <span class="str">"Livre"</span>, <span class="key">"auteur"</span>: <span class="str">"John Doe"</span>, <span class="key">"isbn"</span>: <span class="str">"978-3-16"</span> }
+}</pre>
+        </div>
+      </div>
+      <div id="itab-instagram" class="inner-tab-content">
+        <div class="alert alert-cyan"><div class="alert-label">📱 EXEMPLE DU COURS</div><p>Un post Instagram illustre parfaitement la structure hiérarchique et les données de profondeur variable.</p></div>
+        <div class="code-block">
+          <div class="code-header"><div class="code-dots"><span></span><span></span><span></span></div><span class="code-title">instagram_post.json</span><button class="code-copy" onclick="copyCode(this)">COPY</button></div>
+          <pre>{
+  <span class="key">"user"</span>: <span class="str">"sara_tech"</span>, <span class="key">"text"</span>: <span class="str">"Learning XML is fun!"</span>,
+  <span class="key">"hashtags"</span>: [<span class="str">"#Data"</span>, <span class="str">"#XML"</span>], <span class="key">"likes"</span>: <span class="num">125</span>,
+  <span class="key">"media"</span>: { <span class="key">"type"</span>: <span class="str">"image"</span>, <span class="key">"url"</span>: <span class="str">"photo1.jpg"</span> },
+  <span class="key">"comments"</span>: [{ <span class="key">"user"</span>: <span class="str">"ali"</span>, <span class="key">"text"</span>: <span class="str">"Great post!"</span> }]
+}</pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="evolution">
+    <div class="section-header"><span class="section-num">04</span><h2>Évolution : SGML → HTML → XML</h2></div>
+    <div class="timeline">
+      <div class="timeline-item">
+        <div class="timeline-year">// 1986</div>
+        <h3>SGML — Standard Generalized Markup Language</h3>
+        <p><em>Philosophie : "Je peux tout décrire"</em></p>
+        <ul><li>Langage de balisage très complet et très complexe</li><li>Sépare contenu et présentation</li><li>Ancêtre commun de HTML et XML</li></ul>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-year">// 1991</div>
+        <h3>HTML — HyperText Markup Language</h3>
+        <p><em>Philosophie : "Je décris comment afficher"</em></p>
+        <ul><li>Simplification de SGML pour le Web</li><li>Balises prédéfinies fixes : &lt;p&gt;, &lt;h1&gt;, &lt;a&gt;…</li><li>Non extensible</li></ul>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-year">// 1998</div>
+        <h3>XML — eXtensible Markup Language</h3>
+        <p><em>Philosophie : "Je décris ce que ça signifie"</em></p>
+        <ul><li>Sous-ensemble simplifié de SGML</li><li>Balises définies par l'utilisateur</li><li>Auto-descriptif, portable, universel</li></ul>
+      </div>
+    </div>
+    <div class="alert alert-purple">
+      <div class="alert-label">🔑 DIFFÉRENCE CLÉ</div>
+      <p>HTML a des balises <strong style="color:var(--purple)">fixes pour l'affichage</strong>. XML permet de créer ses <strong style="color:var(--purple)">propres balises pour décrire ses données</strong>.</p>
+    </div>
+  </section>
+
+  <section id="limites">
+    <div class="section-header"><span class="section-num">05</span><h2>Pourquoi XML/JSON est Essentiel</h2></div>
+    <ul class="benefits-list">
+      <li><strong>🔄 Interopérabilité</strong> — Formats standards compris par toutes les plateformes</li>
+      <li><strong>🚀 Adaptabilité</strong> — Pas de schéma prédéfini = idéal pour données évolutives</li>
+      <li><strong>🔗 Intégration</strong> — Fusionne facilement des sources hétérogènes</li>
+      <li><strong>⚙️ Configuration</strong> — Spring, Maven, web.xml utilisent XML pour configurer les applications Java</li>
+      <li><strong>🌐 Web Services</strong> — SOAP, APIs REST, flux RSS, syndication de contenu</li>
+      <li><strong>🤖 Machine Learning</strong> — Datasets annotés (PASCAL VOC en XML), corpus NLP</li>
+      <li><strong>🗃️ BD Natives XML</strong> — eXist-db, MarkLogic stockent et requêtent du XML nativement</li>
+    </ul>
+    <div class="cards-grid" style="margin-top:2rem;">
+      <div class="card" style="--accent1:var(--red);--accent2:var(--amber)"><div class="card-icon">🔒</div><h3>Rigidité du Schéma</h3><p>ALTER TABLE sur 1 million d'entrées = opération lourde. Avec XML : on ajoute simplement un champ aux nouveaux documents.</p></div>
+      <div class="card" style="--accent1:var(--amber);--accent2:var(--red)"><div class="card-icon">❓</div><h3>Données Hétérogènes</h3><p>Livres et vêtements n'ont pas les mêmes attributs. En SQL = colonnes NULL partout.</p></div>
+      <div class="card" style="--accent1:var(--purple);--accent2:var(--cyan)"><div class="card-icon">🔄</div><h3>Évolution Fréquente</h3><p>Sur le Web, les structures changent constamment. XML/JSON permettent d'ajouter des attributs sans migration complexe.</p></div>
+      <div class="card" style="--accent1:var(--green);--accent2:var(--cyan)"><div class="card-icon">📤</div><h3>Échange Difficile</h3><p>Export SQL = format propriétaire. Export XML/JSON = format texte universel, lisible partout.</p></div>
+    </div>
+  </section>
+
+  <section id="documents">
+    <div class="section-header"><span class="section-num">06</span><h2>Documents et Hyperdocuments Multimédias</h2></div>
+    <div class="cards-grid">
+      <div class="card" style="--accent1:var(--cyan);--accent2:var(--purple)"><div class="card-icon">📄</div><h3>Document</h3><p>Entité informationnelle destinée à être lue, consultée ou traitée par un humain ou un système.</p></div>
+      <div class="card" style="--accent1:var(--green);--accent2:var(--cyan)"><div class="card-icon">🔗</div><h3>Hyperdocument</h3><p>Document enrichi de liens permettant une navigation non-linéaire entre ressources.</p></div>
+      <div class="card" style="--accent1:var(--amber);--accent2:var(--green)"><div class="card-icon">🎬</div><h3>Contenu Multimédia</h3><p>Combine texte, images, sons, vidéos, animations pour un rendu riche.</p></div>
+    </div>
+  </section>
+
+  <section id="recap">
+    <div class="section-header"><span class="section-num">07</span><h2>Points Clés à Retenir</h2></div>
+    <div class="cards-grid">
+      <div class="card" style="--accent1:var(--cyan);--accent2:var(--green)"><div class="card-icon">📊</div><h3>Classification</h3><ul><li>Structurées → schéma fixe (SQL)</li><li>Semi-structurées → schéma flexible (XML, JSON)</li><li>Non structurées → aucun schéma</li></ul></div>
+      <div class="card" style="--accent1:var(--green);--accent2:var(--amber)"><div class="card-icon">📅</div><h3>Évolution Historique</h3><ul><li>1986 → SGML</li><li>1991 → HTML</li><li>1998 → XML</li></ul></div>
+      <div class="card" style="--accent1:var(--amber);--accent2:var(--purple)"><div class="card-icon">🔑</div><h3>Semi-Structuré</h3><ul><li>Auto-descriptif</li><li>Hiérarchique</li><li>Flexible</li><li>Portable</li></ul></div>
+      <div class="card" style="--accent1:var(--purple);--accent2:var(--cyan)"><div class="card-icon">🚀</div><h3>Prochaines Étapes</h3><ul><li>Chapitre 3 → Noyau XML</li><li>Chapitre 4 → Galaxie XML</li><li>Chapitre 5 → BD XML &amp; XQuery</li></ul></div>
+    </div>
+  </section>
+
+  <section id="quiz">
+    <div class="section-header"><span class="section-num">08</span><h2>Quiz Interactif</h2></div>
+    <div class="quiz-wrap" id="quiz-container">
+      <div class="q-card" data-q="0">
+        <div class="q-text">1 / 8 — Quelle est la principale caractéristique des données semi-structurées ?</div>
+        <div class="q-options">
+          <button class="q-opt" onclick="answer(this,0,false)">Elles nécessitent un schéma rigide prédéfini</button>
+          <button class="q-opt" onclick="answer(this,0,true)">La structure est dans les données elles-mêmes (auto-descriptif)</button>
+          <button class="q-opt" onclick="answer(this,0,false)">Elles ne peuvent pas être hiérarchiques</button>
+          <button class="q-opt" onclick="answer(this,0,false)">Elles sont identiques aux données structurées</button>
+        </div>
+        <div class="q-feedback">La structure est portée par les balises (XML) ou les clés (JSON) intégrées aux données elles-mêmes.</div>
+      </div>
+      <div class="q-card" data-q="1">
+        <div class="q-text">2 / 8 — Quel est le modèle de données des données semi-structurées ?</div>
+        <div class="q-options">
+          <button class="q-opt" onclick="answer(this,1,false)">Plat (tables)</button>
+          <button class="q-opt" onclick="answer(this,1,true)">Hiérarchique (arbre)</button>
+          <button class="q-opt" onclick="answer(this,1,false)">Matriciel (grille)</button>
+          <button class="q-opt" onclick="answer(this,1,false)">Linéaire (liste)</button>
+        </div>
+        <div class="q-feedback">Les données semi-structurées utilisent un modèle hiérarchique en arbre.</div>
+      </div>
+      <div class="q-card" data-q="2">
+        <div class="q-text">3 / 8 — En quelle année XML a-t-il été standardisé ?</div>
+        <div class="q-options">
+          <button class="q-opt" onclick="answer(this,2,false)">1986</button>
+          <button class="q-opt" onclick="answer(this,2,false)">1991</button>
+          <button class="q-opt" onclick="answer(this,2,true)">1998</button>
+          <button class="q-opt" onclick="answer(this,2,false)">2005</button>
+        </div>
+        <div class="q-feedback">XML a été publié par le W3C en 1998, après SGML (1986) et HTML (1991).</div>
+      </div>
+      <div class="q-card" data-q="3">
+        <div class="q-text">4 / 8 — Quelle est la différence fondamentale entre HTML et XML ?</div>
+        <div class="q-options">
+          <button class="q-opt" onclick="answer(this,3,false)">HTML est plus récent que XML</button>
+          <button class="q-opt" onclick="answer(this,3,true)">HTML décrit l'affichage (balises fixes), XML décrit le sens (balises personnalisées)</button>
+          <button class="q-opt" onclick="answer(this,3,false)">XML ne peut pas contenir du texte</button>
+          <button class="q-opt" onclick="answer(this,3,false)">HTML et XML sont identiques</button>
+        </div>
+        <div class="q-feedback">HTML a des balises fixes pour l'affichage. XML est extensible : on crée ses propres balises sémantiques.</div>
+      </div>
+      <div class="q-card" data-q="4">
+        <div class="q-text">5 / 8 — Pourquoi les bases relationnelles sont-elles inadaptées aux données du Web ?</div>
+        <div class="q-options">
+          <button class="q-opt" onclick="answer(this,4,false)">Elles sont trop rapides</button>
+          <button class="q-opt" onclick="answer(this,4,false)">Elles ne supportent pas les nombres</button>
+          <button class="q-opt" onclick="answer(this,4,true)">Leur schéma rigide ne s'adapte pas aux données hétérogènes et évolutives</button>
+          <button class="q-opt" onclick="answer(this,4,false)">Elles n'existent plus</button>
+        </div>
+        <div class="q-feedback">Le schéma fixe génère de nombreuses colonnes NULL, et toute évolution nécessite une migration coûteuse.</div>
+      </div>
+      <div class="q-card" data-q="5">
+        <div class="q-text">6 / 8 — Qu'est-ce qu'un hyperdocument ?</div>
+        <div class="q-options">
+          <button class="q-opt" onclick="answer(this,5,false)">Un document très long</button>
+          <button class="q-opt" onclick="answer(this,5,true)">Un document enrichi de liens permettant une navigation non-linéaire</button>
+          <button class="q-opt" onclick="answer(this,5,false)">Un document en XML uniquement</button>
+          <button class="q-opt" onclick="answer(this,5,false)">Un document sans structure</button>
+        </div>
+        <div class="q-feedback">Un hyperdocument contient des hyperliens qui permettent de naviguer de façon non-linéaire.</div>
+      </div>
+      <div class="q-card" data-q="6">
+        <div class="q-text">7 / 8 — Quel ancêtre commun ont HTML et XML ?</div>
+        <div class="q-options">
+          <button class="q-opt" onclick="answer(this,6,false)">JSON</button>
+          <button class="q-opt" onclick="answer(this,6,false)">SQL</button>
+          <button class="q-opt" onclick="answer(this,6,true)">SGML</button>
+          <button class="q-opt" onclick="answer(this,6,false)">CSS</button>
+        </div>
+        <div class="q-feedback">SGML (1986) est l'ancêtre commun de HTML et XML.</div>
+      </div>
+      <div class="q-card" data-q="7">
+        <div class="q-text">8 / 8 — Quel format utilise-t-on pour les datasets annotés en Machine Learning ?</div>
+        <div class="q-options">
+          <button class="q-opt" onclick="answer(this,7,false)">CSV uniquement</button>
+          <button class="q-opt" onclick="answer(this,7,true)">XML (format PASCAL VOC)</button>
+          <button class="q-opt" onclick="answer(this,7,false)">PDF</button>
+          <button class="q-opt" onclick="answer(this,7,false)">SQL</button>
+        </div>
+        <div class="q-feedback">Le format PASCAL VOC, très utilisé pour la détection d'objets, est basé sur XML.</div>
+      </div>
+    </div>
+    <div class="quiz-score" id="quiz-score">
+      <div class="score-num" id="score-display">0/8</div>
+      <div class="score-label">Score final</div>
+      <p id="score-msg" style="color:var(--text-dim);margin-bottom:1.5rem"></p>
+      <button class="btn-restart" onclick="restartQuiz()">↺ Recommencer</button>
+    </div>
+  </section>
+
+</div><!-- .page ch12 -->
+</div><!-- #panel-ch12 -->
+
+
+<!-- ════════════════════════════════════════════════════════════ -->
+<!--  CHAPITRE 3                                                  -->
+<!-- ════════════════════════════════════════════════════════════ -->
+<div class="chapter-panel" id="panel-ch3">
+<div class="page">
+
+  <header class="hero">
+    <div class="hero-badge">CHAPITRE 03 · NOYAU XML</div>
+    <h1>Le <span>Noyau</span> XML<br>de A à Z</h1>
+    <p>Structure, syntaxe, namespaces et validation — tout ce qu'il faut savoir sur XML pour maîtriser les données semi-structurées.</p>
+    <div class="hero-tags">
+      <span class="tag tag-cyan">eXtensible Markup Language</span>
+      <span class="tag tag-green">Structure arborescente</span>
+      <span class="tag tag-amber">Bien formé</span>
+      <span class="tag tag-purple">Namespaces</span>
+      <span class="tag tag-red">DTD / XSD</span>
+    </div>
+  </header>
+
+  <div class="stats-row">
+    <div class="stat-card"><span class="stat-value" data-count="1998">1998</span><div class="stat-label2">Année de création de XML (W3C)</div></div>
+    <div class="stat-card"><span class="stat-value" data-count="11">11</span><div class="stat-label2">Règles pour un doc bien formé</div></div>
+    <div class="stat-card"><span class="stat-value" data-count="5">5</span><div class="stat-label2">Entités prédéfinies XML</div></div>
+    <div class="stat-card"><span class="stat-value" data-count="8">8+</span><div class="stat-label2">Technologies associées XML</div></div>
+  </div>
+
+  <div class="divider"></div>
+
+  <section id="intro">
+    <div class="section-header"><span class="section-num">3.1</span><h2>Introduction à XML</h2></div>
+    <div class="alert alert-cyan">
+      <div class="alert-label">DÉFINITION</div>
+      <strong>XML = eXtensible Markup Language</strong> — Langage de balisage <em>structuré et extensible</em>, destiné à la <strong>description</strong>, au <strong>stockage</strong> et au <strong>transfert</strong> de données.
+    </div>
+    <div class="compare-grid">
+      <div class="compare-box xml-box">
+        <h3>// XML</h3>
+        <div class="code-block"><pre><span class="xml-pi">&lt;?xml version="1.0"?&gt;</span>
+<span class="xml-tag">&lt;livre&gt;</span>
+  <span class="xml-tag">&lt;titre&gt;</span><span class="xml-content">Java et Internet</span><span class="xml-tag">&lt;/titre&gt;</span>
+  <span class="xml-tag">&lt;auteur&gt;</span><span class="xml-content">Etienne Duris</span><span class="xml-tag">&lt;/auteur&gt;</span>
+<span class="xml-tag">&lt;/livre&gt;</span></pre></div>
+        <p style="font-size:.85rem;color:var(--text-dim);">🎯 Décrit <strong style="color:var(--cyan)">CE QUE ÇA SIGNIFIE</strong></p>
+      </div>
+      <div class="compare-box html-box">
+        <h3>// HTML</h3>
+        <div class="code-block"><pre><span class="xml-tag">&lt;html&gt;</span><span class="xml-tag">&lt;body&gt;</span>
+  "Java et Internet" par
+  Etienne Duris — Vuibert
+<span class="xml-tag">&lt;/body&gt;</span><span class="xml-tag">&lt;/html&gt;</span></pre></div>
+        <p style="font-size:.85rem;color:var(--text-dim);">🎨 Décrit <strong style="color:var(--amber)">COMMENT AFFICHER</strong></p>
+      </div>
+    </div>
+    <h3 style="margin:2rem 0 1rem;font-size:1.1rem;">Domaines d'application</h3>
+    <div class="cards-grid">
+      <div class="card" style="--accent1:var(--cyan);--accent2:var(--green)"><div class="card-icon">🔄</div><h3>Échange de données</h3><p>Entre systèmes hétérogènes — protocoles SOAP, flux RSS, APIs</p></div>
+      <div class="card" style="--accent1:var(--green);--accent2:var(--cyan)"><div class="card-icon">🗄️</div><h3>Stockage de données</h3><p>Bases XML natives : eXist-db, MarkLogic</p></div>
+      <div class="card" style="--accent1:var(--amber);--accent2:var(--green)"><div class="card-icon">📱</div><h3>Dev d'applications</h3><p>Web, mobile (Android layouts), interfaces de données</p></div>
+      <div class="card" style="--accent1:var(--purple);--accent2:var(--amber)"><div class="card-icon">📋</div><h3>Métadonnées</h3><p>Dublin Core (bibliothèques), RDF/XML (web sémantique)</p></div>
+      <div class="card" style="--accent1:var(--red);--accent2:var(--purple)"><div class="card-icon">⚙️</div><h3>Configuration logicielle</h3><p>web.xml, Maven pom.xml, Spring — fichiers de config</p></div>
+      <div class="card" style="--accent1:var(--cyan);--accent2:var(--amber)"><div class="card-icon">📄</div><h3>Documents électroniques</h3><p>OOXML (Word/Excel), DocBook, EPUB, SVG</p></div>
+    </div>
+    <h3 style="margin:2rem 0 1rem;font-size:1.1rem;">⚙️ Écosystème XML</h3>
+    <div class="tech-wheel">
+      <div class="tech-pill tp-cyan" data-tip="Transformation & formatage">XSL / XSLT</div>
+      <div class="tech-pill tp-green" data-tip="Navigation dans les docs XML">XPath</div>
+      <div class="tech-pill tp-amber" data-tip="Langage de requête (= SQL pour XML)">XQuery</div>
+      <div class="tech-pill tp-purple" data-tip="Interface de programmation">DOM</div>
+      <div class="tech-pill tp-cyan" data-tip="API événementielle de lecture">SAX</div>
+      <div class="tech-pill tp-green" data-tip="Liens hypertextes dans XML">XLink / XPointer</div>
+      <div class="tech-pill tp-amber" data-tip="Validation avancée avec typage fort">XML Schema (XSD)</div>
+      <div class="tech-pill tp-purple" data-tip="Définition de structure (legacy)">DTD</div>
+      <div class="tech-pill tp-cyan" data-tip="Feuilles de style simples">CSS</div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <section id="structure">
+    <div class="section-header"><span class="section-num">3.2</span><h2>Structure de base d'un document XML</h2></div>
+    <div class="alert alert-amber">
+      <div class="alert-label">LES 3 PARTIES</div>
+      Un document XML comprend 3 parties : <strong>(1) Prologue</strong> optionnel — <strong>(2) Arbre d'éléments</strong> obligatoire — <strong>(3) Épilogue</strong> optionnel.
+    </div>
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><span></span><span></span><span></span></div><span class="code-title">biblio.xml — Document XML complet annoté</span><button class="code-copy" onclick="copyCode(this)">COPIER</button></div>
+      <pre><span class="xml-pi">&lt;?xml version="1.0" encoding="ISO-8859-1"?&gt;</span>  <span class="xml-comment">&lt;!-- ① PROLOGUE --&gt;</span>
+<span class="xml-comment">&lt;!DOCTYPE biblio SYSTEM "biblio.dtd"&gt;</span>
+
+<span class="xml-tag">&lt;biblio&gt;</span>  <span class="xml-comment">&lt;!-- ② RACINE --&gt;</span>
+  <span class="xml-tag">&lt;livre&gt;</span>
+    <span class="xml-tag">&lt;titre&gt;</span><span class="xml-content">Les Misérables</span><span class="xml-tag">&lt;/titre&gt;</span>
+    <span class="xml-tag">&lt;auteur&gt;</span><span class="xml-content">Victor Hugo</span><span class="xml-tag">&lt;/auteur&gt;</span>
+  <span class="xml-tag">&lt;/livre&gt;</span>
+  <span class="xml-tag">&lt;livre <span class="xml-attr">lang</span>=<span class="xml-val">"en"</span>&gt;</span>
+    <span class="xml-tag">&lt;titre&gt;</span><span class="xml-content">David Copperfield</span><span class="xml-tag">&lt;/titre&gt;</span>
+    <span class="xml-tag">&lt;auteur&gt;</span><span class="xml-content">Charles Dickens</span><span class="xml-tag">&lt;/auteur&gt;</span>
+  <span class="xml-tag">&lt;/livre&gt;</span>
+<span class="xml-tag">&lt;/biblio&gt;</span></pre>
+    </div>
+    <div class="accordion">
+      <div class="acc-item">
+        <div class="acc-header" onclick="toggleAcc(this)">
+          <h3><span class="tag tag-cyan" style="font-size:.65rem;">3.2.1</span> Le Prologue</h3>
+          <span class="acc-icon">+</span>
+        </div>
+        <div class="acc-body">
+          <div class="acc-body-inner">
+            <div class="cards-grid">
+              <div class="card" style="--accent1:var(--cyan)"><h3>Déclaration XML</h3><div class="code-block"><pre style="padding:.75rem;"><span class="xml-pi">&lt;?xml version="1.0" encoding="UTF-8" standalone="yes"?&gt;</span></pre></div><ul><li><strong>version</strong> : "1.0" ou "1.1"</li><li><strong>encoding</strong> : UTF-8 recommandé</li><li><strong>standalone="yes"</strong> : doc sans DTD externe</li></ul></div>
+              <div class="card" style="--accent1:var(--amber)"><h3>Déclaration DOCTYPE</h3><div class="code-block"><pre style="padding:.75rem;"><span class="xml-comment">&lt;!DOCTYPE biblio SYSTEM "biblio.dtd"&gt;</span></pre></div><p>Définit la structure du document via une DTD.</p></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="acc-item">
+        <div class="acc-header" onclick="toggleAcc(this)">
+          <h3><span class="tag tag-green" style="font-size:.65rem;">3.2.2</span> Les Commentaires</h3>
+          <span class="acc-icon">+</span>
+        </div>
+        <div class="acc-body">
+          <div class="acc-body-inner">
+            <div class="cards-grid">
+              <div class="card" style="--accent1:var(--green)"><h3>✅ Valides</h3><div class="code-block"><pre style="padding:.75rem;"><span class="xml-comment">&lt;!-- Commentaire normal --&gt;</span></pre></div></div>
+              <div class="card" style="--accent1:var(--red)"><h3>❌ Invalides</h3><div class="code-block"><pre style="padding:.75rem;"><span style="color:var(--red)">&lt;!-- Avec -- double tiret -- interdit --&gt;</span></pre></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <section id="elements">
+    <div class="section-header"><span class="section-num">3.2.3</span><h2>Éléments · Attributs · Entités</h2></div>
+    <div class="inner-tabs">
+      <div class="inner-tab-headers">
+        <button class="inner-tab-btn active" onclick="switchInnerTab(this,'ch3-elements')">Éléments</button>
+        <button class="inner-tab-btn" onclick="switchInnerTab(this,'ch3-attrs')">Attributs</button>
+        <button class="inner-tab-btn" onclick="switchInnerTab(this,'ch3-entities')">Entités</button>
+      </div>
+      <div id="ch3-elements" class="inner-tab-content active">
+        <div class="alert alert-cyan"><div class="alert-label">ÉLÉMENT XML</div>Un élément = <strong>balise ouvrante</strong> + <strong>contenu</strong> + <strong>balise fermante</strong>.</div>
+        <div class="code-block">
+          <div class="code-header"><div class="code-dots"><span></span><span></span><span></span></div><span class="code-title">Les 4 types d'éléments</span></div>
+          <pre><span class="xml-comment">&lt;!-- 1. Avec texte (nœud feuille) --&gt;</span>
+<span class="xml-tag">&lt;titre&gt;</span><span class="xml-content">XML Fondamental</span><span class="xml-tag">&lt;/titre&gt;</span>
+
+<span class="xml-comment">&lt;!-- 2. Avec enfants (nœud branche) --&gt;</span>
+<span class="xml-tag">&lt;auteur&gt;</span>
+  <span class="xml-tag">&lt;nom&gt;</span><span class="xml-content">Dupont</span><span class="xml-tag">&lt;/nom&gt;</span>
+<span class="xml-tag">&lt;/auteur&gt;</span>
+
+<span class="xml-comment">&lt;!-- 3. Vide (auto-fermant) --&gt;</span>
+<span class="xml-tag">&lt;image <span class="xml-attr">src</span>=<span class="xml-val">"logo.jpg"</span>/&gt;</span>
+
+<span class="xml-comment">&lt;!-- 4. Racine (unique par document) --&gt;</span>
+<span class="xml-tag">&lt;bibliotheque&gt;</span>...<span class="xml-tag">&lt;/bibliotheque&gt;</span></pre>
+        </div>
+      </div>
+      <div id="ch3-attrs" class="inner-tab-content">
+        <div class="alert alert-green"><div class="alert-label">SYNTAXE</div><code>&lt;element attribut="valeur"&gt;</code> — Toujours dans la balise ouvrante, valeur entre guillemets.</div>
+        <div class="code-block">
+          <div class="code-header"><div class="code-dots"><span></span><span></span><span></span></div><span class="code-title">Exemples d'attributs</span></div>
+          <pre><span class="xml-tag">&lt;livre <span class="xml-attr">lang</span>=<span class="xml-val">"fr"</span> <span class="xml-attr">edition</span>=<span class="xml-val">"2"</span>&gt;</span>...<span class="xml-tag">&lt;/livre&gt;</span>
+<span class="xml-tag">&lt;img <span class="xml-attr">src</span>=<span class="xml-val">"photo.jpg"</span> <span class="xml-attr">width</span>=<span class="xml-val">"800"</span>/&gt;</span></pre>
+        </div>
+        <div class="cards-grid" style="margin-top:1rem">
+          <div class="card" style="--accent1:var(--green)"><h3>✅ Règles</h3><ul><li>Toujours dans la balise ouvrante</li><li>Valeur entre guillemets</li><li>Pas de doublon dans un même élément</li></ul></div>
+          <div class="card" style="--accent1:var(--amber)"><h3>💡 Convention</h3><p>Utiliser les <strong>attributs</strong> pour les <em>métadonnées</em> et les <strong>éléments</strong> pour le <em>contenu principal</em>.</p></div>
+        </div>
+      </div>
+      <div id="ch3-entities" class="inner-tab-content">
+        <div class="alert alert-amber"><div class="alert-label">ENTITÉS PRÉDÉFINIES</div>Certains caractères ont une signification spéciale en XML et doivent être échappés.</div>
+        <div class="entity-grid">
+          <div class="entity-card"><span class="entity-char">&amp;</span><span class="entity-code">&amp;amp;</span><span class="entity-name">Esperluette</span></div>
+          <div class="entity-card"><span class="entity-char">&lt;</span><span class="entity-code">&amp;lt;</span><span class="entity-name">Inférieur à</span></div>
+          <div class="entity-card"><span class="entity-char">&gt;</span><span class="entity-code">&amp;gt;</span><span class="entity-name">Supérieur à</span></div>
+          <div class="entity-card"><span class="entity-char">"</span><span class="entity-code">&amp;quot;</span><span class="entity-name">Guillemet</span></div>
+          <div class="entity-card"><span class="entity-char">'</span><span class="entity-code">&amp;apos;</span><span class="entity-name">Apostrophe</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <section id="bien-forme">
+    <div class="section-header"><span class="section-num">3.2.4</span><h2>Document Bien Formé</h2></div>
+    <div class="alert alert-cyan"><div class="alert-label">CONCEPT CLÉ</div>Un document XML <strong>bien formé</strong> respecte toutes les règles syntaxiques XML. C'est la condition minimale pour qu'un parser puisse le traiter.</div>
+    <ul class="rules-list">
+      <li><div class="rule-num">1</div><div><strong>Une seule racine</strong> — <span class="rule-valid">&lt;root&gt; ... &lt;/root&gt;</span> ✓</div></li>
+      <li><div class="rule-num">2</div><div><strong>Balises fermantes obligatoires</strong> — <span class="rule-valid">&lt;titre&gt;XML&lt;/titre&gt;</span> ✓ &nbsp;&nbsp;<span class="rule-invalid">&lt;titre&gt;XML</span> ✗</div></li>
+      <li><div class="rule-num">3</div><div><strong>Imbrication correcte</strong> — <span class="rule-valid">&lt;a&gt;&lt;b&gt;&lt;/b&gt;&lt;/a&gt;</span> ✓ &nbsp;&nbsp;<span class="rule-invalid">&lt;a&gt;&lt;b&gt;&lt;/a&gt;&lt;/b&gt;</span> ✗</div></li>
+      <li><div class="rule-num">4</div><div><strong>Guillemets pour les valeurs d'attributs</strong> — <span class="rule-valid">id="123"</span> ✓ &nbsp;&nbsp;<span class="rule-invalid">id=123</span> ✗</div></li>
+      <li><div class="rule-num">5</div><div><strong>Sensible à la casse</strong> — <span class="rule-valid">&lt;Titre&gt;</span> ≠ <span class="rule-valid">&lt;titre&gt;</span> ≠ <span class="rule-valid">&lt;TITRE&gt;</span></div></li>
+      <li><div class="rule-num">6</div><div><strong>Noms valides</strong> — <span class="rule-valid">_monElement</span> ✓ &nbsp;&nbsp;<span class="rule-invalid">2element</span> ✗</div></li>
+      <li><div class="rule-num">7</div><div><strong>Caractères spéciaux échappés</strong> — <span class="rule-valid">&amp;amp; &amp;lt; &amp;gt; &amp;quot; &amp;apos;</span></div></li>
+      <li><div class="rule-num">8</div><div><strong>Déclaration XML recommandée</strong> en début de document.</div></li>
+      <li><div class="rule-num">9</div><div><strong>Encodage spécifié</strong> — UTF-8 recommandé.</div></li>
+      <li><div class="rule-num">10</div><div><strong>Commentaires bien formés</strong> — pas de <code>--</code> à l'intérieur.</div></li>
+      <li><div class="rule-num">11</div><div><strong>Espaces de noms correctement déclarés</strong> si utilisés (xmlns).</div></li>
+    </ul>
+  </section>
+
+  <div class="divider"></div>
+
+  <section id="namespaces">
+    <div class="section-header"><span class="section-num">3.3</span><h2>Domaines Nominaux (Namespaces)</h2></div>
+    <div class="alert alert-cyan"><div class="alert-label">POURQUOI LES NAMESPACES ?</div>Les namespaces permettent d'<strong>éviter les collisions de noms</strong> en préfixant les éléments lorsque l'on combine plusieurs vocabulaires XML.</div>
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><span></span><span></span><span></span></div><span class="code-title">Namespace avec préfixe</span><button class="code-copy" onclick="copyCode(this)">COPIER</button></div>
+      <pre><span class="xml-pi">&lt;?xml version="1.0"?&gt;</span>
+<span class="xml-tag">&lt;bibliotheque</span>
+  <span class="xml-attr">xmlns:liv</span>=<span class="xml-val">"http://example.org/livres"</span>
+  <span class="xml-attr">xmlns:auteur</span>=<span class="xml-val">"http://example.org/auteurs"</span><span class="xml-tag">&gt;</span>
+  <span class="xml-tag">&lt;liv:book&gt;</span>
+    <span class="xml-tag">&lt;liv:title&gt;</span><span class="xml-content">XML Masterclass</span><span class="xml-tag">&lt;/liv:title&gt;</span>
+    <span class="xml-tag">&lt;auteur:name&gt;</span><span class="xml-content">Jean Dupont</span><span class="xml-tag">&lt;/auteur:name&gt;</span>
+  <span class="xml-tag">&lt;/liv:book&gt;</span>
+<span class="xml-tag">&lt;/bibliotheque&gt;</span></pre>
+    </div>
+    <h3 style="margin:2rem 0 1rem;font-size:1.1rem;">Namespaces standards connus</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Vocabulaire</th><th>URI</th><th>Utilisation</th></tr></thead>
+        <tbody>
+          <tr><td><span class="tag tag-cyan" style="font-size:.65rem;">XML Schema</span></td><td style="font-family:'JetBrains Mono',monospace;font-size:.78rem;">http://www.w3.org/2001/XMLSchema</td><td>Validation avancée (XSD)</td></tr>
+          <tr><td><span class="tag tag-amber" style="font-size:.65rem;">XHTML</span></td><td style="font-family:'JetBrains Mono',monospace;font-size:.78rem;">http://www.w3.org/1999/xhtml</td><td>Pages web en XML strict</td></tr>
+          <tr><td><span class="tag tag-green" style="font-size:.65rem;">SVG</span></td><td style="font-family:'JetBrains Mono',monospace;font-size:.78rem;">http://www.w3.org/2000/svg</td><td>Graphiques vectoriels</td></tr>
+          <tr><td><span class="tag tag-purple" style="font-size:.65rem;">MathML</span></td><td style="font-family:'JetBrains Mono',monospace;font-size:.78rem;">https://www.w3.org/1998/Math/MathML/</td><td>Formules mathématiques</td></tr>
+          <tr><td><span class="tag tag-red" style="font-size:.65rem;">SOAP</span></td><td style="font-family:'JetBrains Mono',monospace;font-size:.78rem;">http://schemas.xmlsoap.org/soap/envelope/</td><td>Web services</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <section id="quiz3">
+    <div class="section-header"><span class="section-num">✦</span><h2>Quiz de Révision — Chapitre 3</h2></div>
+    <div class="quiz3" id="quiz3-container">
+      <div class="quiz3-q" id="quiz3-question">Chargement…</div>
+      <div class="quiz3-options" id="quiz3-options"></div>
+      <div class="quiz3-feedback alert" id="quiz3-feedback" style="display:none;"></div>
+      <div class="quiz3-nav">
+        <span class="quiz3-progress" id="quiz3-prog">Question 1 / 8</span>
+        <button class="btn3" id="quiz3-next" onclick="nextQ3()" disabled>SUIVANT →</button>
+      </div>
+    </div>
+  </section>
+
+</div><!-- .page ch3 -->
+</div><!-- #panel-ch3 -->
+
+<footer>
+  Données Semi-Structurées — <span>Cours Complet</span> · Chapitres 1, 2 &amp; 3<br>
+  <span style="font-size:.7rem; color:var(--text-muted);">SGML → HTML → XML · Structuré · Semi-Structuré · Non Structuré</span>
+</footer>
+
+<script>
+/* ── CHAPTER SWITCHER ── */
+const navCh12 = ['#contexte','#types','#exemples','#evolution','#limites','#documents','#recap','#quiz'];
+const navCh3  = ['#intro','#structure','#elements','#bien-forme','#namespaces','#quiz3'];
+const navNames = {
+  '#contexte':'Contexte','#types':'3 Types','#exemples':'Exemples','#evolution':'Évolution',
+  '#limites':'Limites','#documents':'Documents','#recap':'Récap','#quiz':'Quiz',
+  '#intro':'Intro','#structure':'Structure','#elements':'Éléments',
+  '#bien-forme':'Bien formé','#namespaces':'Namespaces','#quiz3':'Quiz'
+};
+
+function switchChapter(ch) {
+  document.querySelectorAll('.chapter-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.ch-btn').forEach(b => b.classList.remove('active'));
+
+  if (ch === 1) {
+    document.getElementById('panel-ch12').classList.add('active');
+    document.getElementById('ch-btn-1').classList.add('active');
+    updateNavLinks(navCh12);
+    if (!quiz3Loaded) { initQuiz3(); quiz3Loaded = true; }
+  } else {
+    document.getElementById('panel-ch3').classList.add('active');
+    document.getElementById('ch-btn-3').classList.add('active');
+    updateNavLinks(navCh3);
+    if (!quiz3Loaded) { initQuiz3(); quiz3Loaded = true; }
+  }
+  window.scrollTo({ top:0, behavior:'smooth' });
+}
+
+function updateNavLinks(links) {
+  const nav = document.getElementById('nav-links');
+  nav.innerHTML = links.map(h => `<a href="${h}">${navNames[h]}</a>`).join('');
+}
+
+/* ── PROGRESS BAR ── */
+window.addEventListener('scroll', () => {
+  const p = (window.scrollY / (document.body.scrollHeight - window.innerHeight)) * 100;
+  document.getElementById('progress-bar').style.width = p + '%';
+});
+
+/* ── COUNTER ANIMATION (Ch1-2) ── */
+function animateCounter(el, target) {
+  const isYear = target > 1000;
+  let start = isYear ? target - 50 : 0;
+  const step = Math.ceil((target - start) / 40);
+  const timer = setInterval(() => {
+    start += step;
+    if (start >= target) { el.textContent = target; clearInterval(timer); return; }
+    el.textContent = start;
+  }, 30);
+}
+const cio = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      e.target.querySelectorAll('[data-target]').forEach(el => animateCounter(el, parseInt(el.dataset.target)));
+      cio.unobserve(e.target);
+    }
+  });
+}, { threshold: 0.3 });
+document.querySelectorAll('.stats-row').forEach(s => cio.observe(s));
+
+/* ── COUNTER ANIMATION (Ch3) ── */
+function animateCounter3(el) {
+  const val = el.getAttribute('data-count');
+  if (!val) return;
+  const isPlus = val.includes('+');
+  const target = parseInt(val);
+  let current = 0;
+  const step = target / 40;
+  const timer = setInterval(() => {
+    current = Math.min(current + step, target);
+    el.textContent = Math.floor(current) + (isPlus ? '+' : '');
+    if (current >= target) clearInterval(timer);
+  }, 30);
+}
+const cntObs = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      e.target.querySelectorAll('[data-count]').forEach(animateCounter3);
+      cntObs.unobserve(e.target);
+    }
+  });
+}, { threshold: .3 });
+document.querySelectorAll('.stats-row').forEach(s => cntObs.observe(s));
+
+/* ── INNER TABS ── */
+function switchInnerTab(btn, id) {
+  const wrap = btn.closest('.inner-tabs');
+  wrap.querySelectorAll('.inner-tab-btn').forEach(b => b.classList.remove('active'));
+  wrap.querySelectorAll('.inner-tab-content').forEach(c => c.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById(id).classList.add('active');
+}
+
+/* ── ACCORDION ── */
+function toggleAcc(header) {
+  const item = header.parentElement;
+  const body = item.querySelector('.acc-body');
+  const isOpen = item.classList.contains('open');
+  document.querySelectorAll('.acc-item.open').forEach(i => {
+    i.classList.remove('open');
+    i.querySelector('.acc-body').style.maxHeight = '0';
+  });
+  if (!isOpen) {
+    item.classList.add('open');
+    body.style.maxHeight = body.scrollHeight + 'px';
+  }
+}
+
+/* ── COPY CODE ── */
+function copyCode(btn) {
+  const pre = btn.closest('.code-block').querySelector('pre');
+  navigator.clipboard.writeText(pre.innerText).then(() => {
+    btn.textContent = 'COPIÉ ✓';
+    setTimeout(() => btn.textContent = btn.textContent.includes('COPY') ? 'COPY' : 'COPIER', 2000);
+  });
+}
+
+/* ── QUIZ Ch1-2 ── */
+let scores12 = new Array(8).fill(null), answered12 = 0;
+function answer(btn, q, correct) {
+  const card = btn.closest('.q-card');
+  if (card.classList.contains('done')) return;
+  card.classList.add('done');
+  card.querySelectorAll('.q-opt').forEach(b => {
+    b.disabled = true;
+    if (b === btn) b.classList.add(correct ? 'correct' : 'wrong');
+  });
+  const fb = card.querySelector('.q-feedback');
+  fb.classList.add('show', correct ? 'ok' : 'bad');
+  fb.textContent = (correct ? '✓ Correct ! ' : '✗ Incorrect. ') + fb.textContent;
+  if (correct) scores12[q] = 1;
+  answered12++;
+  if (answered12 === 8) setTimeout(showScore12, 600);
+}
+function showScore12() {
+  const s = scores12.filter(x => x === 1).length;
+  document.getElementById('score-display').textContent = s + '/8';
+  const msg = s === 8 ? '🏆 Parfait !'
+    : s >= 6 ? '✨ Très bien !'
+    : s >= 4 ? '📚 Pas mal !'
+    : '💪 Continuez !';
+  document.getElementById('score-msg').textContent = msg;
+  document.getElementById('quiz-score').classList.add('show');
+}
+function restartQuiz() {
+  scores12 = new Array(8).fill(null);
+  answered12 = 0;
+  document.getElementById('quiz-score').classList.remove('show');
+  document.querySelectorAll('.q-card').forEach(card => {
+    card.classList.remove('done');
+    card.querySelectorAll('.q-opt').forEach(b => {
+      b.disabled = false;
+      b.classList.remove('correct','wrong');
+    });
+    const fb = card.querySelector('.q-feedback');
+    fb.classList.remove('show','ok','bad');
+    fb.textContent = fb.textContent.replace(/^[✓✗] (Correct ! |Incorrect\. )/, '');
+  });
+}
+
+/* ── QUIZ Ch3 ── */
+const q3data = [
+  { q:"Que signifie l'acronyme XML ?", opts:["eXtra Markup Language","eXtensible Markup Language","Extended Meta Language","eXact Markup Logic"], correct:1, explain:"XML = eXtensible Markup Language. Le X signifie 'extensible' car vous pouvez définir vos propres balises." },
+  { q:"Un document XML bien formé doit obligatoirement avoir :", opts:["Une DTD","Un encodage UTF-8","Un seul élément racine","Des attributs sur chaque élément"], correct:2, explain:"La règle fondamentale : un seul élément racine qui englobe TOUS les autres éléments du document." },
+  { q:"Quelle entité prédéfinie représente le caractère '&' en XML ?", opts:["&and;","&amp;","&et;","&ref;"], correct:1, explain:"&amp; est l'entité pour le caractère &. Il FAUT l'utiliser sinon le parser XML échoue." },
+  { q:"Laquelle de ces imbrications est CORRECTE en XML ?", opts:["<a><b></a></b>","<a><b></b></a>","<a/><b/>","<a><b>"], correct:1, explain:"<a><b></b></a> est correct car b est complètement à l'intérieur de a. Le chevauchement est INTERDIT." },
+  { q:"À quoi sert l'attribut 'xmlns' dans un document XML ?", opts:["Définir la version XML","Déclarer un espace de noms","Lier une feuille de style","Définir l'encodage"], correct:1, explain:"xmlns (XML NameSpace) sert à déclarer un espace de noms. Ex: xmlns:liv='http://example.org/livres'" },
+  { q:"XML est SENSIBLE à la casse. Lequel est différent des autres ?", opts:["<Titre>","<titre>","<TITRE>","Tous les 3 sont différents !"], correct:3, explain:"En XML, <Titre>, <titre> et <TITRE> sont 3 éléments DIFFÉRENTS ! La casse est significative." },
+  { q:"Quelle est la différence principale entre XML et HTML ?", opts:["HTML est plus récent","XML décrit le sens des données, HTML décrit comment les afficher","XML ne peut pas contenir de texte","HTML utilise des balises personnalisées"], correct:1, explain:"XML décrit CE QUE ÇA SIGNIFIE (sémantique). HTML décrit COMMENT AFFICHER (présentation)." },
+  { q:"Parmi ces technologies, laquelle est l'équivalent de SQL pour XML ?", opts:["XPath","XLink","XQuery","XSLT"], correct:2, explain:"XQuery est le langage de requête pour XML, comparable à SQL pour les bases relationnelles." }
+];
+let q3Index = 0, q3Score = 0, q3Answered = false, quiz3Loaded = false;
+
+function loadQ3() {
+  const q = q3data[q3Index];
+  document.getElementById('quiz3-question').textContent = (q3Index + 1) + '. ' + q.q;
+  document.getElementById('quiz3-prog').textContent = `Question ${q3Index + 1} / ${q3data.length}`;
+  const container = document.getElementById('quiz3-options');
+  container.innerHTML = '';
+  q3Answered = false;
+  document.getElementById('quiz3-next').disabled = true;
+  const fb = document.getElementById('quiz3-feedback');
+  fb.style.display = 'none';
+  q.opts.forEach((opt, i) => {
+    const letters = ['A','B','C','D'];
+    const btn = document.createElement('div');
+    btn.className = 'quiz3-opt';
+    btn.innerHTML = `<div class="quiz3-opt-icon">${letters[i]}</div><span>${opt}</span>`;
+    btn.onclick = () => checkQ3(i, btn, q);
+    container.appendChild(btn);
+  });
+}
+function checkQ3(idx, btn, q) {
+  if (q3Answered) return;
+  q3Answered = true;
+  document.querySelectorAll('.quiz3-opt').forEach((o, i) => {
+    if (i === q.correct) o.classList.add('correct');
+    else if (i === idx && idx !== q.correct) o.classList.add('wrong');
+  });
+  const fb = document.getElementById('quiz3-feedback');
+  if (idx === q.correct) {
+    q3Score++;
+    fb.className = 'quiz3-feedback alert alert-green';
+    fb.innerHTML = '<div class="alert-label">CORRECT ✓</div>' + q.explain;
+  } else {
+    fb.className = 'quiz3-feedback alert alert-red';
+    fb.innerHTML = '<div class="alert-label">INCORRECT ✗</div>' + q.explain;
+  }
+  fb.style.display = 'block';
+  document.getElementById('quiz3-next').disabled = false;
+}
+function nextQ3() {
+  q3Index++;
+  if (q3Index < q3data.length) {
+    loadQ3();
+  } else {
+    const pct = Math.round((q3Score / q3data.length) * 100);
+    document.getElementById('quiz3-container').innerHTML = `
+      <div style="text-align:center;padding:2rem;">
+        <div style="font-size:3rem;margin-bottom:1rem;">${pct >= 70 ? '🏆' : '📚'}</div>
+        <div style="font-family:'Space Mono',monospace;font-size:2.5rem;color:var(--cyan);margin-bottom:.5rem;">${q3Score}/${q3data.length}</div>
+        <div style="font-size:1.1rem;color:var(--text-dim);margin-bottom:2rem;">${pct}% — ${pct >= 80 ? 'Excellent !' : pct >= 60 ? 'Bien, continue !' : 'Révise le cours !'}</div>
+        <button class="btn3 glow" onclick="q3Index=0;q3Score=0;quiz3Loaded=false;restartQ3()">RECOMMENCER</button>
+      </div>`;
+  }
+}
+function restartQ3() {
+  const c = document.getElementById('quiz3-container');
+  c.innerHTML = `
+    <div class="quiz3-q" id="quiz3-question">Chargement…</div>
+    <div class="quiz3-options" id="quiz3-options"></div>
+    <div class="quiz3-feedback alert" id="quiz3-feedback" style="display:none;"></div>
+    <div class="quiz3-nav">
+      <span class="quiz3-progress" id="quiz3-prog">Question 1 / 8</span>
+      <button class="btn3" id="quiz3-next" onclick="nextQ3()" disabled>SUIVANT →</button>
+    </div>`;
+  quiz3Loaded = true;
+  loadQ3();
+}
+function initQuiz3() {
+  loadQ3();
+}
+
+/* ── AUDIO ── */
+let reading = false, utter = null;
+function toggleAudio() {
+  if (reading) { stopAudio(); return; }
+  const activePanel = document.querySelector('.chapter-panel.active .page');
+  const text = activePanel.innerText.replace(/\s+/g,' ').trim();
+  utter = new SpeechSynthesisUtterance(text);
+  utter.lang = 'fr-FR'; utter.rate = 1;
+  const voices = speechSynthesis.getVoices().filter(v => v.lang.startsWith('fr'));
+  if (voices.length) utter.voice = voices[0];
+  utter.onend = () => { reading = false; document.getElementById('audioBtn').classList.remove('playing'); document.getElementById('audioBtn').textContent = '🔊'; };
+  speechSynthesis.speak(utter);
+  reading = true;
+  document.getElementById('audioBtn').classList.add('playing');
+  document.getElementById('audioBtn').textContent = '⏸';
+}
+function stopAudio() {
+  speechSynthesis.cancel();
+  reading = false;
+  document.getElementById('audioBtn').classList.remove('playing');
+  document.getElementById('audioBtn').textContent = '🔊';
+}
+document.addEventListener('keydown', e => { if (e.code === 'Escape') stopAudio(); });
+
+/* ── INIT ── */
+initQuiz3();
+quiz3Loaded = true;
+</script>
+</body>
+</html>

@@ -1,0 +1,890 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Guide Android Studio — Pour les Débutants</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Fraunces:ital,wght@0,300;0,700;1,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0f14;
+    --surface: #13161e;
+    --surface2: #1a1e2a;
+    --border: #2a2f3d;
+    --green: #3ddc84;
+    --green-dim: rgba(61,220,132,0.12);
+    --yellow: #f0c040;
+    --yellow-dim: rgba(240,192,64,0.12);
+    --red: #ff6b6b;
+    --red-dim: rgba(255,107,107,0.12);
+    --blue: #7eb8f7;
+    --blue-dim: rgba(126,184,247,0.12);
+    --purple: #c084fc;
+    --text: #e2e8f0;
+    --muted: #64748b;
+    --accent: #3ddc84;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Fraunces', serif;
+    font-weight: 300;
+    line-height: 1.7;
+    min-height: 100vh;
+  }
+
+  /* HEADER */
+  header {
+    padding: 80px 40px 60px;
+    text-align: center;
+    border-bottom: 1px solid var(--border);
+    position: relative;
+    overflow: hidden;
+  }
+  header::before {
+    content: '';
+    position: absolute;
+    top: -100px; left: 50%;
+    transform: translateX(-50%);
+    width: 600px; height: 300px;
+    background: radial-gradient(ellipse, rgba(61,220,132,0.15) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .badge {
+    display: inline-block;
+    background: var(--green-dim);
+    border: 1px solid rgba(61,220,132,0.3);
+    color: var(--green);
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 6px 14px;
+    border-radius: 2px;
+    margin-bottom: 24px;
+  }
+  h1 {
+    font-size: clamp(2.2rem, 5vw, 4rem);
+    font-weight: 700;
+    line-height: 1.1;
+    margin-bottom: 16px;
+  }
+  h1 span { color: var(--green); font-style: italic; }
+  header p {
+    color: var(--muted);
+    font-size: 1.1rem;
+    max-width: 550px;
+    margin: 0 auto;
+  }
+
+  /* NAV */
+  nav {
+    display: flex;
+    gap: 4px;
+    justify-content: center;
+    flex-wrap: wrap;
+    padding: 20px 40px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  nav a {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    text-decoration: none;
+    padding: 8px 14px;
+    border-radius: 3px;
+    transition: all 0.2s;
+    letter-spacing: 0.5px;
+  }
+  nav a:hover { color: var(--green); background: var(--green-dim); }
+
+  /* MAIN */
+  main { max-width: 1000px; margin: 0 auto; padding: 60px 30px; }
+
+  section { margin-bottom: 80px; }
+
+  .section-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--green);
+    margin-bottom: 12px;
+  }
+  h2 {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 16px;
+    line-height: 1.2;
+  }
+  h3 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 8px;
+    font-family: 'Space Mono', monospace;
+  }
+  p { color: #94a3b8; margin-bottom: 12px; }
+  p strong { color: var(--text); font-weight: 700; font-family: 'Space Mono', monospace; font-size: 0.9em; }
+
+  /* INTRO CARD */
+  .intro-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 32px;
+    margin-bottom: 40px;
+    position: relative;
+  }
+  .intro-card .emoji { font-size: 2.5rem; margin-bottom: 16px; display: block; }
+
+  /* FILE TREE */
+  .tree-container {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 40px;
+  }
+  .tree-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 20px;
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .dot { width: 10px; height: 10px; border-radius: 50%; }
+  .dot.r { background: #ff5f56; }
+  .dot.y { background: #ffbd2e; }
+  .dot.g { background: #27c93f; }
+  .tree-body { padding: 20px; font-family: 'Space Mono', monospace; font-size: 13px; line-height: 2; }
+  .tree-item { display: flex; align-items: center; gap: 10px; cursor: pointer; border-radius: 4px; padding: 2px 8px; transition: background 0.15s; }
+  .tree-item:hover { background: rgba(255,255,255,0.04); }
+  .tree-item .indent { color: var(--border); user-select: none; }
+  .tag {
+    font-size: 9px;
+    padding: 2px 7px;
+    border-radius: 2px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-left: auto;
+    white-space: nowrap;
+  }
+  .tag.essential { background: var(--green-dim); color: var(--green); border: 1px solid rgba(61,220,132,0.3); }
+  .tag.modify { background: var(--yellow-dim); color: var(--yellow); border: 1px solid rgba(240,192,64,0.3); }
+  .tag.notouch { background: var(--red-dim); color: var(--red); border: 1px solid rgba(255,107,107,0.3); }
+  .tag.auto { background: var(--blue-dim); color: var(--blue); border: 1px solid rgba(126,184,247,0.3); }
+  .folder { color: var(--blue); }
+  .file-green { color: var(--green); }
+  .file-yellow { color: var(--yellow); }
+  .file-red { color: var(--red); }
+  .file-muted { color: var(--muted); }
+
+  /* LEGEND */
+  .legend {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 24px;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+  }
+
+  /* FILE CARDS */
+  .file-cards { display: grid; gap: 16px; }
+  .file-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 24px;
+    cursor: pointer;
+    transition: border-color 0.2s, transform 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+  .file-card::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+  }
+  .file-card.essential::before { background: var(--green); }
+  .file-card.modify::before { background: var(--yellow); }
+  .file-card.notouch::before { background: var(--red); }
+  .file-card.auto::before { background: var(--blue); }
+  .file-card:hover { transform: translateX(4px); }
+  .file-card.essential:hover { border-color: rgba(61,220,132,0.4); }
+  .file-card.modify:hover { border-color: rgba(240,192,64,0.4); }
+  .file-card.notouch:hover { border-color: rgba(255,107,107,0.4); }
+  .file-card:hover .details { display: block; }
+  .card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 8px; }
+  .card-path { font-family: 'Space Mono', monospace; font-size: 13px; color: var(--text); }
+  .card-desc { color: #64748b; font-size: 0.9rem; }
+  .details { display: none; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); }
+  .details p { font-size: 0.875rem; color: #94a3b8; margin-bottom: 8px; }
+  .details code {
+    display: block;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 12px 16px;
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    color: var(--green);
+    margin-top: 8px;
+    white-space: pre;
+    overflow-x: auto;
+  }
+
+  /* ALWAYS SHOW ON CLICK */
+  .file-card.open .details { display: block; }
+
+  /* SCHEMA STEPS */
+  .steps { display: flex; flex-direction: column; gap: 0; }
+  .step {
+    display: flex;
+    gap: 24px;
+    position: relative;
+  }
+  .step-line {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex-shrink: 0;
+  }
+  .step-num {
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Space Mono', monospace;
+    font-size: 14px;
+    font-weight: 700;
+    flex-shrink: 0;
+    z-index: 1;
+  }
+  .step-num.s1 { background: var(--green-dim); color: var(--green); border: 2px solid var(--green); }
+  .step-num.s2 { background: var(--blue-dim); color: var(--blue); border: 2px solid var(--blue); }
+  .step-num.s3 { background: var(--yellow-dim); color: var(--yellow); border: 2px solid var(--yellow); }
+  .step-num.s4 { background: var(--red-dim); color: var(--red); border: 2px solid var(--red); }
+  .step-num.s5 { background: rgba(192,132,252,0.12); color: var(--purple); border: 2px solid var(--purple); }
+  .step-connector {
+    width: 2px;
+    flex: 1;
+    min-height: 20px;
+    background: var(--border);
+    margin: 4px 0;
+  }
+  .step-content {
+    flex: 1;
+    padding-bottom: 40px;
+  }
+  .step-content h3 { font-size: 1.1rem; margin-bottom: 8px; color: var(--text); font-family: 'Fraunces', serif; }
+  .step-content p { font-size: 0.9rem; }
+  .step-content code {
+    display: inline-block;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--green);
+  }
+  .step-content .code-block {
+    display: block;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 16px;
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    color: #94a3b8;
+    margin-top: 12px;
+    white-space: pre;
+    overflow-x: auto;
+    line-height: 1.6;
+  }
+  .code-block .kw { color: var(--purple); }
+  .code-block .fn { color: var(--blue); }
+  .code-block .str { color: var(--green); }
+  .code-block .cm { color: var(--muted); font-style: italic; }
+
+  /* TIP BOX */
+  .tip {
+    background: var(--green-dim);
+    border: 1px solid rgba(61,220,132,0.25);
+    border-radius: 6px;
+    padding: 16px 20px;
+    margin-top: 12px;
+    font-size: 0.875rem;
+    color: #94a3b8;
+  }
+  .tip strong { color: var(--green); font-family: 'Space Mono', monospace; font-size: 0.8em; }
+
+  .warn {
+    background: var(--red-dim);
+    border: 1px solid rgba(255,107,107,0.25);
+    border-radius: 6px;
+    padding: 16px 20px;
+    margin-top: 12px;
+    font-size: 0.875rem;
+    color: #94a3b8;
+  }
+  .warn strong { color: var(--red); font-family: 'Space Mono', monospace; font-size: 0.8em; }
+
+  /* SUMMARY TABLE */
+  .summary-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  @media (max-width: 600px) { .summary-grid { grid-template-columns: 1fr; } }
+  .summary-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px;
+  }
+  .summary-card h4 {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 1px;
+    margin-bottom: 12px;
+    text-transform: uppercase;
+  }
+  .summary-card ul { list-style: none; }
+  .summary-card li {
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    color: var(--muted);
+    padding: 4px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .summary-card li:last-child { border-bottom: none; }
+  .summary-card li::before { content: '→ '; }
+
+  /* FOOTER */
+  footer {
+    text-align: center;
+    padding: 40px;
+    border-top: 1px solid var(--border);
+    color: var(--muted);
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+  }
+
+  /* ANIMATIONS */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  section { animation: fadeUp 0.5s ease both; }
+  section:nth-child(2) { animation-delay: 0.1s; }
+  section:nth-child(3) { animation-delay: 0.2s; }
+  section:nth-child(4) { animation-delay: 0.3s; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="badge">📱 Guide Android Studio</div>
+  <h1>Comprendre ton<br><span>Projet Android</span></h1>
+  <p>Un guide simple et visuel pour comprendre chaque fichier de ton projet — sans se noyer dans la complexité.</p>
+</header>
+
+<nav>
+  <a href="#intro">🏠 Intro</a>
+  <a href="#arbre">🌳 Structure</a>
+  <a href="#essentiels">⭐ Fichiers clés</a>
+  <a href="#touchez-pas">🚫 Ne pas toucher</a>
+  <a href="#schema">🗺️ Première App</a>
+</nav>
+
+<main>
+
+  <!-- INTRO -->
+  <section id="intro">
+    <div class="section-label">// 01 — Introduction</div>
+    <h2>Pourquoi autant de fichiers ?</h2>
+    <div class="intro-card">
+      <span class="emoji">😱</span>
+      <p>La première fois qu'on ouvre un projet Android Studio, c'est le choc. Des dizaines de dossiers, des centaines de fichiers... C'est <strong>normal de se sentir perdu</strong>.</p>
+      <p>Bonne nouvelle : tu n'as besoin de toucher qu'à <strong>3 ou 4 fichiers</strong> pour créer ta première application. Le reste, c'est soit généré automatiquement, soit des configurations que tu ne modifieras presque jamais.</p>
+      <p style="margin-bottom:0;">Pense à Android Studio comme une cuisine professionnelle. Tu as des ustensiles, des équipements, des réserves... mais quand tu cuisines, tu utilises juste <strong>le plan de travail et quelques outils</strong>.</p>
+    </div>
+
+    <div class="legend">
+      <div class="legend-item"><span class="tag essential">Essentiel</span> Fichiers que tu DOIS connaître</div>
+      <div class="legend-item"><span class="tag modify">À modifier</span> Fichiers que tu modifieras souvent</div>
+      <div class="legend-item"><span class="tag notouch">Ne pas toucher</span> Générés automatiquement</div>
+      <div class="legend-item"><span class="tag auto">Config</span> Configuration du projet</div>
+    </div>
+  </section>
+
+  <!-- ARBRE SIMPLIFIÉ -->
+  <section id="arbre">
+    <div class="section-label">// 02 — Vue d'ensemble</div>
+    <h2>La structure simplifiée</h2>
+    <p>Voilà ce qui <em>compte vraiment</em> dans ton projet. On ignore le dossier <strong>build/</strong> pour l'instant (c'est généré automatiquement à chaque compilation).</p>
+
+    <div class="tree-container">
+      <div class="tree-header">
+        <div class="dot r"></div><div class="dot y"></div><div class="dot g"></div>
+        <span>MyApplication/</span>
+      </div>
+      <div class="tree-body">
+        <div class="tree-item"><span class="folder">📁 app/</span></div>
+        <div class="tree-item"><span class="indent">│  </span><span class="folder">📁 src/main/</span></div>
+        <div class="tree-item"><span class="indent">│  │  </span><span class="file-green">📄 AndroidManifest.xml</span><span class="tag essential">Essentiel</span></div>
+        <div class="tree-item"><span class="indent">│  │  </span><span class="folder">📁 java/.../myapplication/</span></div>
+        <div class="tree-item"><span class="indent">│  │  │  </span><span class="file-green">📄 MainActivity.kt</span><span class="tag modify">À modifier</span></div>
+        <div class="tree-item"><span class="indent">│  │  </span><span class="folder">📁 res/</span></div>
+        <div class="tree-item"><span class="indent">│  │  │  </span><span class="folder">📁 layout/</span></div>
+        <div class="tree-item"><span class="indent">│  │  │  │  </span><span class="file-yellow">📄 activity_main.xml</span><span class="tag modify">À modifier</span></div>
+        <div class="tree-item"><span class="indent">│  │  │  </span><span class="folder">📁 values/</span></div>
+        <div class="tree-item"><span class="indent">│  │  │  │  </span><span class="file-yellow">📄 strings.xml</span><span class="tag modify">À modifier</span></div>
+        <div class="tree-item"><span class="indent">│  │  │  │  </span><span class="file-yellow">📄 colors.xml</span><span class="tag modify">À modifier</span></div>
+        <div class="tree-item"><span class="indent">│  │  │  │  </span><span class="file-yellow">📄 themes.xml</span><span class="tag auto">Config</span></div>
+        <div class="tree-item"><span class="indent">│  │  │  </span><span class="folder">📁 drawable/</span><span class="tag modify">À modifier</span></div>
+        <div class="tree-item"><span class="indent">│  │  │  </span><span class="folder">📁 mipmap-*/</span><span class="tag notouch">Icônes app</span></div>
+        <div class="tree-item"><span class="indent">│  </span><span class="folder">📁 build/ <span style="color:var(--muted)">(généré automatiquement)</span></span><span class="tag notouch">Ne pas toucher</span></div>
+        <div class="tree-item"><span class="indent">│  </span><span class="file-yellow">📄 build.gradle.kts</span><span class="tag auto">Config</span></div>
+        <div class="tree-item"><span class="file-yellow">📄 build.gradle.kts</span><span style="color:var(--muted);font-size:11px;margin-left:8px">(racine)</span><span class="tag auto">Config</span></div>
+        <div class="tree-item"><span class="file-muted">📄 gradle.properties</span><span class="tag auto">Config</span></div>
+        <div class="tree-item"><span class="file-muted">📄 settings.gradle.kts</span><span class="tag auto">Config</span></div>
+        <div class="tree-item"><span class="folder">📁 gradle/</span><span class="tag notouch">Ne pas toucher</span></div>
+        <div class="tree-item"><span class="folder">📁 .gradle/ .idea/</span><span class="tag notouch">Ne pas toucher</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FICHIERS ESSENTIELS -->
+  <section id="essentiels">
+    <div class="section-label">// 03 — Les fichiers clés</div>
+    <h2>Clique pour découvrir chaque fichier</h2>
+    <p>Voici les fichiers que tu vas utiliser au quotidien. <strong>Clique sur chaque carte</strong> pour en savoir plus.</p>
+
+    <div class="file-cards">
+
+      <div class="file-card essential" onclick="this.classList.toggle('open')">
+        <div class="card-top">
+          <div>
+            <div class="card-path">AndroidManifest.xml</div>
+            <div class="card-desc">La carte d'identité de ton application</div>
+          </div>
+          <span class="tag essential">Essentiel</span>
+        </div>
+        <div class="details">
+          <p>C'est le <strong>fichier le plus important</strong> de ton projet. Il dit au système Android tout ce qu'il doit savoir sur ton app :</p>
+          <p>• Le <strong>nom du package</strong> (identifiant unique de ton app, ex: com.monnom.mamap)<br>
+          • La liste de toutes tes <strong>activités (écrans)</strong><br>
+          • Les <strong>permissions</strong> dont tu as besoin (internet, caméra, GPS...)<br>
+          • Quelle activité s'ouvre en <strong>premier</strong> au lancement</p>
+          <p>Chaque fois que tu crées un nouvel écran, tu dois l'enregistrer ici !</p>
+          <code>&lt;activity android:name=".MainActivity"&gt;
+    &lt;intent-filter&gt;
+        &lt;!-- Ceci dit que MainActivity est l'écran de démarrage --&gt;
+        &lt;action android:name="android.intent.action.MAIN"/&gt;
+    &lt;/intent-filter&gt;
+&lt;/activity&gt;</code>
+        </div>
+      </div>
+
+      <div class="file-card modify" onclick="this.classList.toggle('open')">
+        <div class="card-top">
+          <div>
+            <div class="card-path">MainActivity.kt (ou .java)</div>
+            <div class="card-desc">Le cerveau de ton écran principal</div>
+          </div>
+          <span class="tag modify">À modifier</span>
+        </div>
+        <div class="details">
+          <p>C'est ici que tu écris la <strong>logique de ton application</strong>. Chaque écran (Activity) a son propre fichier Kotlin/Java. <code>MainActivity</code> = l'écran principal.</p>
+          <p>C'est ici que tu mets : ce qui se passe quand on clique sur un bouton, comment récupérer du texte d'un champ, comment naviguer vers un autre écran, etc.</p>
+          <code><span class="kw">class</span> <span class="fn">MainActivity</span> : <span class="fn">AppCompatActivity</span>() {
+
+    <span class="kw">override fun</span> <span class="fn">onCreate</span>(savedInstanceState: Bundle?) {
+        <span class="kw">super</span>.<span class="fn">onCreate</span>(savedInstanceState)
+        <span class="fn">setContentView</span>(R.layout.activity_main)
+        <span class="cm">// Ton code commence ici !</span>
+    }
+}</code>
+        </div>
+      </div>
+
+      <div class="file-card modify" onclick="this.classList.toggle('open')">
+        <div class="card-top">
+          <div>
+            <div class="card-path">res/layout/activity_main.xml</div>
+            <div class="card-desc">Le design visuel de ton écran</div>
+          </div>
+          <span class="tag modify">À modifier</span>
+        </div>
+        <div class="details">
+          <p>C'est le <strong>fichier de mise en page (layout)</strong>. Il définit ce que l'utilisateur voit à l'écran : les boutons, les textes, les images, les champs de saisie...</p>
+          <p>Tu peux l'éditer en mode <strong>visuel (drag & drop)</strong> ou en mode <strong>XML</strong>. Chaque vue a un <code>android:id</code> qui permet de la retrouver depuis le code Kotlin.</p>
+          <code>&lt;Button
+    android:id="@+id/monBouton"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:text="Clique-moi !" /&gt;</code>
+          <div class="tip"><strong>💡 ASTUCE :</strong> Le <code>@+id/monBouton</code> te permet ensuite de faire <code>val btn = findViewById(R.id.monBouton)</code> dans ton fichier .kt pour le contrôler avec du code !</div>
+        </div>
+      </div>
+
+      <div class="file-card modify" onclick="this.classList.toggle('open')">
+        <div class="card-top">
+          <div>
+            <div class="card-path">res/values/strings.xml</div>
+            <div class="card-desc">Tous les textes de ton application</div>
+          </div>
+          <span class="tag modify">À modifier</span>
+        </div>
+        <div class="details">
+          <p>Bonne pratique : au lieu d'écrire tes textes directement dans le XML de layout, tu les mets ici. Pourquoi ? Pour faciliter la <strong>traduction en plusieurs langues</strong> plus tard.</p>
+          <code>&lt;resources&gt;
+    &lt;string name="app_name"&gt;Mon Application&lt;/string&gt;
+    &lt;string name="bouton_ok"&gt;C'est parti !&lt;/string&gt;
+&lt;/resources&gt;</code>
+          <p>Et dans ton layout, tu écris : <code>android:text="@string/bouton_ok"</code></p>
+        </div>
+      </div>
+
+      <div class="file-card modify" onclick="this.classList.toggle('open')">
+        <div class="card-top">
+          <div>
+            <div class="card-path">res/values/colors.xml</div>
+            <div class="card-desc">La palette de couleurs de ton app</div>
+          </div>
+          <span class="tag modify">À modifier</span>
+        </div>
+        <div class="details">
+          <p>Définis ici toutes les couleurs de ton application. Comme ça, si tu veux changer ta couleur principale, tu le fais <strong>une seule fois</strong> et ça s'applique partout.</p>
+          <code>&lt;resources&gt;
+    &lt;color name="couleur_principale"&gt;#3DDC84&lt;/color&gt;
+    &lt;color name="couleur_fond"&gt;#FFFFFF&lt;/color&gt;
+    &lt;color name="texte_fonce"&gt;#212121&lt;/color&gt;
+&lt;/resources&gt;</code>
+        </div>
+      </div>
+
+      <div class="file-card auto" onclick="this.classList.toggle('open')">
+        <div class="card-top">
+          <div>
+            <div class="card-path">app/build.gradle.kts</div>
+            <div class="card-desc">La liste des dépendances (bibliothèques)</div>
+          </div>
+          <span class="tag auto">Config</span>
+        </div>
+        <div class="details">
+          <p>C'est ici que tu ajoutes des <strong>bibliothèques externes</strong> (libraries) à ton projet. Envie d'utiliser Retrofit pour les appels réseau ? Glide pour les images ? Tu les ajoutes ici.</p>
+          <code>dependencies {
+    <span class="cm">// Bibliothèques Android de base</span>
+    implementation(<span class="str">"androidx.appcompat:appcompat:1.7.0"</span>)
+
+    <span class="cm">// Exemple : ajouter une bibliothèque d'images</span>
+    implementation(<span class="str">"com.github.bumptech.glide:glide:4.16.0"</span>)
+}</code>
+          <div class="tip"><strong>💡 ASTUCE :</strong> Après avoir modifié ce fichier, Android Studio te demandera de faire "Sync Now" — c'est normal, il doit télécharger les nouvelles bibliothèques.</div>
+        </div>
+      </div>
+
+      <div class="file-card modify" onclick="this.classList.toggle('open')">
+        <div class="card-top">
+          <div>
+            <div class="card-path">res/drawable/</div>
+            <div class="card-desc">Tes images et icônes</div>
+          </div>
+          <span class="tag modify">À modifier</span>
+        </div>
+        <div class="details">
+          <p>C'est le dossier où tu mets tes <strong>images, icônes et formes</strong>. Tu peux y mettre des fichiers PNG, JPEG, WebP, ou des fichiers XML qui décrivent des formes vectorielles.</p>
+          <p>Pour utiliser une image dans ton layout : <code>android:src="@drawable/mon_image"</code></p>
+          <div class="tip"><strong>💡 ASTUCE :</strong> Préfère les fichiers SVG/Vectoriel (VectorDrawable) aux images PNG — ils s'adaptent à toutes les tailles d'écran sans pixelliser !</div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- NE PAS TOUCHER -->
+  <section id="touchez-pas">
+    <div class="section-label">// 04 — À éviter</div>
+    <h2>Les fichiers à ne pas toucher</h2>
+
+    <div class="file-cards">
+
+      <div class="file-card notouch" onclick="this.classList.toggle('open')">
+        <div class="card-top">
+          <div>
+            <div class="card-path">app/build/ (tout le dossier)</div>
+            <div class="card-desc">Fichiers générés à chaque compilation</div>
+          </div>
+          <span class="tag notouch">Ne pas toucher</span>
+        </div>
+        <div class="details">
+          <p>Ce dossier est <strong>entièrement généré automatiquement</strong> par Android Studio à chaque fois que tu compiles ton projet. Il contient le code compilé, les fichiers APK intermédiaires, etc.</p>
+          <p>Si tu modifies quoi que ce soit ici, tes changements seront <strong>écrasés</strong> à la prochaine compilation. Et ce dossier fait des Go — c'est pour ça qu'on le met dans <code>.gitignore</code> pour ne pas le sauvegarder sur GitHub.</p>
+          <div class="warn"><strong>⚠️ ATTENTION :</strong> Même si tu vois un bug "dans" un fichier de build, la solution se trouve TOUJOURS dans ton code source, pas dans build/.</div>
+        </div>
+      </div>
+
+      <div class="file-card notouch" onclick="this.classList.toggle('open')">
+        <div class="card-top">
+          <div>
+            <div class="card-path">.gradle/ et .idea/</div>
+            <div class="card-desc">Paramètres internes d'Android Studio</div>
+          </div>
+          <span class="tag notouch">Ne pas toucher</span>
+        </div>
+        <div class="details">
+          <p><strong>.idea/</strong> contient les paramètres de ton IDE (Android Studio). C'est propre à ta machine. <strong>.gradle/</strong> contient le cache de Gradle (l'outil qui compile ton projet).</p>
+          <p>Si ton projet a des comportements bizarres, tu peux parfois faire <em>"File → Invalidate Caches"</em> pour nettoyer ces dossiers. Mais tu ne les modifies jamais manuellement.</p>
+        </div>
+      </div>
+
+      <div class="file-card notouch" onclick="this.classList.toggle('open')">
+        <div class="card-top">
+          <div>
+            <div class="card-path">gradlew et gradlew.bat</div>
+            <div class="card-desc">Scripts d'exécution de Gradle</div>
+          </div>
+          <span class="tag notouch">Ne pas toucher</span>
+        </div>
+        <div class="details">
+          <p>Ce sont des scripts qui permettent d'exécuter Gradle (l'outil de build) sans avoir à l'installer manuellement. <code>gradlew</code> est pour Linux/Mac, <code>gradlew.bat</code> pour Windows.</p>
+          <p>Ils sont générés par Android Studio et ne doivent <strong>jamais être modifiés</strong>.</p>
+        </div>
+      </div>
+
+      <div class="file-card notouch" onclick="this.classList.toggle('open')">
+        <div class="card-top">
+          <div>
+            <div class="card-path">res/mipmap-*/</div>
+            <div class="card-desc">Les icônes de l'application (plusieurs tailles)</div>
+          </div>
+          <span class="tag notouch">Ne pas toucher (directement)</span>
+        </div>
+        <div class="details">
+          <p>Ces dossiers contiennent l'icône de ton application en <strong>plusieurs résolutions</strong> (mdpi, hdpi, xhdpi, xxhdpi, xxxhdpi) pour s'adapter à tous les écrans.</p>
+          <p>Si tu veux changer l'icône, n'écrase pas ces fichiers manuellement ! Utilise plutôt : <em>clic droit sur res → New → Image Asset</em> — Android Studio générera automatiquement toutes les tailles.</p>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- SCHEMA PREMIÈRE APP -->
+  <section id="schema">
+    <div class="section-label">// 05 — Ton premier projet</div>
+    <h2>Schéma : Créer une app "Bonjour Monde"</h2>
+    <p>Suivons ensemble les étapes pour créer une application simple avec un bouton qui affiche un message. Voilà exactement <strong>dans quel ordre</strong> travailler.</p>
+
+    <div class="steps">
+
+      <div class="step">
+        <div class="step-line">
+          <div class="step-num s1">1</div>
+          <div class="step-connector"></div>
+        </div>
+        <div class="step-content">
+          <h3>Créer le projet dans Android Studio</h3>
+          <p>File → New → New Project → <strong>Empty Views Activity</strong> (pas Compose pour l'instant, c'est plus simple). Donne un nom à ton app, un package name (<code>com.tonnom.tonapp</code>), choisis Kotlin ou Java. Android Studio génère tout le squelette.</p>
+          <div class="tip"><strong>💡 PACKAGE NAME :</strong> C'est l'identifiant unique de ton app sur le Play Store. Convention : ton domaine à l'envers + nom app. Si tu n'as pas de domaine, utilise com.tonprenom.nomapp</div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-line">
+          <div class="step-num s2">2</div>
+          <div class="step-connector"></div>
+        </div>
+        <div class="step-content">
+          <h3>Modifier le layout → activity_main.xml</h3>
+          <p>Ouvre <code>res/layout/activity_main.xml</code>. C'est ici que tu dessines ton interface. Ajoute un <strong>TextView</strong> (texte) et un <strong>Button</strong> :</p>
+          <code class="code-block">&lt;LinearLayout ...&gt;
+
+    &lt;<span class="kw">TextView</span>
+        android:id="<span class="str">@+id/monTexte</span>"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="<span class="str">En attente...</span>"
+        android:textSize="<span class="str">24sp</span>" /&gt;
+
+    &lt;<span class="kw">Button</span>
+        android:id="<span class="str">@+id/monBouton</span>"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="<span class="str">Clique ici !</span>" /&gt;
+
+&lt;/LinearLayout&gt;</code>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-line">
+          <div class="step-num s3">3</div>
+          <div class="step-connector"></div>
+        </div>
+        <div class="step-content">
+          <h3>Écrire la logique → MainActivity.kt</h3>
+          <p>Ouvre <code>MainActivity.kt</code>. Tu vas récupérer ton bouton et ton texte par leur ID, puis définir ce qui se passe au clic :</p>
+          <code class="code-block"><span class="kw">class</span> <span class="fn">MainActivity</span> : <span class="fn">AppCompatActivity</span>() {
+
+    <span class="kw">override fun</span> <span class="fn">onCreate</span>(savedInstanceState: Bundle?) {
+        <span class="kw">super</span>.<span class="fn">onCreate</span>(savedInstanceState)
+        <span class="fn">setContentView</span>(R.layout.activity_main)
+
+        <span class="cm">// On récupère les éléments du layout par leur ID</span>
+        <span class="kw">val</span> monTexte = <span class="fn">findViewById</span>&lt;<span class="fn">TextView</span>&gt;(R.id.monTexte)
+        <span class="kw">val</span> monBouton = <span class="fn">findViewById</span>&lt;<span class="fn">Button</span>&gt;(R.id.monBouton)
+
+        <span class="cm">// On définit ce qui se passe quand on clique</span>
+        monBouton.<span class="fn">setOnClickListener</span> {
+            monTexte.text = <span class="str">"Bonjour le Monde ! 🎉"</span>
+        }
+    }
+}</code>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-line">
+          <div class="step-num s4">4</div>
+          <div class="step-connector"></div>
+        </div>
+        <div class="step-content">
+          <h3>Personnaliser → strings.xml & colors.xml</h3>
+          <p>Bonne pratique : met tes textes dans <code>strings.xml</code> et tes couleurs dans <code>colors.xml</code> pour garder ton code propre.</p>
+          <code class="code-block"><span class="cm">&lt;!-- strings.xml --&gt;</span>
+&lt;resources&gt;
+    &lt;string name="<span class="str">app_name</span>"&gt;Mon App&lt;/string&gt;
+    &lt;string name="<span class="str">btn_label</span>"&gt;Clique ici !&lt;/string&gt;
+    &lt;string name="<span class="str">message_hello</span>"&gt;Bonjour le Monde ! 🎉&lt;/string&gt;
+&lt;/resources&gt;
+
+<span class="cm">&lt;!-- colors.xml --&gt;</span>
+&lt;resources&gt;
+    &lt;color name="<span class="str">colorPrimary</span>"&gt;#3DDC84&lt;/color&gt;
+    &lt;color name="<span class="str">colorBackground</span>"&gt;#FFFFFF&lt;/color&gt;
+&lt;/resources&gt;</code>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-line">
+          <div class="step-num s5">5</div>
+        </div>
+        <div class="step-content">
+          <h3>Lancer l'application ! 🚀</h3>
+          <p>Branche ton téléphone Android (ou lance un émulateur via <em>Device Manager</em>), puis clique sur le bouton <strong>▶ Run</strong> en haut. Android Studio va :</p>
+          <p>① Compiler ton code (Kotlin → bytecode)<br>
+          ② Générer un APK (fichier d'installation)<br>
+          ③ Installer et lancer l'app sur ton appareil</p>
+          <div class="tip"><strong>🎉 FÉLICITATIONS !</strong> Tu viens de créer ta première app Android. Clique sur le bouton dans l'app — le texte devrait changer !</div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- RÉSUMÉ -->
+  <section>
+    <div class="section-label">// 06 — Récapitulatif</div>
+    <h2>Ce qu'il faut retenir</h2>
+    <div class="summary-grid">
+      <div class="summary-card">
+        <h4 style="color:var(--green)">✅ Fichiers que tu modifies</h4>
+        <ul>
+          <li>AndroidManifest.xml</li>
+          <li>MainActivity.kt / .java</li>
+          <li>res/layout/*.xml</li>
+          <li>res/values/strings.xml</li>
+          <li>res/values/colors.xml</li>
+          <li>res/drawable/ (tes images)</li>
+          <li>app/build.gradle.kts (pour les libs)</li>
+        </ul>
+      </div>
+      <div class="summary-card">
+        <h4 style="color:var(--red)">🚫 Fichiers à ignorer</h4>
+        <ul>
+          <li>app/build/ (tout le dossier)</li>
+          <li>.gradle/ (cache)</li>
+          <li>.idea/ (IDE settings)</li>
+          <li>gradlew / gradlew.bat</li>
+          <li>gradle/wrapper/*</li>
+          <li>local.properties</li>
+          <li>settings.gradle.kts (au début)</li>
+        </ul>
+      </div>
+      <div class="summary-card">
+        <h4 style="color:var(--blue)">📐 La logique à comprendre</h4>
+        <ul>
+          <li>XML = ce qu'on VOIT (design)</li>
+          <li>Kotlin/Java = ce qui SE PASSE (logique)</li>
+          <li>R.id.xxx = pont entre XML et code</li>
+          <li>Manifest = déclaration de tout</li>
+          <li>build.gradle = gestion des libs</li>
+        </ul>
+      </div>
+      <div class="summary-card">
+        <h4 style="color:var(--yellow)">🚀 Prochaines étapes</h4>
+        <ul>
+          <li>Ajouter un 2e écran (Activity)</li>
+          <li>Naviguer entre les écrans (Intent)</li>
+          <li>RecyclerView pour des listes</li>
+          <li>Room pour une base de données locale</li>
+          <li>Retrofit pour les APIs REST</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  Fait pour un débutant Android — Bonne chance dans ton apprentissage ! 🚀
+</footer>
+
+<script>
+  // Smooth scroll for nav links
+  document.querySelectorAll('nav a').forEach(link => {
+    link.addEventListener('click', e => {
+      e.preventDefault();
+      const target = document.querySelector(link.getAttribute('href'));
+      if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  });
+
+  // Highlight active nav item on scroll
+  const sections = document.querySelectorAll('section[id]');
+  const navLinks = document.querySelectorAll('nav a');
+  window.addEventListener('scroll', () => {
+    let current = '';
+    sections.forEach(s => {
+      if (window.scrollY >= s.offsetTop - 100) current = s.id;
+    });
+    navLinks.forEach(a => {
+      a.style.color = a.getAttribute('href') === '#' + current ? 'var(--green)' : '';
+      a.style.background = a.getAttribute('href') === '#' + current ? 'var(--green-dim)' : '';
+    });
+  });
+</script>
+</body>
+</html>
