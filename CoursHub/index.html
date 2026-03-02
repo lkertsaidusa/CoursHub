@@ -128,8 +128,20 @@ nav{position:fixed;top:0;left:0;right:0;z-index:500;
 .card-title{font-family:var(--display);font-size:1.2rem;font-weight:800;line-height:1.2;color:var(--text);}
 .card-desc{font-size:.83rem;color:var(--muted);line-height:1.7;}
 
-/* CHAPTERS — FIX: pointer-events couvre tout le lien, flèche toujours visible au hover */
-.card-chapters{display:flex;flex-direction:column;gap:.45rem;margin-top:.2rem;}
+/* CHAPTERS — FIX: scrollbar added for many chapters, pointer-events couvre tout le lien */
+.card-chapters{
+  display:flex;
+  flex-direction:column;
+  gap:.45rem;
+  margin-top:.2rem;
+  max-height: 160px;
+  overflow-y: auto;
+  padding-right: 5px;
+}
+.card-chapters::-webkit-scrollbar{width:3px;}
+.card-chapters::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:10px;}
+.card-chapters::-webkit-scrollbar-thumb:hover{background:var(--green);}
+
 .chapter-item{
   display:flex;align-items:center;gap:.7rem;
   font-size:.78rem;color:var(--muted);
@@ -312,7 +324,7 @@ footer{position:relative;z-index:10;border-top:1px solid var(--border);padding:3
       <a class="chapter-item" href="DSS/Chapitre1&2.html">
         <span class="ch-num">01 & 02</span><span class="ch-name">Introduction aux Données Semi-Structurées</span><span class="ch-arrow">→</span>
       </a>
-      <a class="chapter-item" href="DSS/chapitre3.html">
+      <a class="chapter-item" href="DSS/chapitre3part01.html">
         <span class="ch-num">03</span><span class="ch-name">Le Noyau XML</span><span class="ch-arrow">→</span>
       </a>
     </div>
@@ -361,6 +373,9 @@ footer{position:relative;z-index:10;border-top:1px solid var(--border);padding:3
       </a>
       <a class="chapter-item" href="AppMobile/chapitre02.html">
         <span class="ch-num">02</span><span class="ch-name">Outils de développement</span><span class="ch-arrow">→</span>
+      </a>
+      <a class="chapter-item" href="AppMobile/chapitre03.html">
+        <span class="ch-num">03</span><span class="ch-name">Notion d'Activité</span><span class="ch-arrow">→</span>
       </a>
       <a class="chapter-item" href="AppMobile/android-project-structure.html">
         <span class="ch-num">📁</span><span class="ch-name">Structure d'un projet Android Studio</span><span class="ch-arrow">→</span>
