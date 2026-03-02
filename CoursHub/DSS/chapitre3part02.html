@@ -1,0 +1,1943 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ch.03 Part2 — DTD & XSD</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #050810;
+      --surface: #0c1220;
+      --surface2: #111b30;
+      --border: #1a2b4a;
+      --cyan: #00e5ff;
+      --cyan-dim: rgba(0,229,255,0.1);
+      --green: #39ff14;
+      --green-dim: rgba(57,255,20,0.09);
+      --amber: #ffaa00;
+      --amber-dim: rgba(255,170,0,0.1);
+      --red: #ff2d55;
+      --red-dim: rgba(255,45,85,0.1);
+      --purple: #bf5fff;
+      --purple-dim: rgba(191,95,255,0.1);
+      --pink: #ff6eb4;
+      --text: #dde8f8;
+      --text-muted: #4a6080;
+      --text-dim: #8fa8c8;
+      --glow-cyan: 0 0 20px rgba(0,229,255,0.5);
+      --glow-green: 0 0 20px rgba(57,255,20,0.4);
+      --glow-amber: 0 0 20px rgba(255,170,0,0.4);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Rajdhani', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.7;
+      overflow-x: hidden;
+    }
+
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--cyan); border-radius: 10px; }
+
+    .bg-canvas {
+      position: fixed; inset: 0; z-index: 0;
+      background: 
+        radial-gradient(ellipse 80% 60% at 20% 10%, rgba(0,229,255,0.04) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 80% at 80% 90%, rgba(191,95,255,0.04) 0%, transparent 60%),
+        var(--bg);
+    }
+
+    .grid-lines {
+      position: fixed; inset: 0; z-index: 0;
+      background-image:
+        linear-gradient(rgba(0,229,255,0.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,229,255,0.025) 1px, transparent 1px);
+      background-size: 50px 50px;
+    }
+
+    .particle {
+      position: fixed;
+      width: 2px; height: 2px;
+      background: var(--cyan);
+      border-radius: 50%;
+      animation: float-up linear infinite;
+      z-index: 0;
+      opacity: 0;
+    }
+
+    @keyframes float-up {
+      0% { transform: translateY(100vh); opacity: 0; }
+      10% { opacity: 0.6; }
+      90% { opacity: 0.3; }
+      100% { transform: translateY(-100px); opacity: 0; }
+    }
+
+    nav {
+      position: fixed; top: 0; left: 0; right: 0;
+      background: rgba(5,8,16,0.92);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      z-index: 100;
+      height: 58px;
+      display: flex; align-items: center;
+      padding: 0 2rem;
+      justify-content: space-between;
+    }
+
+    .nav-brand {
+      font-family: 'Orbitron', monospace;
+      font-size: .75rem;
+      color: var(--cyan);
+      letter-spacing: 3px;
+      text-shadow: var(--glow-cyan);
+    }
+
+    .nav-links { display: flex; gap: .4rem; flex-wrap: wrap; }
+    .nav-links a {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: .65rem;
+      color: var(--text-muted);
+      text-decoration: none;
+      padding: .3rem .6rem;
+      border-radius: 3px;
+      border: 1px solid transparent;
+      transition: all .2s;
+    }
+    .nav-links a:hover { color: var(--cyan); border-color: rgba(0,229,255,0.4); background: var(--cyan-dim); }
+
+    #progress-bar {
+      position: fixed; top: 58px; left: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--cyan), var(--purple), var(--green));
+      width: 0%; transition: width .1s linear;
+      z-index: 101;
+      box-shadow: var(--glow-cyan);
+    }
+
+    .page {
+      position: relative; z-index: 1;
+      max-width: 1150px;
+      margin: 0 auto;
+      padding: 75px 2rem 5rem;
+    }
+
+    .hero {
+      text-align: center;
+      padding: 4rem 0 3rem;
+      position: relative;
+    }
+
+    .hero-badge {
+      display: inline-block;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: .65rem;
+      color: var(--cyan);
+      border: 1px solid var(--cyan);
+      padding: .3rem 1.2rem;
+      border-radius: 20px;
+      margin-bottom: 1.5rem;
+      letter-spacing: 3px;
+      background: var(--cyan-dim);
+      box-shadow: var(--glow-cyan);
+      animation: fadeDown .6s ease both;
+    }
+
+    .hero h1 {
+      font-family: 'Orbitron', monospace;
+      font-size: clamp(2rem, 5vw, 4rem);
+      font-weight: 900;
+      line-height: 1.1;
+      animation: fadeDown .7s .1s ease both;
+      opacity: 0;
+    }
+
+    .hero h1 .c1 { color: var(--cyan); text-shadow: var(--glow-cyan); }
+    .hero h1 .c2 { color: var(--purple); text-shadow: 0 0 20px rgba(191,95,255,0.5); }
+
+    .hero-sub {
+      margin-top: 1rem;
+      color: var(--text-dim);
+      font-size: 1.1rem;
+      animation: fadeDown .7s .2s ease both;
+      opacity: 0;
+    }
+
+    .hero-tags {
+      display: flex; flex-wrap: wrap; gap: .5rem; justify-content: center;
+      margin-top: 2rem;
+      animation: fadeDown .7s .3s ease both;
+      opacity: 0;
+    }
+
+    .tag {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: .68rem;
+      padding: .3rem .85rem;
+      border-radius: 3px;
+      border: 1px solid;
+    }
+    .tag-c { color: var(--cyan); border-color: var(--cyan); background: var(--cyan-dim); }
+    .tag-g { color: var(--green); border-color: var(--green); background: var(--green-dim); }
+    .tag-a { color: var(--amber); border-color: var(--amber); background: var(--amber-dim); }
+    .tag-p { color: var(--purple); border-color: var(--purple); background: var(--purple-dim); }
+    .tag-r { color: var(--red); border-color: var(--red); background: var(--red-dim); }
+
+    .battle {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      gap: 1.5rem;
+      align-items: center;
+      margin: 2rem 0;
+    }
+
+    .battle-vs {
+      font-family: 'Orbitron', monospace;
+      font-size: 1.5rem;
+      font-weight: 900;
+      color: var(--amber);
+      text-shadow: var(--glow-amber);
+      text-align: center;
+    }
+
+    .battle-card {
+      background: var(--surface);
+      border-radius: 12px;
+      padding: 1.5rem;
+      border: 1px solid;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .battle-card::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0;
+      height: 3px;
+    }
+
+    .battle-dtd { border-color: var(--amber); }
+    .battle-dtd::before { background: linear-gradient(90deg, var(--amber), var(--red)); }
+    .battle-xsd { border-color: var(--green); }
+    .battle-xsd::before { background: linear-gradient(90deg, var(--cyan), var(--green)); }
+
+    .battle-card h3 {
+      font-family: 'Orbitron', monospace;
+      font-size: .8rem;
+      margin-bottom: .75rem;
+    }
+
+    .battle-dtd h3 { color: var(--amber); }
+    .battle-xsd h3 { color: var(--green); text-shadow: var(--glow-green); }
+
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 1rem;
+      margin: 2rem 0;
+    }
+
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.25rem;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+      transition: transform .3s, border-color .3s;
+    }
+
+    .stat-card:hover { transform: translateY(-4px); border-color: var(--cyan); }
+
+    .stat-card::after {
+      content: '';
+      position: absolute; bottom: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+      transform: scaleX(0);
+      transition: transform .4s;
+    }
+    .stat-card:hover::after { transform: scaleX(1); }
+
+    .stat-value {
+      font-family: 'Orbitron', monospace;
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--cyan);
+      display: block;
+      text-shadow: var(--glow-cyan);
+    }
+
+    .stat-label { font-size: .8rem; color: var(--text-muted); margin-top: .25rem; }
+
+    section {
+      margin-bottom: 5rem;
+      opacity: 0;
+      transform: translateY(40px);
+      transition: opacity .7s ease, transform .7s ease;
+    }
+    section.visible { opacity: 1; transform: translateY(0); }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 2rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--border);
+      position: relative;
+    }
+
+    .section-header::after {
+      content: '';
+      position: absolute; bottom: -1px; left: 0;
+      width: 80px; height: 2px;
+      background: var(--cyan);
+      box-shadow: var(--glow-cyan);
+    }
+
+    .section-num {
+      font-family: 'Orbitron', monospace;
+      font-size: .65rem;
+      color: var(--cyan);
+      background: var(--cyan-dim);
+      border: 1px solid var(--cyan);
+      padding: .25rem .7rem;
+      border-radius: 3px;
+      white-space: nowrap;
+      box-shadow: var(--glow-cyan);
+    }
+
+    .section-header h2 {
+      font-family: 'Orbitron', monospace;
+      font-size: 1.3rem;
+      font-weight: 700;
+    }
+
+    .alert {
+      border-radius: 8px;
+      padding: 1.25rem 1.5rem;
+      margin: 1.5rem 0;
+      border-left: 3px solid;
+      font-size: .95rem;
+      position: relative;
+    }
+
+    .alert-cyan { background: var(--cyan-dim); border-color: var(--cyan); }
+    .alert-green { background: var(--green-dim); border-color: var(--green); }
+    .alert-amber { background: var(--amber-dim); border-color: var(--amber); }
+    .alert-red { background: var(--red-dim); border-color: var(--red); }
+    .alert-purple { background: var(--purple-dim); border-color: var(--purple); }
+
+    .alert-label {
+      font-family: 'Orbitron', monospace;
+      font-size: .6rem;
+      font-weight: 700;
+      letter-spacing: 2px;
+      margin-bottom: .5rem;
+    }
+    .alert-cyan .alert-label { color: var(--cyan); }
+    .alert-green .alert-label { color: var(--green); }
+    .alert-amber .alert-label { color: var(--amber); }
+    .alert-red .alert-label { color: var(--red); }
+    .alert-purple .alert-label { color: var(--purple); }
+
+    .code-block {
+      background: #020609;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+      margin: 1.5rem 0;
+      position: relative;
+    }
+
+    .code-block::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+      opacity: 0.4;
+    }
+
+    .code-header {
+      display: flex; align-items: center;
+      justify-content: space-between;
+      padding: .6rem 1rem;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .code-dots { display: flex; gap: .4rem; }
+    .code-dots span { width: 10px; height: 10px; border-radius: 50%; }
+    .code-dots span:nth-child(1) { background: #ff5f57; }
+    .code-dots span:nth-child(2) { background: #ffbd2e; }
+    .code-dots span:nth-child(3) { background: #28c840; }
+
+    .code-title {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: .62rem;
+      color: var(--text-muted);
+    }
+
+    .code-copy {
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      font-family: 'Share Tech Mono', monospace;
+      font-size: .62rem;
+      padding: .2rem .5rem;
+      border-radius: 3px;
+      cursor: pointer;
+      transition: all .2s;
+    }
+    .code-copy:hover { color: var(--cyan); border-color: var(--cyan); }
+
+    pre {
+      padding: 1.4rem;
+      overflow-x: auto;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: .82rem;
+      line-height: 1.9;
+    }
+
+    .kw { color: #ff79c6; }
+    .el { color: #61dafb; }
+    .attr { color: #80ff80; }
+    .val { color: var(--amber); }
+    .cm { color: #546e7a; font-style: italic; }
+    .op { color: var(--red); }
+    .ty { color: var(--purple); }
+
+    .table-wrap {
+      overflow-x: auto;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      margin: 1.5rem 0;
+    }
+
+    table { width: 100%; border-collapse: collapse; font-size: .88rem; }
+
+    th {
+      background: var(--surface);
+      color: var(--cyan);
+      font-family: 'Orbitron', monospace;
+      font-size: .62rem;
+      font-weight: 700;
+      padding: .8rem 1rem;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+      letter-spacing: 1px;
+      white-space: nowrap;
+    }
+
+    td {
+      padding: .75rem 1rem;
+      border-bottom: 1px solid var(--border);
+      color: var(--text-dim);
+      vertical-align: top;
+    }
+
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: var(--surface2); }
+    td:first-child { color: var(--text); font-weight: 600; font-family: 'Share Tech Mono', monospace; font-size: .82rem; }
+
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 1.25rem;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.4rem;
+      transition: transform .3s, border-color .3s, box-shadow .3s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--accent1, var(--cyan)), var(--accent2, var(--purple)));
+      opacity: 0;
+      transition: opacity .3s;
+    }
+
+    .card:hover { transform: translateY(-5px); border-color: var(--accent1, var(--cyan)); box-shadow: 0 15px 40px rgba(0,0,0,0.4); }
+    .card:hover::before { opacity: 1; }
+
+    .card-icon { font-size: 1.8rem; margin-bottom: .75rem; }
+    .card h3 { font-family: 'Orbitron', monospace; font-size: .78rem; margin-bottom: .5rem; }
+    .card p, .card li { font-size: .9rem; color: var(--text-dim); }
+    .card ul { list-style: none; }
+    .card li { padding: .25rem 0; }
+    .card li::before { content: '▸ '; color: var(--cyan); }
+
+    .accordion { border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin: 1.5rem 0; }
+    .acc-item { border-bottom: 1px solid var(--border); }
+    .acc-item:last-child { border-bottom: none; }
+
+    .acc-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 1rem 1.5rem;
+      cursor: pointer;
+      background: var(--surface);
+      transition: background .2s;
+      user-select: none;
+    }
+
+    .acc-header:hover { background: var(--surface2); }
+    .acc-header h3 { font-size: .95rem; font-weight: 600; display: flex; align-items: center; gap: .75rem; }
+    .acc-icon { font-family: 'Orbitron', monospace; font-size: .8rem; color: var(--cyan); transition: transform .3s; }
+    .acc-item.open .acc-icon { transform: rotate(45deg); }
+    .acc-body { max-height: 0; overflow: hidden; transition: max-height .4s ease; background: var(--bg); }
+    .acc-body-inner { padding: 1.5rem; }
+
+    .tabs { margin: 1.5rem 0; }
+
+    .tab-headers {
+      display: flex; gap: .4rem;
+      border-bottom: 1px solid var(--border);
+      flex-wrap: wrap;
+    }
+
+    .tab-btn {
+      font-family: 'Orbitron', monospace;
+      font-size: .6rem;
+      padding: .65rem 1rem;
+      background: none; border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: all .2s;
+      position: relative; bottom: -1px;
+      letter-spacing: 1px;
+    }
+
+    .tab-btn:hover { color: var(--text); }
+    .tab-btn.active { color: var(--cyan); border-bottom-color: var(--cyan); }
+    .tab-content { display: none; padding: 1.5rem 0; animation: fadeIn .3s ease; }
+    .tab-content.active { display: block; }
+
+    .op-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: .75rem;
+      margin: 1rem 0;
+    }
+
+    .op-chip {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem;
+      display: flex; align-items: center; gap: 1rem;
+      transition: border-color .2s, transform .2s;
+    }
+
+    .op-chip:hover { transform: translateX(4px); }
+
+    .op-symbol {
+      font-family: 'Orbitron', monospace;
+      font-size: 1.6rem;
+      font-weight: 900;
+      min-width: 40px;
+      text-align: center;
+    }
+
+    .op-chip:nth-child(1) .op-symbol { color: var(--text-dim); }
+    .op-chip:nth-child(1) { border-color: rgba(200,200,200,0.2); }
+    .op-chip:nth-child(2) .op-symbol { color: var(--amber); }
+    .op-chip:nth-child(2) { border-color: rgba(255,170,0,0.3); }
+    .op-chip:nth-child(3) .op-symbol { color: var(--cyan); }
+    .op-chip:nth-child(3) { border-color: rgba(0,229,255,0.3); }
+    .op-chip:nth-child(4) .op-symbol { color: var(--green); }
+    .op-chip:nth-child(4) { border-color: rgba(57,255,20,0.3); }
+
+    .op-info strong { font-family: 'Share Tech Mono', monospace; font-size: .8rem; display: block; }
+    .op-info span { font-size: .82rem; color: var(--text-muted); }
+
+    .type-pills {
+      display: flex; flex-wrap: wrap; gap: .6rem;
+      padding: 1.5rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+    }
+
+    .type-pill {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: .75rem;
+      padding: .4rem 1rem;
+      border-radius: 20px;
+      border: 1px solid;
+      transition: transform .2s, box-shadow .2s;
+      cursor: default;
+    }
+
+    .type-pill:hover { transform: scale(1.06) translateY(-2px); }
+    .tp-c { color: var(--cyan); border-color: var(--cyan); background: var(--cyan-dim); }
+    .tp-c:hover { box-shadow: 0 4px 20px rgba(0,229,255,0.3); }
+    .tp-g { color: var(--green); border-color: var(--green); background: var(--green-dim); }
+    .tp-g:hover { box-shadow: 0 4px 20px rgba(57,255,20,0.3); }
+    .tp-a { color: var(--amber); border-color: var(--amber); background: var(--amber-dim); }
+    .tp-a:hover { box-shadow: 0 4px 20px rgba(255,170,0,0.3); }
+    .tp-p { color: var(--purple); border-color: var(--purple); background: var(--purple-dim); }
+    .tp-p:hover { box-shadow: 0 4px 20px rgba(191,95,255,0.3); }
+
+    .timeline { position: relative; padding-left: 2.5rem; }
+    .timeline::before {
+      content: '';
+      position: absolute; left: 0; top: 0; bottom: 0;
+      width: 2px;
+      background: linear-gradient(to bottom, var(--cyan), var(--green), var(--amber));
+    }
+
+    .timeline-item {
+      position: relative;
+      margin-bottom: 2rem;
+      padding: 1.25rem 1.5rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      transition: border-color .2s;
+    }
+
+    .timeline-item:hover { border-color: var(--cyan); }
+
+    .timeline-item::before {
+      content: '';
+      position: absolute; left: -2.9rem; top: 1.2rem;
+      width: 14px; height: 14px;
+      border-radius: 50%;
+      background: var(--bg);
+      border: 2px solid var(--cyan);
+    }
+
+    .timeline-item:nth-child(2)::before { border-color: var(--green); }
+    .timeline-item:nth-child(3)::before { border-color: var(--amber); }
+
+    .timeline-num {
+      font-family: 'Orbitron', monospace;
+      font-size: .62rem;
+      color: var(--cyan);
+      margin-bottom: .5rem;
+      letter-spacing: 1px;
+    }
+
+    .timeline-item:nth-child(2) .timeline-num { color: var(--green); }
+    .timeline-item:nth-child(3) .timeline-num { color: var(--amber); }
+    .timeline-item h3 { font-size: 1rem; font-weight: 700; margin-bottom: .5rem; }
+
+    .quiz {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 2rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .quiz::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--cyan), var(--purple), var(--green));
+      box-shadow: 0 0 15px rgba(0,229,255,0.3);
+    }
+
+    .quiz-q {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 1.05rem;
+      font-weight: 600;
+      margin-bottom: 1.25rem;
+      min-height: 2em;
+    }
+
+    .quiz-options { display: grid; gap: .5rem; }
+
+    .quiz-opt {
+      display: flex; align-items: center; gap: .75rem;
+      padding: .9rem 1rem;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: .92rem;
+      background: var(--bg);
+      transition: all .2s;
+    }
+
+    .quiz-opt:hover { border-color: var(--cyan); background: var(--cyan-dim); }
+    .quiz-opt.correct { border-color: var(--green) !important; background: var(--green-dim) !important; color: var(--green); }
+    .quiz-opt.wrong { border-color: var(--red) !important; background: var(--red-dim) !important; color: var(--red); }
+
+    .quiz-opt-icon {
+      width: 24px; height: 24px; border-radius: 50%;
+      border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Orbitron', monospace; font-size: .6rem;
+      flex-shrink: 0;
+    }
+
+    .quiz-feedback { margin-top: 1rem; padding: .85rem 1rem; border-radius: 8px; font-size: .9rem; display: none; }
+
+    .quiz-nav {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-top: 1.25rem;
+    }
+
+    .quiz-progress { font-family: 'Share Tech Mono', monospace; font-size: .7rem; color: var(--text-muted); }
+
+    .btn {
+      font-family: 'Orbitron', monospace;
+      font-size: .62rem;
+      padding: .55rem 1.4rem;
+      border-radius: 5px;
+      cursor: pointer;
+      border: 1px solid var(--cyan);
+      background: var(--cyan-dim);
+      color: var(--cyan);
+      transition: all .2s;
+      letter-spacing: 1px;
+    }
+
+    .btn:hover { background: var(--cyan); color: var(--bg); box-shadow: var(--glow-cyan); }
+    .btn:disabled { opacity: .4; cursor: not-allowed; }
+
+    .divider {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--border), transparent);
+      margin: 3.5rem 0;
+    }
+
+    .compare-full {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+      margin: 1.5rem 0;
+    }
+
+    @media (max-width: 640px) { .compare-full { grid-template-columns: 1fr; } .battle { grid-template-columns: 1fr; } .battle-vs { display: none; } }
+
+    .compare-box { border-radius: 10px; padding: 1.5rem; border: 1px solid; }
+    .compare-box h3 { font-family: 'Orbitron', monospace; font-size: .8rem; margin-bottom: 1rem; }
+
+    .box-dtd { border-color: var(--amber); background: rgba(255,170,0,0.04); }
+    .box-dtd h3 { color: var(--amber); }
+    .box-xsd { border-color: var(--green); background: rgba(57,255,20,0.04); }
+    .box-xsd h3 { color: var(--green); }
+
+    .limit-item { display: flex; align-items: flex-start; gap: .75rem; padding: .6rem 0; border-bottom: 1px solid var(--border); font-size: .9rem; }
+    .limit-item:last-child { border-bottom: none; }
+    .limit-icon { flex-shrink: 0; font-size: 1rem; }
+
+    footer {
+      text-align: center;
+      padding: 3rem 1rem;
+      border-top: 1px solid var(--border);
+      color: var(--text-muted);
+      font-family: 'Share Tech Mono', monospace;
+      font-size: .75rem;
+    }
+
+    footer span { color: var(--cyan); text-shadow: var(--glow-cyan); }
+
+    @keyframes fadeDown {
+      from { opacity: 0; transform: translateY(-20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+    @keyframes pulse {
+      0%, 100% { box-shadow: 0 0 5px rgba(0,229,255,0.3); }
+      50% { box-shadow: 0 0 25px rgba(0,229,255,0.6); }
+    }
+
+    .glow-pulse { animation: pulse 2.5s ease-in-out infinite; }
+
+    @keyframes scan {
+      0% { transform: translateY(-100%); }
+      100% { transform: translateY(100vh); }
+    }
+
+    .scanline {
+      position: fixed; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, transparent, rgba(0,229,255,0.1), transparent);
+      animation: scan 4s linear infinite;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    [data-tip] { position: relative; cursor: help; }
+    [data-tip]::after {
+      content: attr(data-tip);
+      position: absolute; bottom: calc(100% + 8px); left: 50%;
+      transform: translateX(-50%);
+      background: var(--surface2);
+      border: 1px solid var(--cyan);
+      padding: .35rem .8rem;
+      border-radius: 5px;
+      font-size: .7rem;
+      font-family: 'Share Tech Mono', monospace;
+      white-space: nowrap;
+      opacity: 0; pointer-events: none;
+      transition: opacity .2s;
+      color: var(--text);
+      z-index: 10;
+      box-shadow: 0 0 10px rgba(0,229,255,0.2);
+    }
+    [data-tip]:hover::after { opacity: 1; }
+
+    @media (max-width: 768px) {
+      nav { padding: 0 1rem; }
+      .nav-links { display: none; }
+      .page { padding: 68px 1rem 3rem; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="bg-canvas"></div>
+<div class="grid-lines"></div>
+<div class="scanline"></div>
+
+<nav>
+  <div class="nav-brand">CH.03 &nbsp;//&nbsp; DTD &amp; XSD</div>
+  <div class="nav-links">
+    <a href="#intro">Validation</a>
+    <a href="#dtd">DTD</a>
+    <a href="#elements-dtd">Éléments</a>
+    <a href="#attributs-dtd">Attributs</a>
+    <a href="#xsd">XSD</a>
+    <a href="#types-xsd">Types XSD</a>
+    <a href="#complex">Complexes</a>
+    <a href="#quiz">Quiz</a>
+  </div>
+</nav>
+
+<div id="progress-bar"></div>
+
+<div class="page">
+
+  <header class="hero">
+    <div class="hero-badge">CHAPITRE 03 · PART 2 · VALIDATION XML</div>
+    <h1>
+      <span class="c1">DTD</span> vs <span class="c2">XSD</span><br>
+      Valider tes Données
+    </h1>
+    <p class="hero-sub">Document Type Definition &amp; XML Schema Definition — deux façons de donner des règles à tes données XML.</p>
+    <div class="hero-tags">
+      <span class="tag tag-c">Validation XML</span>
+      <span class="tag tag-a">DTD — Définition de type</span>
+      <span class="tag tag-g">XSD — Schéma XML</span>
+      <span class="tag tag-p">Typage Fort</span>
+      <span class="tag tag-r">Contraintes &amp; Règles</span>
+    </div>
+  </header>
+
+  <div class="stats-row" style="animation: fadeDown .8s .4s ease both; opacity:0; animation-fill-mode:forwards;">
+    <div class="stat-card">
+      <span class="stat-value" data-count="5">0</span>
+      <div class="stat-label">Types de contraintes DTD</div>
+    </div>
+    <div class="stat-card">
+      <span class="stat-value" data-count="44">0</span>
+      <div class="stat-label">Types de données XSD</div>
+    </div>
+    <div class="stat-card">
+      <span class="stat-value" data-count="2001">0</span>
+      <div class="stat-label">Année recommandation XSD (W3C)</div>
+    </div>
+    <div class="stat-card">
+      <span class="stat-value" data-count="4">0</span>
+      <div class="stat-label">Opérateurs d'occurrence DTD</div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- SECTION 1: VALIDATION -->
+  <section id="intro">
+    <div class="section-header">
+      <span class="section-num">3.4</span>
+      <h2>Validation XML — Kézako ?</h2>
+    </div>
+
+    <div class="alert alert-cyan">
+      <div class="alert-label">🎯 DÉFINITION SIMPLE</div>
+      Imagine que tu remplis un formulaire d'inscription. Si tu laisses le champ "email" vide, le site te dit <em>"erreur !"</em>. La <strong>validation XML</strong> c'est pareil : on définit des règles, et le <strong>parseur</strong> vérifie que le document XML les respecte.
+    </div>
+
+    <div class="cards-grid">
+      <div class="card" style="--accent1:var(--cyan);">
+        <div class="card-icon">✅</div>
+        <h3 style="color:var(--cyan);">SYNTAXE</h3>
+        <p>Les balises sont-elles bien fermées ? Les guillemets sont-ils là ? Le document est-il <em>bien formé</em> ?</p>
+      </div>
+      <div class="card" style="--accent1:var(--amber);">
+        <div class="card-icon">🏗️</div>
+        <h3 style="color:var(--amber);">STRUCTURE</h3>
+        <p>Un &lt;livre&gt; contient-il bien &lt;titre&gt; et &lt;auteur&gt; ? Les éléments sont-ils dans le bon ordre ?</p>
+      </div>
+      <div class="card" style="--accent1:var(--purple);">
+        <div class="card-icon">🧠</div>
+        <h3 style="color:var(--purple);">SÉMANTIQUE</h3>
+        <p>L'âge est-il un entier ? La date est-elle au bon format ? Les valeurs respectent-elles les contraintes ?</p>
+      </div>
+    </div>
+
+    <div class="alert alert-green" style="margin-top:1.5rem;">
+      <div class="alert-label">📐 FORMULE MAGIQUE</div>
+      <strong>Document VALIDE</strong> = <span style="color:var(--cyan)">Bien Formé (syntaxe OK)</span> + <span style="color:var(--green)">Conforme à la DTD/XSD (structure OK)</span>
+    </div>
+
+    <h3 style="margin: 2rem 0 1rem; font-family:'Orbitron',monospace; font-size:.9rem;">Le duel : DTD vs XSD</h3>
+    <div class="battle">
+      <div class="battle-card battle-dtd">
+        <h3>⚔️ DTD — L'Ancêtre</h3>
+        <ul style="list-style:none; font-size:.88rem; color:var(--text-dim);">
+          <li>📜 Syntaxe propre (non-XML)</li>
+          <li>📦 Simple à écrire</li>
+          <li>⚠️ Typage faible (tout = texte)</li>
+          <li>🗓️ Depuis les années 80 (SGML)</li>
+          <li>🔧 Toujours utilisé (XHTML, SVG...)</li>
+        </ul>
+      </div>
+      <div class="battle-vs">VS</div>
+      <div class="battle-card battle-xsd">
+        <h3>🚀 XSD — Le Moderne</h3>
+        <ul style="list-style:none; font-size:.88rem; color:var(--text-dim);">
+          <li>✨ Écrit en XML (cohérent !)</li>
+          <li>💪 Typage fort (entier, date...)</li>
+          <li>🎯 Namespaces natifs</li>
+          <li>📏 Regex, plages, contraintes</li>
+          <li>🏆 Standard W3C depuis 2001</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- SECTION 2: DTD -->
+  <section id="dtd">
+    <div class="section-header">
+      <span class="section-num">3.4.1</span>
+      <h2>DTD — Document Type Definition</h2>
+    </div>
+
+    <div class="alert alert-amber">
+      <div class="alert-label">🧪 ANALOGIE BÉTON</div>
+      La DTD est comme un <strong>plan d'architecte</strong> : elle dit "une maison DOIT avoir des murs, peut avoir un garage, et les pièces sont dans cet ordre". Sans ce plan, tout le monde peut construire n'importe quoi.
+    </div>
+
+    <h3 style="margin:1.5rem 0 1rem; font-family:'Orbitron',monospace; font-size:.85rem; color:var(--amber);">Types de DTD</h3>
+    <div class="timeline">
+      <div class="timeline-item">
+        <div class="timeline-num">TYPE 01 — DTD INTERNE</div>
+        <h3>Intégrée au fichier XML</h3>
+        <p style="font-size:.9rem; color:var(--text-dim);">La DTD vit dans le fichier XML lui-même, entre <code style="color:var(--cyan);">&lt;!DOCTYPE nom [</code> et <code style="color:var(--cyan);">]&gt;</code>. Pratique pour les petits projets.</p>
+        <div class="code-block">
+          <div class="code-header"><div class="code-dots"><span></span><span></span><span></span></div><span class="code-title">DTD interne — exemple complet</span><button class="code-copy" onclick="copyCode(this)">COPIER</button></div>
+          <pre><span class="kw">&lt;?xml</span> <span class="attr">version</span>=<span class="val">"1.0"</span> <span class="attr">encoding</span>=<span class="val">"UTF-8"</span><span class="kw">?&gt;</span>
+
+<span class="kw">&lt;!DOCTYPE</span> <span class="el">biblio</span> <span class="kw">[</span>
+  <span class="kw">&lt;!ELEMENT</span> <span class="el">biblio</span> (<span class="el">livre</span><span class="op">*</span>)<span class="kw">&gt;</span>
+  <span class="kw">&lt;!ELEMENT</span> <span class="el">livre</span>  (<span class="el">titre</span>, <span class="el">auteur</span>)<span class="kw">&gt;</span>
+  <span class="kw">&lt;!ELEMENT</span> <span class="el">titre</span>  (<span class="ty">#PCDATA</span>)<span class="kw">&gt;</span>
+  <span class="kw">&lt;!ELEMENT</span> <span class="el">auteur</span> (<span class="ty">#PCDATA</span>)<span class="kw">&gt;</span>
+<span class="kw">]&gt;</span>
+
+<span class="el">&lt;biblio&gt;</span>
+  <span class="el">&lt;livre&gt;</span>
+    <span class="el">&lt;titre&gt;</span>Les Misérables<span class="el">&lt;/titre&gt;</span>
+    <span class="el">&lt;auteur&gt;</span>Victor Hugo<span class="el">&lt;/auteur&gt;</span>
+  <span class="el">&lt;/livre&gt;</span>
+<span class="el">&lt;/biblio&gt;</span></pre>
+        </div>
+      </div>
+
+      <div class="timeline-item">
+        <div class="timeline-num">TYPE 02 — DTD EXTERNE SYSTEM</div>
+        <h3>Fichier séparé .dtd (LOCAL)</h3>
+        <p style="font-size:.9rem; color:var(--text-dim);">La DTD est dans un fichier à part. <code style="color:var(--green);">SYSTEM</code> = fichier local/privé sur ton disque ou serveur interne.</p>
+        <div class="code-block">
+          <div class="code-header"><div class="code-dots"><span></span><span></span><span></span></div><span class="code-title">DTD externe SYSTEM</span></div>
+          <pre><span class="kw">&lt;!DOCTYPE</span> <span class="el">bibliotheque</span> <span class="kw">SYSTEM</span> <span class="val">"bibliotheque.dtd"</span><span class="kw">&gt;</span>
+
+<span class="cm">--- Dans bibliotheque.dtd ---</span>
+
+<span class="kw">&lt;!ELEMENT</span> <span class="el">bibliotheque</span> (<span class="el">livre</span><span class="op">+</span>)<span class="kw">&gt;</span>
+<span class="kw">&lt;!ELEMENT</span> <span class="el">livre</span> (<span class="el">titre</span>, <span class="el">auteur</span>, <span class="el">annee</span>)<span class="kw">&gt;</span>
+<span class="kw">&lt;!ELEMENT</span> <span class="el">titre</span>  (<span class="ty">#PCDATA</span>)<span class="kw">&gt;</span>
+<span class="kw">&lt;!ELEMENT</span> <span class="el">auteur</span> (<span class="ty">#PCDATA</span>)<span class="kw">&gt;</span>
+<span class="kw">&lt;!ELEMENT</span> <span class="el">annee</span>  (<span class="ty">#PCDATA</span>)<span class="kw">&gt;</span>
+<span class="kw">&lt;!ATTLIST</span> <span class="el">livre</span> <span class="attr">id</span> <span class="ty">ID</span> <span class="ty">#REQUIRED</span><span class="kw">&gt;</span></pre>
+        </div>
+      </div>
+
+      <div class="timeline-item">
+        <div class="timeline-num">TYPE 03 — DTD EXTERNE PUBLIC</div>
+        <h3>Standard public (XHTML, SVG...)</h3>
+        <p style="font-size:.9rem; color:var(--text-dim);"><code style="color:var(--amber);">PUBLIC</code> = standard reconnu publiquement, avec identifiant + URL de secours.</p>
+        <div class="code-block">
+          <div class="code-header"><div class="code-dots"><span></span><span></span><span></span></div><span class="code-title">DTD PUBLIC — exemple XHTML</span></div>
+          <pre><span class="kw">&lt;!DOCTYPE</span> <span class="el">html</span> <span class="kw">PUBLIC</span>
+  <span class="val">"-//W3C//DTD XHTML 1.0 Strict//EN"</span>
+  <span class="val">"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"</span><span class="kw">&gt;</span>
+
+<span class="cm">&lt;!--   ↑ identifiant public      ↑ URL de secours --&gt;</span></pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- SECTION 3: ELEMENTS DTD -->
+  <section id="elements-dtd">
+    <div class="section-header">
+      <span class="section-num">3.4.1 — A</span>
+      <h2>Déclaration des Éléments en DTD</h2>
+    </div>
+
+    <div class="alert alert-cyan">
+      <div class="alert-label">💡 SYNTAXE DE BASE</div>
+      <code style="font-family:'Share Tech Mono',monospace; font-size:.95rem; color:var(--amber);">&lt;!ELEMENT&nbsp; nom_element&nbsp; catégorie&gt;</code>
+      &nbsp; — On définit ce que l'élément peut contenir.
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Catégorie</th><th>Syntaxe</th><th>Description</th><th>Exemple</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>📝 Texte</td><td><code class="ty">(#PCDATA)</code></td><td>Du texte brut</td><td><code class="kw">&lt;!ELEMENT</code> <code class="el">titre</code> <code class="ty">(#PCDATA)</code><code class="kw">&gt;</code></td></tr>
+          <tr><td>🚫 Vide</td><td><code class="ty">EMPTY</code></td><td>Aucun contenu autorisé</td><td><code class="kw">&lt;!ELEMENT</code> <code class="el">image</code> <code class="ty">EMPTY</code><code class="kw">&gt;</code></td></tr>
+          <tr><td>🌿 Enfants ordonnés</td><td><code class="ty">(e1, e2, e3)</code></td><td>Suite ordonnée</td><td><code class="kw">&lt;!ELEMENT</code> <code class="el">livre</code> <code class="ty">(titre, auteur)</code><code class="kw">&gt;</code></td></tr>
+          <tr><td>🎲 Alternative</td><td><code class="ty">(e1 | e2)</code></td><td>Un choix parmi plusieurs</td><td><code class="kw">&lt;!ELEMENT</code> <code class="el">contact</code> <code class="ty">(email | tel)</code><code class="kw">&gt;</code></td></tr>
+          <tr><td>🌀 Quelconque</td><td><code class="ty">ANY</code></td><td>N'importe quel contenu</td><td><code class="kw">&lt;!ELEMENT</code> <code class="el">note</code> <code class="ty">ANY</code><code class="kw">&gt;</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 style="margin:2rem 0 1rem; font-family:'Orbitron',monospace; font-size:.85rem; color:var(--green);">⚙️ Indicateurs d'Occurrences</h3>
+    <div class="op-grid">
+      <div class="op-chip">
+        <div class="op-symbol">∅</div>
+        <div class="op-info"><strong>Exactement 1 fois</strong><span>ni plus, ni moins — obligatoire !</span></div>
+      </div>
+      <div class="op-chip">
+        <div class="op-symbol">?</div>
+        <div class="op-info"><strong>0 ou 1 fois</strong><span>optionnel — peut être absent</span></div>
+      </div>
+      <div class="op-chip">
+        <div class="op-symbol">*</div>
+        <div class="op-info"><strong>0 ou plusieurs fois</strong><span>zéro ou plus — très flexible</span></div>
+      </div>
+      <div class="op-chip">
+        <div class="op-symbol">+</div>
+        <div class="op-info"><strong>1 ou plusieurs fois</strong><span>au moins un — obligatoire mais répétable</span></div>
+      </div>
+    </div>
+
+    <h3 style="margin:2rem 0 1rem; font-family:'Orbitron',monospace; font-size:.85rem; color:var(--cyan);">🔬 Exemples Décortiqués</h3>
+
+    <div class="tabs">
+      <div class="tab-headers">
+        <button class="tab-btn active" onclick="switchTab(this,'ex1')">Exemple 1 — Simple</button>
+        <button class="tab-btn" onclick="switchTab(this,'ex2')">Exemple 2 — Hiérarchique</button>
+        <button class="tab-btn" onclick="switchTab(this,'ex3')">Exemple 3 — Choix</button>
+        <button class="tab-btn" onclick="switchTab(this,'ex4')">Exemple 4 — Complexe</button>
+      </div>
+
+      <div id="ex1" class="tab-content active">
+        <div class="code-block">
+          <div class="code-header"><div class="code-dots"><span></span><span></span><span></span></div><span class="code-title">Document simple : note interne</span></div>
+          <pre><span class="kw">&lt;!ELEMENT</span> <span class="el">note</span> (<span class="el">destinataire</span>, <span class="el">expediteur</span>, <span class="el">corps</span>, <span class="el">date</span>)<span class="kw">&gt;</span>
+<span class="kw">&lt;!ELEMENT</span> <span class="el">destinataire</span> (<span class="ty">#PCDATA</span>)<span class="kw">&gt;</span>
+<span class="kw">&lt;!ELEMENT</span> <span class="el">expediteur</span>   (<span class="ty">#PCDATA</span>)<span class="kw">&gt;</span>
+<span class="kw">&lt;!ELEMENT</span> <span class="el">corps</span>        (<span class="ty">#PCDATA</span>)<span class="kw">&gt;</span>
+<span class="kw">&lt;!ELEMENT</span> <span class="el">date</span>         (<span class="ty">#PCDATA</span>)<span class="kw">&gt;</span>
+
+<span class="el">&lt;note&gt;</span>
+  <span class="el">&lt;destinataire&gt;</span>Alice<span class="el">&lt;/destinataire&gt;</span>
+  <span class="el">&lt;expediteur&gt;</span>Bob<span class="el">&lt;/expediteur&gt;</span>
+  <span class="el">&lt;corps&gt;</span>Réunion annulée demain.<span class="el">&lt;/corps&gt;</span>
+  <span class="el">&lt;date&gt;</span>2024-01-15<span class="el">&lt;/date&gt;</span>
+<span class="el">&lt;/note&gt;</span></pre>
+        </div>
+        <div class="alert alert-cyan"><div class="alert-label">💡</div>Les 4 éléments sont <strong>obligatoires</strong> et doivent apparaître <strong>dans cet ordre exact</strong>.</div>
+      </div>
+
+      <div id="ex2" class="tab-content">
+        <div class="code-block">
+          <div class="code-header"><div class="code-dots"><span></span><span></span><span></span></div><span class="code-title">Bibliothèque avec occurrences multiples</span></div>
+          <pre><span class="kw">&lt;!ELEMENT</span> <span class="el">bibliotheque</span> (<span class="el">livre</span><span class="op">+</span>)<span class="kw">&gt;</span>       <span class="cm">&lt;!-- au moins 1 livre --&gt;</span>
+<span class="kw">&lt;!ELEMENT</span> <span class="el">livre</span>  (<span class="el">titre</span>, <span class="el">auteur</span><span class="op">+</span>, <span class="el">prix</span>, <span class="el">resume</span><span class="op">?</span>)<span class="kw">&gt;</span>
+<span class="cm">&lt;!--              ↑ 1+ auteurs         ↑ optionnel --&gt;</span>
+<span class="kw">&lt;!ELEMENT</span> <span class="el">titre</span>  (<span class="ty">#PCDATA</span>)<span class="kw">&gt;</span>
+<span class="kw">&lt;!ELEMENT</span> <span class="el">auteur</span> (<span class="el">nom</span>, <span class="el">prenom</span>)<span class="kw">&gt;</span>
+<span class="kw">&lt;!ELEMENT</span> <span class="el">nom</span>    (<span class="ty">#PCDATA</span>)<span class="kw">&gt;</span>
+<span class="kw">&lt;!ELEMENT</span> <span class="el">prenom</span> (<span class="ty">#PCDATA</span>)<span class="kw">&gt;</span>
+<span class="kw">&lt;!ELEMENT</span> <span class="el">prix</span>   (<span class="ty">#PCDATA</span>)<span class="kw">&gt;</span>
+<span class="kw">&lt;!ELEMENT</span> <span class="el">resume</span> (<span class="ty">#PCDATA</span>)<span class="kw">&gt;</span>
+
+<span class="el">&lt;bibliotheque&gt;</span>
+  <span class="el">&lt;livre&gt;</span>
+    <span class="el">&lt;titre&gt;</span>XML Mastery<span class="el">&lt;/titre&gt;</span>
+    <span class="el">&lt;auteur&gt;</span><span class="el">&lt;nom&gt;</span>Dupont<span class="el">&lt;/nom&gt;</span><span class="el">&lt;prenom&gt;</span>Jean<span class="el">&lt;/prenom&gt;</span><span class="el">&lt;/auteur&gt;</span>
+    <span class="el">&lt;auteur&gt;</span><span class="el">&lt;nom&gt;</span>Martin<span class="el">&lt;/nom&gt;</span><span class="el">&lt;prenom&gt;</span>Paul<span class="el">&lt;/prenom&gt;</span><span class="el">&lt;/auteur&gt;</span>
+    <span class="el">&lt;prix&gt;</span>29.90<span class="el">&lt;/prix&gt;</span>
+    <span class="cm">&lt;!-- résumé absent : OK car "?" --&gt;</span>
+  <span class="el">&lt;/livre&gt;</span>
+<span class="el">&lt;/bibliotheque&gt;</span></pre>
+        </div>
+      </div>
+
+      <div id="ex3" class="tab-content">
+        <div class="code-block">
+          <div class="code-header"><div class="code-dots"><span></span><span></span><span></span></div><span class="code-title">Alternative — un seul choix parmi plusieurs</span></div>
+          <pre><span class="cm">&lt;!-- contact = email OU telephone OU adresse --&gt;</span>
+<span class="kw">&lt;!ELEMENT</span> <span class="el">contact</span> (<span class="el">email</span> <span class="op">|</span> <span class="el">telephone</span> <span class="op">|</span> <span class="el">adresse</span>)<span class="kw">&gt;</span>
+<span class="kw">&lt;!ELEMENT</span> <span class="el">email</span>     (<span class="ty">#PCDATA</span>)<span class="kw">&gt;</span>
+<span class="kw">&lt;!ELEMENT</span> <span class="el">telephone</span> (<span class="ty">#PCDATA</span>)<span class="kw">&gt;</span>
+<span class="kw">&lt;!ELEMENT</span> <span class="el">adresse</span>   (<span class="ty">#PCDATA</span>)<span class="kw">&gt;</span>
+
+<span class="cm">&lt;!-- ✅ Valide --&gt;</span>
+<span class="el">&lt;contact&gt;</span><span class="el">&lt;email&gt;</span>alice@example.com<span class="el">&lt;/email&gt;</span><span class="el">&lt;/contact&gt;</span>
+
+<span class="cm">&lt;!-- ❌ INVALIDE — les 2 à la fois interdits ! --&gt;</span>
+<span class="el">&lt;contact&gt;</span><span class="el">&lt;email&gt;</span>...<span class="el">&lt;/email&gt;</span><span class="el">&lt;telephone&gt;</span>...<span class="el">&lt;/telephone&gt;</span><span class="el">&lt;/contact&gt;</span></pre>
+        </div>
+      </div>
+
+      <div id="ex4" class="tab-content">
+        <div class="code-block">
+          <div class="code-header"><div class="code-dots"><span></span><span></span><span></span></div><span class="code-title">Commande complexe — tout combiné</span></div>
+          <pre><span class="kw">&lt;!ELEMENT</span> <span class="el">commande</span> (<span class="el">client</span>, (<span class="el">produit</span><span class="op">+</span>), <span class="el">date</span>, <span class="el">remise</span><span class="op">?</span>, <span class="el">commentaire</span><span class="op">*</span>)<span class="kw">&gt;</span>
+<span class="cm">&lt;!--        ↑ 1x     ↑ 1..N prods  ↑ 1x  ↑ 0..1      ↑ 0..N --&gt;</span>
+
+<span class="el">&lt;commande&gt;</span>
+  <span class="el">&lt;client&gt;</span>Alice<span class="el">&lt;/client&gt;</span>
+  <span class="el">&lt;produit&gt;</span>Clavier<span class="el">&lt;/produit&gt;</span>
+  <span class="el">&lt;produit&gt;</span>Souris<span class="el">&lt;/produit&gt;</span>
+  <span class="el">&lt;date&gt;</span>2024-01-15<span class="el">&lt;/date&gt;</span>
+  <span class="cm">&lt;!-- pas de remise ni commentaire → OK --&gt;</span>
+<span class="el">&lt;/commande&gt;</span></pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- SECTION 4: ATTRIBUTS DTD -->
+  <section id="attributs-dtd">
+    <div class="section-header">
+      <span class="section-num">3.4.1 — B</span>
+      <h2>Déclaration des Attributs &amp; Limites DTD</h2>
+    </div>
+
+    <div class="alert alert-purple">
+      <div class="alert-label">📋 SYNTAXE ATTLIST</div>
+      <code style="font-family:'Share Tech Mono',monospace; color:var(--amber);">&lt;!ATTLIST nom_élément&nbsp; nom_attribut&nbsp; type&nbsp; obligation&nbsp; "valeur_défaut"&gt;</code>
+    </div>
+
+    <div class="tabs">
+      <div class="tab-headers">
+        <button class="tab-btn active" onclick="switchTab(this,'att1')">Obligations</button>
+        <button class="tab-btn" onclick="switchTab(this,'att2')">Types d'attributs</button>
+        <button class="tab-btn" onclick="switchTab(this,'att3')">Exemple complet</button>
+      </div>
+
+      <div id="att1" class="tab-content active">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Obligation</th><th>Signification</th><th>Exemple</th></tr></thead>
+            <tbody>
+              <tr><td>#REQUIRED</td><td>Obligatoire — l'attribut DOIT être présent</td><td><code class="attr">id</code> <code class="ty">CDATA</code> <code class="ty">#REQUIRED</code></td></tr>
+              <tr><td>#IMPLIED</td><td>Optionnel — peut être absent</td><td><code class="attr">lang</code> <code class="ty">CDATA</code> <code class="ty">#IMPLIED</code></td></tr>
+              <tr><td>#FIXED "val"</td><td>Valeur fixe — toujours la même</td><td><code class="attr">version</code> <code class="ty">CDATA</code> <code class="ty">#FIXED "1.0"</code></td></tr>
+              <tr><td>"valeur"</td><td>Valeur par défaut si absent</td><td><code class="attr">unite</code> <code class="ty">CDATA</code> <code class="val">"grammes"</code></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div id="att2" class="tab-content">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Type</th><th>Description</th><th>Exemple de valeur</th></tr></thead>
+            <tbody>
+              <tr><td>CDATA</td><td>Texte quelconque</td><td><code class="val">"roman policier"</code></td></tr>
+              <tr><td>ID</td><td>Identifiant unique dans le doc</td><td><code class="val">"liv001"</code></td></tr>
+              <tr><td>IDREF</td><td>Référence vers un ID existant</td><td><code class="val">"liv001"</code></td></tr>
+              <tr><td>IDREFS</td><td>Liste de références séparées par espaces</td><td><code class="val">"liv001 liv002"</code></td></tr>
+              <tr><td>NMTOKEN</td><td>Un mot (pas d'espace)</td><td><code class="val">"urgent"</code></td></tr>
+              <tr><td>(v1|v2|...)</td><td>Énumération de valeurs</td><td><code class="val">(homme|femme|autre)</code></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div id="att3" class="tab-content">
+        <div class="code-block">
+          <div class="code-header"><div class="code-dots"><span></span><span></span><span></span></div><span class="code-title">Exemple réel — attributs pour livre et personne</span></div>
+          <pre><span class="kw">&lt;!ATTLIST</span> <span class="el">livre</span>
+  <span class="attr">isbn</span>    <span class="ty">CDATA</span>          <span class="ty">#REQUIRED</span>
+  <span class="attr">lang</span>    <span class="ty">CDATA</span>          <span class="val">"fr"</span>
+  <span class="attr">edition</span> <span class="ty">CDATA</span>          <span class="ty">#IMPLIED</span>
+  <span class="attr">version</span> <span class="ty">CDATA</span>          <span class="ty">#FIXED "2.0"</span>
+<span class="kw">&gt;</span>
+
+<span class="kw">&lt;!ATTLIST</span> <span class="el">personne</span>
+  <span class="attr">id</span>     <span class="ty">ID</span>              <span class="ty">#REQUIRED</span>
+  <span class="attr">genre</span>  (<span class="val">homme</span>|<span class="val">femme</span>|<span class="val">autre</span>) <span class="ty">#REQUIRED</span>
+  <span class="attr">amis</span>   <span class="ty">IDREFS</span>          <span class="ty">#IMPLIED</span>
+<span class="kw">&gt;</span>
+
+<span class="el">&lt;personne <span class="attr">id</span>=<span class="val">"P001"</span> <span class="attr">genre</span>=<span class="val">"femme"</span> <span class="attr">amis</span>=<span class="val">"P002 P003"</span>&gt;</span>
+  ...
+<span class="el">&lt;/personne&gt;</span></pre>
+        </div>
+      </div>
+    </div>
+
+    <h3 style="margin:2.5rem 0 1rem; font-family:'Orbitron',monospace; font-size:.85rem; color:var(--red);">⚠️ Les Limites des DTD → Pourquoi XSD ?</h3>
+    <div class="compare-full">
+      <div class="compare-box box-dtd">
+        <h3>🚨 Problèmes DTD</h3>
+        <div class="limit-item"><div class="limit-icon">❌</div><div><strong>Syntaxe non-XML</strong> — impossible à traiter avec XSLT</div></div>
+        <div class="limit-item"><div class="limit-icon">❌</div><div><strong>Typage faible</strong> — tout est <code>#PCDATA</code>, impossible de dire "entier" ou "date"</div></div>
+        <div class="limit-item"><div class="limit-icon">❌</div><div><strong>Namespaces</strong> — support très limité des espaces de noms</div></div>
+        <div class="limit-item"><div class="limit-icon">❌</div><div><strong>Pas de contraintes avancées</strong> — impossible d'imposer "âge entre 0 et 120"</div></div>
+        <div class="limit-item"><div class="limit-icon">❌</div><div><strong>Extensibilité faible</strong> — pas d'héritage, réutilisation difficile</div></div>
+      </div>
+      <div class="compare-box box-xsd">
+        <h3>✅ Solutions XSD</h3>
+        <div class="limit-item"><div class="limit-icon">✅</div><div><strong>Syntaxe XML</strong> — traitée avec n'importe quel outil XML</div></div>
+        <div class="limit-item"><div class="limit-icon">✅</div><div><strong>44 types prédéfinis</strong> — xs:integer, xs:date, xs:boolean...</div></div>
+        <div class="limit-item"><div class="limit-icon">✅</div><div><strong>Support natif namespaces</strong> — parfait pour les standards modernes</div></div>
+        <div class="limit-item"><div class="limit-icon">✅</div><div><strong>Contraintes avancées</strong> — regex, plages, énumérations, patterns</div></div>
+        <div class="limit-item"><div class="limit-icon">✅</div><div><strong>Héritage &amp; modularité</strong> — réutilise et combine les schémas</div></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- SECTION 5: XSD -->
+  <section id="xsd">
+    <div class="section-header">
+      <span class="section-num">3.4.2</span>
+      <h2>XSD — XML Schema Definition</h2>
+    </div>
+
+    <div class="alert alert-green">
+      <div class="alert-label">🚀 ANALOGIE SIMPLE</div>
+      XSD c'est comme une <strong>fiche de base de données</strong> : tu définis que <em>id</em> est un entier unique, <em>email</em> doit correspondre à une regex, <em>age</em> est entre 0 et 150... et le parseur vérifie tout automatiquement !
+    </div>
+
+    <h3 style="margin:1.5rem 0 1rem; font-family:'Orbitron',monospace; font-size:.85rem; color:var(--green);">🏗️ Structure de base d'un XSD</h3>
+
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><span></span><span></span><span></span></div><span class="code-title">schema.xsd — Structure minimale commentée</span><button class="code-copy" onclick="copyCode(this)">COPIER</button></div>
+      <pre><span class="el">&lt;xs:schema</span>
+  <span class="attr">xmlns:xs</span>=<span class="val">"http://www.w3.org/2001/XMLSchema"</span>  <span class="cm">&lt;!-- namespace de XSD --&gt;</span>
+  <span class="attr">targetNamespace</span>=<span class="val">"http://example.org/mon-schema"</span>
+  <span class="attr">elementFormDefault</span>=<span class="val">"qualified"</span><span class="el">&gt;</span>
+
+  <span class="cm">&lt;!-- Ici : types complexes, types simples, éléments... --&gt;</span>
+
+<span class="el">&lt;/xs:schema&gt;</span></pre>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><span></span><span></span><span></span></div><span class="code-title">personne.xsd — Premier schéma complet</span><button class="code-copy" onclick="copyCode(this)">COPIER</button></div>
+      <pre><span class="el">&lt;xs:schema</span> <span class="attr">xmlns:xs</span>=<span class="val">"http://www.w3.org/2001/XMLSchema"</span><span class="el">&gt;</span>
+
+  <span class="el">&lt;xs:complexType</span> <span class="attr">name</span>=<span class="val">"typePersonne"</span><span class="el">&gt;</span>
+    <span class="el">&lt;xs:sequence&gt;</span>
+      <span class="el">&lt;xs:element</span> <span class="attr">name</span>=<span class="val">"nom"</span>    <span class="attr">type</span>=<span class="val">"xs:string"</span><span class="el">/&gt;</span>
+      <span class="el">&lt;xs:element</span> <span class="attr">name</span>=<span class="val">"prenom"</span> <span class="attr">type</span>=<span class="val">"xs:string"</span><span class="el">/&gt;</span>
+      <span class="el">&lt;xs:element</span> <span class="attr">name</span>=<span class="val">"age"</span>    <span class="attr">type</span>=<span class="val">"xs:positiveInteger"</span><span class="el">/&gt;</span>
+      <span class="el">&lt;xs:element</span> <span class="attr">name</span>=<span class="val">"email"</span>  <span class="attr">type</span>=<span class="val">"xs:string"</span> <span class="attr">minOccurs</span>=<span class="val">"0"</span><span class="el">/&gt;</span>
+    <span class="el">&lt;/xs:sequence&gt;</span>
+    <span class="el">&lt;xs:attribute</span> <span class="attr">name</span>=<span class="val">"id"</span> <span class="attr">type</span>=<span class="val">"xs:ID"</span> <span class="attr">use</span>=<span class="val">"required"</span><span class="el">/&gt;</span>
+  <span class="el">&lt;/xs:complexType&gt;</span>
+
+  <span class="el">&lt;xs:element</span> <span class="attr">name</span>=<span class="val">"personne"</span> <span class="attr">type</span>=<span class="val">"typePersonne"</span><span class="el">/&gt;</span>
+
+<span class="el">&lt;/xs:schema&gt;</span>
+
+<span class="cm">&lt;!-- ★ XML valide correspondant ↓ --&gt;</span>
+<span class="el">&lt;personne <span class="attr">id</span>=<span class="val">"P001"</span>&gt;</span>
+  <span class="el">&lt;nom&gt;</span>Dupont<span class="el">&lt;/nom&gt;</span>
+  <span class="el">&lt;prenom&gt;</span>Jean<span class="el">&lt;/prenom&gt;</span>
+  <span class="el">&lt;age&gt;</span>30<span class="el">&lt;/age&gt;</span>
+  <span class="el">&lt;email&gt;</span>jean.dupont@email.com<span class="el">&lt;/email&gt;</span>
+<span class="el">&lt;/personne&gt;</span></pre>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- SECTION 6: TYPES XSD -->
+  <section id="types-xsd">
+    <div class="section-header">
+      <span class="section-num">3.4.2 — A</span>
+      <h2>Les Types de Données XSD</h2>
+    </div>
+
+    <div class="alert alert-purple">
+      <div class="alert-label">💡 LA VRAIE PUISSANCE DE XSD</div>
+      Contrairement à DTD où tout est du texte (#PCDATA), XSD dispose de <strong>44 types prédéfinis</strong>. C'est comme avoir le système de types d'un langage de programmation !
+    </div>
+
+    <div class="tabs">
+      <div class="tab-headers">
+        <button class="tab-btn active" onclick="switchTab(this,'t1')">📝 Textuels</button>
+        <button class="tab-btn" onclick="switchTab(this,'t2')">🔢 Numériques</button>
+        <button class="tab-btn" onclick="switchTab(this,'t3')">📅 Temporels</button>
+        <button class="tab-btn" onclick="switchTab(this,'t4')">🌈 Autres</button>
+      </div>
+
+      <div id="t1" class="tab-content active">
+        <div class="type-pills">
+          <span class="type-pill tp-c" data-tip="Chaîne quelconque">xs:string</span>
+          <span class="type-pill tp-a" data-tip="Texte sans saut de ligne">xs:normalizedString</span>
+          <span class="type-pill tp-g" data-tip="Texte sans espaces multiples">xs:token</span>
+          <span class="type-pill tp-p" data-tip="Identifiant unique dans le doc">xs:ID</span>
+          <span class="type-pill tp-c" data-tip="Référence à un ID">xs:IDREF</span>
+          <span class="type-pill tp-g" data-tip="Liste d'IDREFs">xs:IDREFS</span>
+          <span class="type-pill tp-a" data-tip="Un mot sans espace">xs:NMTOKEN</span>
+          <span class="type-pill tp-p" data-tip="Plusieurs mots">xs:NMTOKENS</span>
+          <span class="type-pill tp-c" data-tip="Langue (fr, en, ar...)">xs:language</span>
+        </div>
+        <div class="code-block" style="margin-top:1rem;">
+          <div class="code-header"><div class="code-dots"><span></span><span></span><span></span></div><span class="code-title">Utilisation des types textuels</span></div>
+          <pre><span class="el">&lt;xs:element</span> <span class="attr">name</span>=<span class="val">"nom"</span>  <span class="attr">type</span>=<span class="val">"xs:string"</span><span class="el">/&gt;</span>    <span class="cm">&lt;!-- "Dupont" OK --&gt;</span>
+<span class="el">&lt;xs:element</span> <span class="attr">name</span>=<span class="val">"code"</span> <span class="attr">type</span>=<span class="val">"xs:NMTOKEN"</span><span class="el">/&gt;</span>   <span class="cm">&lt;!-- "urgent" OK, "ur gent" ❌ --&gt;</span>
+<span class="el">&lt;xs:element</span> <span class="attr">name</span>=<span class="val">"lang"</span> <span class="attr">type</span>=<span class="val">"xs:language"</span><span class="el">/&gt;</span>  <span class="cm">&lt;!-- "fr" ou "en-US" OK --&gt;</span></pre>
+        </div>
+      </div>
+
+      <div id="t2" class="tab-content">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Type XSD</th><th>Signification</th><th>Exemples valides</th></tr></thead>
+            <tbody>
+              <tr><td>xs:integer</td><td>Entier (positif ou négatif)</td><td>42, -10, 0</td></tr>
+              <tr><td>xs:positiveInteger</td><td>Entier positif (&gt;0)</td><td>1, 100, 9999</td></tr>
+              <tr><td>xs:negativeInteger</td><td>Entier négatif (&lt;0)</td><td>-5, -100</td></tr>
+              <tr><td>xs:nonNegativeInteger</td><td>Entier ≥ 0</td><td>0, 50, 200</td></tr>
+              <tr><td>xs:nonPositiveInteger</td><td>Entier ≤ 0</td><td>0, -30, -500</td></tr>
+              <tr><td>xs:decimal</td><td>Nombre décimal</td><td>3.14, -2.5, 99.99</td></tr>
+              <tr><td>xs:float</td><td>Nombre flottant</td><td>3.14E5</td></tr>
+              <tr><td>xs:double</td><td>Double précision</td><td>3.14159265359</td></tr>
+              <tr><td>xs:long / xs:int / xs:short / xs:byte</td><td>Entiers avec taille</td><td>Long: 64bits, Int: 32bits...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div id="t3" class="tab-content">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Type</th><th>Format</th><th>Exemple</th></tr></thead>
+            <tbody>
+              <tr><td>xs:date</td><td>YYYY-MM-DD</td><td>2024-01-15</td></tr>
+              <tr><td>xs:time</td><td>HH:MM:SS</td><td>14:30:00</td></tr>
+              <tr><td>xs:dateTime</td><td>YYYY-MM-DDTHH:MM:SS</td><td>2024-01-15T14:30:00</td></tr>
+              <tr><td>xs:duration</td><td>PnYnMnDTnHnMnS</td><td>P1Y2M3DT10H30M</td></tr>
+              <tr><td>xs:gYear</td><td>YYYY</td><td>2024</td></tr>
+              <tr><td>xs:gMonth</td><td>--MM</td><td>--01 (janvier)</td></tr>
+              <tr><td>xs:gDay</td><td>---DD</td><td>---15 (le 15)</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="code-block" style="margin-top:1rem;">
+          <div class="code-header"><div class="code-dots"><span></span><span></span><span></span></div><span class="code-title">Utilisation types temporels</span></div>
+          <pre><span class="el">&lt;xs:element</span> <span class="attr">name</span>=<span class="val">"naissance"</span>  <span class="attr">type</span>=<span class="val">"xs:date"</span><span class="el">/&gt;</span>      <span class="cm">&lt;!-- 1990-05-15 --&gt;</span>
+<span class="el">&lt;xs:element</span> <span class="attr">name</span>=<span class="val">"rendez-vous"</span> <span class="attr">type</span>=<span class="val">"xs:dateTime"</span><span class="el">/&gt;</span>  <span class="cm">&lt;!-- 2024-01-15T14:30:00 --&gt;</span>
+<span class="el">&lt;xs:element</span> <span class="attr">name</span>=<span class="val">"duree"</span>       <span class="attr">type</span>=<span class="val">"xs:duration"</span><span class="el">/&gt;</span>   <span class="cm">&lt;!-- P2H30M = 2h30min --&gt;</span></pre>
+        </div>
+      </div>
+
+      <div id="t4" class="tab-content">
+        <div class="cards-grid">
+          <div class="card" style="--accent1:var(--green);">
+            <h3 style="color:var(--green);">xs:boolean</h3>
+            <p>Valeurs : <code style="color:var(--amber);">true</code> / <code style="color:var(--amber);">false</code> ou <code style="color:var(--amber);">1</code> / <code style="color:var(--amber);">0</code></p>
+            <code style="font-size:.78rem; color:var(--cyan);">&lt;actif&gt;true&lt;/actif&gt;</code>
+          </div>
+          <div class="card" style="--accent1:var(--cyan);">
+            <h3 style="color:var(--cyan);">xs:anyURI</h3>
+            <p>URL ou URI — valide si bien formée</p>
+            <code style="font-size:.78rem; color:var(--amber);">https://example.com/api</code>
+          </div>
+          <div class="card" style="--accent1:var(--amber);">
+            <h3 style="color:var(--amber);">xs:base64Binary</h3>
+            <p>Données binaires encodées en base64</p>
+            <code style="font-size:.78rem; color:var(--purple);">SGVsbG8gV29ybGQ=</code>
+          </div>
+          <div class="card" style="--accent1:var(--purple);">
+            <h3 style="color:var(--purple);">xs:hexBinary</h3>
+            <p>Données binaires en hexadécimal</p>
+            <code style="font-size:.78rem; color:var(--green);">48656C6C6F</code>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <h3 style="margin:2rem 0 1rem; font-family:'Orbitron',monospace; font-size:.85rem; color:var(--cyan);">📊 Occurrences avec minOccurs / maxOccurs</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>minOccurs</th><th>maxOccurs</th><th>Équivalent DTD</th><th>Signification</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td>1</td><td>(aucun opérateur)</td><td>Exactement 1 fois (défaut)</td></tr>
+          <tr><td>0</td><td>1</td><td>?</td><td>Optionnel — 0 ou 1 fois</td></tr>
+          <tr><td>1</td><td>unbounded</td><td>+</td><td>Au moins 1 fois</td></tr>
+          <tr><td>0</td><td>unbounded</td><td>*</td><td>0 ou plusieurs fois</td></tr>
+          <tr><td>1</td><td>5</td><td><em>n/a (impossible en DTD !)</em></td><td>De 1 à 5 fois</td></tr>
+          <tr><td>3</td><td>unbounded</td><td><em>n/a (impossible en DTD !)</em></td><td>Au moins 3 fois</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- SECTION 7: TYPES COMPLEXES XSD -->
+  <section id="complex">
+    <div class="section-header">
+      <span class="section-num">3.4.2 — B</span>
+      <h2>Types Complexes &amp; Restrictions XSD</h2>
+    </div>
+
+    <div class="accordion">
+
+      <div class="acc-item">
+        <div class="acc-header" onclick="toggleAcc(this)">
+          <h3><span class="tag tag-c" style="font-size:.6rem;">xs:sequence</span> Séquence ordonnée — ordre strict</h3>
+          <span class="acc-icon">+</span>
+        </div>
+        <div class="acc-body">
+          <div class="acc-body-inner">
+            <p style="font-size:.9rem; color:var(--text-dim); margin-bottom:1rem;">Les éléments <strong>doivent</strong> apparaître dans l'ordre défini. C'est le plus courant.</p>
+            <div class="code-block">
+              <div class="code-header"><div class="code-dots"><span></span><span></span><span></span></div><span class="code-title">xs:sequence — exemple</span></div>
+              <pre><span class="el">&lt;xs:complexType</span> <span class="attr">name</span>=<span class="val">"typePersonne"</span><span class="el">&gt;</span>
+  <span class="el">&lt;xs:sequence&gt;</span>
+    <span class="el">&lt;xs:element</span> <span class="attr">name</span>=<span class="val">"nom"</span>           <span class="attr">type</span>=<span class="val">"xs:string"</span><span class="el">/&gt;</span>          <span class="cm">&lt;!-- 1er --&gt;</span>
+    <span class="el">&lt;xs:element</span> <span class="attr">name</span>=<span class="val">"prenom"</span>        <span class="attr">type</span>=<span class="val">"xs:string"</span><span class="el">/&gt;</span>          <span class="cm">&lt;!-- 2ème --&gt;</span>
+    <span class="el">&lt;xs:element</span> <span class="attr">name</span>=<span class="val">"dateNaissance"</span> <span class="attr">type</span>=<span class="val">"xs:date"</span><span class="el">/&gt;</span>           <span class="cm">&lt;!-- 3ème --&gt;</span>
+    <span class="el">&lt;xs:element</span> <span class="attr">name</span>=<span class="val">"adresse"</span>      <span class="attr">type</span>=<span class="val">"xs:string"</span> <span class="attr">minOccurs</span>=<span class="val">"0"</span><span class="el">/&gt;</span>  <span class="cm">&lt;!-- optionnel --&gt;</span>
+  <span class="el">&lt;/xs:sequence&gt;</span>
+<span class="el">&lt;/xs:complexType&gt;</span></pre>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="acc-item">
+        <div class="acc-header" onclick="toggleAcc(this)">
+          <h3><span class="tag tag-a" style="font-size:.6rem;">xs:choice</span> Choix exclusif — un seul parmi plusieurs</h3>
+          <span class="acc-icon">+</span>
+        </div>
+        <div class="acc-body">
+          <div class="acc-body-inner">
+            <p style="font-size:.9rem; color:var(--text-dim); margin-bottom:1rem;">Un <strong>seul</strong> des éléments listés peut apparaître. Équivalent du <code class="op">|</code> en DTD.</p>
+            <div class="code-block">
+              <div class="code-header"><div class="code-dots"><span></span><span></span><span></span></div><span class="code-title">xs:choice — un seul contact possible</span></div>
+              <pre><span class="el">&lt;xs:complexType</span> <span class="attr">name</span>=<span class="val">"typeContact"</span><span class="el">&gt;</span>
+  <span class="el">&lt;xs:choice&gt;</span>
+    <span class="el">&lt;xs:element</span> <span class="attr">name</span>=<span class="val">"telephone"</span> <span class="attr">type</span>=<span class="val">"xs:string"</span><span class="el">/&gt;</span>
+    <span class="el">&lt;xs:element</span> <span class="attr">name</span>=<span class="val">"email"</span>     <span class="attr">type</span>=<span class="val">"xs:string"</span><span class="el">/&gt;</span>
+    <span class="el">&lt;xs:element</span> <span class="attr">name</span>=<span class="val">"adresse"</span>   <span class="attr">type</span>=<span class="val">"xs:string"</span><span class="el">/&gt;</span>
+  <span class="el">&lt;/xs:choice&gt;</span>
+<span class="el">&lt;/xs:complexType&gt;</span>
+
+<span class="cm">&lt;!-- ✅ Valide --&gt;</span>
+<span class="el">&lt;contact&gt;</span><span class="el">&lt;email&gt;</span>alice@ex.com<span class="el">&lt;/email&gt;</span><span class="el">&lt;/contact&gt;</span>
+
+<span class="cm">&lt;!-- ❌ INVALIDE — 2 éléments à la fois ! --&gt;</span>
+<span class="el">&lt;contact&gt;</span><span class="el">&lt;email&gt;</span>...<span class="el">&lt;/email&gt;</span><span class="el">&lt;telephone&gt;</span>...<span class="el">&lt;/telephone&gt;</span><span class="el">&lt;/contact&gt;</span></pre>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="acc-item">
+        <div class="acc-header" onclick="toggleAcc(this)">
+          <h3><span class="tag tag-g" style="font-size:.6rem;">xs:all</span> Ordre libre — chacun max 1 fois</h3>
+          <span class="acc-icon">+</span>
+        </div>
+        <div class="acc-body">
+          <div class="acc-body-inner">
+            <p style="font-size:.9rem; color:var(--text-dim); margin-bottom:1rem;">Tous les éléments peuvent apparaître dans <strong>n'importe quel ordre</strong>, mais chacun une seule fois maximum.</p>
+            <div class="code-block">
+              <div class="code-header"><div class="code-dots"><span></span><span></span><span></span></div><span class="code-title">xs:all — ordre libre</span></div>
+              <pre><span class="el">&lt;xs:complexType</span> <span class="attr">name</span>=<span class="val">"typeIdentite"</span><span class="el">&gt;</span>
+  <span class="el">&lt;xs:all&gt;</span>
+    <span class="el">&lt;xs:element</span> <span class="attr">name</span>=<span class="val">"nom"</span>           <span class="attr">type</span>=<span class="val">"xs:string"</span><span class="el">/&gt;</span>
+    <span class="el">&lt;xs:element</span> <span class="attr">name</span>=<span class="val">"prenom"</span>        <span class="attr">type</span>=<span class="val">"xs:string"</span><span class="el">/&gt;</span>
+    <span class="el">&lt;xs:element</span> <span class="attr">name</span>=<span class="val">"dateNaissance"</span> <span class="attr">type</span>=<span class="val">"xs:date"</span> <span class="attr">minOccurs</span>=<span class="val">"0"</span><span class="el">/&gt;</span>
+  <span class="el">&lt;/xs:all&gt;</span>
+<span class="el">&lt;/xs:complexType&gt;</span>
+
+<span class="cm">&lt;!-- ✅ Valide — ordre inverse OK ! --&gt;</span>
+<span class="el">&lt;identite&gt;</span>
+  <span class="el">&lt;dateNaissance&gt;</span>1990-05-15<span class="el">&lt;/dateNaissance&gt;</span>
+  <span class="el">&lt;nom&gt;</span>Dupont<span class="el">&lt;/nom&gt;</span>
+  <span class="el">&lt;prenom&gt;</span>Jean<span class="el">&lt;/prenom&gt;</span>
+<span class="el">&lt;/identite&gt;</span></pre>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="acc-item">
+        <div class="acc-header" onclick="toggleAcc(this)">
+          <h3><span class="tag tag-p" style="font-size:.6rem;">xs:restriction</span> Restrictions — contraintes avancées</h3>
+          <span class="acc-icon">+</span>
+        </div>
+        <div class="acc-body">
+          <div class="acc-body-inner">
+            <div class="alert alert-purple"><div class="alert-label">🏆 LA KILLER FEATURE DE XSD</div>Créer des types personnalisés avec des contraintes précises. Impossible avec DTD !</div>
+
+            <div class="tabs" style="margin-top:1rem;">
+              <div class="tab-headers">
+                <button class="tab-btn active" onclick="switchTab(this,'r1')">Plages numériques</button>
+                <button class="tab-btn" onclick="switchTab(this,'r2')">Énumérations</button>
+                <button class="tab-btn" onclick="switchTab(this,'r3')">Longueur de chaîne</button>
+                <button class="tab-btn" onclick="switchTab(this,'r4')">Regex (pattern)</button>
+              </div>
+
+              <div id="r1" class="tab-content active">
+                <div class="code-block">
+                  <div class="code-header"><div class="code-dots"><span></span><span></span><span></span></div><span class="code-title">Contraintes numériques — âge entre 0 et 120</span></div>
+                  <pre><span class="el">&lt;xs:simpleType</span> <span class="attr">name</span>=<span class="val">"typeAge"</span><span class="el">&gt;</span>
+  <span class="el">&lt;xs:restriction</span> <span class="attr">base</span>=<span class="val">"xs:integer"</span><span class="el">&gt;</span>
+    <span class="el">&lt;xs:minInclusive</span> <span class="attr">value</span>=<span class="val">"0"</span><span class="el">/&gt;</span>
+    <span class="el">&lt;xs:maxInclusive</span> <span class="attr">value</span>=<span class="val">"120"</span><span class="el">/&gt;</span>
+  <span class="el">&lt;/xs:restriction&gt;</span>
+<span class="el">&lt;/xs:simpleType&gt;</span>
+
+<span class="cm">&lt;!-- Note de 0 à 20 avec 2 décimales max --&gt;</span>
+<span class="el">&lt;xs:simpleType</span> <span class="attr">name</span>=<span class="val">"typeNote"</span><span class="el">&gt;</span>
+  <span class="el">&lt;xs:restriction</span> <span class="attr">base</span>=<span class="val">"xs:decimal"</span><span class="el">&gt;</span>
+    <span class="el">&lt;xs:minInclusive</span>  <span class="attr">value</span>=<span class="val">"0"</span><span class="el">/&gt;</span>
+    <span class="el">&lt;xs:maxInclusive</span>  <span class="attr">value</span>=<span class="val">"20"</span><span class="el">/&gt;</span>
+    <span class="el">&lt;xs:fractionDigits</span> <span class="attr">value</span>=<span class="val">"2"</span><span class="el">/&gt;</span>
+  <span class="el">&lt;/xs:restriction&gt;</span>
+<span class="el">&lt;/xs:simpleType&gt;</span></pre>
+                </div>
+              </div>
+
+              <div id="r2" class="tab-content">
+                <div class="code-block">
+                  <div class="code-header"><div class="code-dots"><span></span><span></span><span></span></div><span class="code-title">Énumération — jours de la semaine</span></div>
+                  <pre><span class="el">&lt;xs:simpleType</span> <span class="attr">name</span>=<span class="val">"typeJour"</span><span class="el">&gt;</span>
+  <span class="el">&lt;xs:restriction</span> <span class="attr">base</span>=<span class="val">"xs:string"</span><span class="el">&gt;</span>
+    <span class="el">&lt;xs:enumeration</span> <span class="attr">value</span>=<span class="val">"lundi"</span><span class="el">/&gt;</span>
+    <span class="el">&lt;xs:enumeration</span> <span class="attr">value</span>=<span class="val">"mardi"</span><span class="el">/&gt;</span>
+    <span class="el">&lt;xs:enumeration</span> <span class="attr">value</span>=<span class="val">"mercredi"</span><span class="el">/&gt;</span>
+    <span class="el">&lt;xs:enumeration</span> <span class="attr">value</span>=<span class="val">"jeudi"</span><span class="el">/&gt;</span>
+    <span class="el">&lt;xs:enumeration</span> <span class="attr">value</span>=<span class="val">"vendredi"</span><span class="el">/&gt;</span>
+    <span class="el">&lt;xs:enumeration</span> <span class="attr">value</span>=<span class="val">"samedi"</span><span class="el">/&gt;</span>
+    <span class="el">&lt;xs:enumeration</span> <span class="attr">value</span>=<span class="val">"dimanche"</span><span class="el">/&gt;</span>
+  <span class="el">&lt;/xs:restriction&gt;</span>
+<span class="el">&lt;/xs:simpleType&gt;</span>
+
+<span class="cm">&lt;!-- ✅  &lt;jour&gt;lundi&lt;/jour&gt; --&gt;</span>
+<span class="cm">&lt;!-- ❌  &lt;jour&gt;Monday&lt;/jour&gt; (valeur non listée) --&gt;</span></pre>
+                </div>
+              </div>
+
+              <div id="r3" class="tab-content">
+                <div class="code-block">
+                  <div class="code-header"><div class="code-dots"><span></span><span></span><span></span></div><span class="code-title">Contraintes de longueur</span></div>
+                  <pre><span class="cm">&lt;!-- Code postal : exactement 5 caractères --&gt;</span>
+<span class="el">&lt;xs:simpleType</span> <span class="attr">name</span>=<span class="val">"typeCodePostal"</span><span class="el">&gt;</span>
+  <span class="el">&lt;xs:restriction</span> <span class="attr">base</span>=<span class="val">"xs:string"</span><span class="el">&gt;</span>
+    <span class="el">&lt;xs:length</span> <span class="attr">value</span>=<span class="val">"5"</span><span class="el">/&gt;</span>
+  <span class="el">&lt;/xs:restriction&gt;</span>
+<span class="el">&lt;/xs:simpleType&gt;</span>
+
+<span class="cm">&lt;!-- Mot de passe : entre 8 et 50 caractères --&gt;</span>
+<span class="el">&lt;xs:simpleType</span> <span class="attr">name</span>=<span class="val">"typePassword"</span><span class="el">&gt;</span>
+  <span class="el">&lt;xs:restriction</span> <span class="attr">base</span>=<span class="val">"xs:string"</span><span class="el">&gt;</span>
+    <span class="el">&lt;xs:minLength</span> <span class="attr">value</span>=<span class="val">"8"</span><span class="el">/&gt;</span>
+    <span class="el">&lt;xs:maxLength</span> <span class="attr">value</span>=<span class="val">"50"</span><span class="el">/&gt;</span>
+  <span class="el">&lt;/xs:restriction&gt;</span>
+<span class="el">&lt;/xs:simpleType&gt;</span></pre>
+                </div>
+              </div>
+
+              <div id="r4" class="tab-content">
+                <div class="alert alert-cyan"><div class="alert-label">🔍 REGEX DANS XSD</div>Utilise <code>xs:pattern</code> pour valider le <strong>format</strong> du contenu avec des expressions régulières. C'est la fonctionnalité la plus puissante !</div>
+                <div class="code-block">
+                  <div class="code-header"><div class="code-dots"><span></span><span></span><span></span></div><span class="code-title">Patterns avec regex</span></div>
+                  <pre><span class="cm">&lt;!-- Format email basique --&gt;</span>
+<span class="el">&lt;xs:simpleType</span> <span class="attr">name</span>=<span class="val">"typeEmail"</span><span class="el">&gt;</span>
+  <span class="el">&lt;xs:restriction</span> <span class="attr">base</span>=<span class="val">"xs:string"</span><span class="el">&gt;</span>
+    <span class="el">&lt;xs:pattern</span> <span class="attr">value</span>=<span class="val">"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}"</span><span class="el">/&gt;</span>
+  <span class="el">&lt;/xs:restriction&gt;</span>
+<span class="el">&lt;/xs:simpleType&gt;</span>
+
+<span class="cm">&lt;!-- Téléphone algérien : 0XXXXXXXXX --&gt;</span>
+<span class="el">&lt;xs:simpleType</span> <span class="attr">name</span>=<span class="val">"typeTelDZ"</span><span class="el">&gt;</span>
+  <span class="el">&lt;xs:restriction</span> <span class="attr">base</span>=<span class="val">"xs:string"</span><span class="el">&gt;</span>
+    <span class="el">&lt;xs:pattern</span> <span class="attr">value</span>=<span class="val">"0[567][0-9]{8}"</span><span class="el">/&gt;</span>
+    <span class="cm">&lt;!-- commence par 05, 06 ou 07, suivi de 8 chiffres --&gt;</span>
+  <span class="el">&lt;/xs:restriction&gt;</span>
+<span class="el">&lt;/xs:simpleType&gt;</span>
+
+<span class="cm">&lt;!-- ✅  &lt;tel&gt;0551234567&lt;/tel&gt; --&gt;</span>
+<span class="cm">&lt;!-- ❌  &lt;tel&gt;+33612345678&lt;/tel&gt; (pas le bon format) --&gt;</span></pre>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Lier XML à XSD -->
+    <h3 style="margin:2rem 0 1rem; font-family:'Orbitron',monospace; font-size:.85rem; color:var(--amber);">🔗 Lier un XML à son XSD</h3>
+    <div class="compare-full">
+      <div class="compare-box box-dtd">
+        <h3>Méthode 1 — Sans namespace</h3>
+        <div class="code-block" style="margin:.5rem 0;">
+          <div class="code-header"><div class="code-dots"><span></span><span></span><span></span></div><span class="code-title">xsi:noNamespaceSchemaLocation</span></div>
+          <pre style="padding:.8rem; font-size:.76rem;"><span class="el">&lt;personnes</span>
+  <span class="attr">xmlns:xsi</span>=<span class="val">"http://www.w3.org/2001/XMLSchema-instance"</span>
+  <span class="attr">xsi:noNamespaceSchemaLocation</span>=<span class="val">"personnes.xsd"</span><span class="el">&gt;</span>
+  ...
+<span class="el">&lt;/personnes&gt;</span></pre>
+        </div>
+        <p style="font-size:.85rem; color:var(--text-dim);">Simple, pour les projets privés sans namespace.</p>
+      </div>
+      <div class="compare-box box-xsd">
+        <h3>Méthode 2 — Avec namespace</h3>
+        <div class="code-block" style="margin:.5rem 0;">
+          <div class="code-header"><div class="code-dots"><span></span><span></span><span></span></div><span class="code-title">xsi:schemaLocation</span></div>
+          <pre style="padding:.8rem; font-size:.76rem;"><span class="el">&lt;p:personnes</span>
+  <span class="attr">xmlns:p</span>=<span class="val">"http://example.org/personnes"</span>
+  <span class="attr">xmlns:xsi</span>=<span class="val">"http://www.w3.org/2001/XMLSchema-instance"</span>
+  <span class="attr">xsi:schemaLocation</span>=<span class="val">"http://example.org/personnes personnes.xsd"</span><span class="el">&gt;</span>
+<span class="el">&lt;/p:personnes&gt;</span></pre>
+        </div>
+        <p style="font-size:.85rem; color:var(--text-dim);">Professionnel, pour les échanges inter-entreprises.</p>
+      </div>
+    </div>
+
+    <!-- Exemple final complet -->
+    <h3 style="margin:2rem 0 1rem; font-family:'Orbitron',monospace; font-size:.85rem; color:var(--green);">🏆 Exemple Complet Final — Catalogue de produits</h3>
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><span></span><span></span><span></span></div><span class="code-title">catalogue.xsd — XSD complet avec types custom</span><button class="code-copy" onclick="copyCode(this)">COPIER</button></div>
+      <pre><span class="el">&lt;xs:schema</span> <span class="attr">xmlns:xs</span>=<span class="val">"http://www.w3.org/2001/XMLSchema"</span><span class="el">&gt;</span>
+
+  <span class="cm">&lt;!-- Type simple : prix positif --&gt;</span>
+  <span class="el">&lt;xs:simpleType</span> <span class="attr">name</span>=<span class="val">"typePrix"</span><span class="el">&gt;</span>
+    <span class="el">&lt;xs:restriction</span> <span class="attr">base</span>=<span class="val">"xs:decimal"</span><span class="el">&gt;</span>
+      <span class="el">&lt;xs:minInclusive</span>  <span class="attr">value</span>=<span class="val">"0.01"</span><span class="el">/&gt;</span>
+      <span class="el">&lt;xs:fractionDigits</span> <span class="attr">value</span>=<span class="val">"2"</span><span class="el">/&gt;</span>
+    <span class="el">&lt;/xs:restriction&gt;</span>
+  <span class="el">&lt;/xs:simpleType&gt;</span>
+
+  <span class="cm">&lt;!-- Type simple : catégorie de produit --&gt;</span>
+  <span class="el">&lt;xs:simpleType</span> <span class="attr">name</span>=<span class="val">"typeCategorie"</span><span class="el">&gt;</span>
+    <span class="el">&lt;xs:restriction</span> <span class="attr">base</span>=<span class="val">"xs:string"</span><span class="el">&gt;</span>
+      <span class="el">&lt;xs:enumeration</span> <span class="attr">value</span>=<span class="val">"electronique"</span><span class="el">/&gt;</span>
+      <span class="el">&lt;xs:enumeration</span> <span class="attr">value</span>=<span class="val">"alimentaire"</span><span class="el">/&gt;</span>
+      <span class="el">&lt;xs:enumeration</span> <span class="attr">value</span>=<span class="val">"habillement"</span><span class="el">/&gt;</span>
+    <span class="el">&lt;/xs:restriction&gt;</span>
+  <span class="el">&lt;/xs:simpleType&gt;</span>
+
+  <span class="cm">&lt;!-- Élément racine : catalogue --&gt;</span>
+  <span class="el">&lt;xs:element</span> <span class="attr">name</span>=<span class="val">"catalogue"</span><span class="el">&gt;</span>
+    <span class="el">&lt;xs:complexType&gt;</span>
+      <span class="el">&lt;xs:sequence&gt;</span>
+        <span class="el">&lt;xs:element</span> <span class="attr">name</span>=<span class="val">"produit"</span> <span class="attr">maxOccurs</span>=<span class="val">"unbounded"</span><span class="el">&gt;</span>
+          <span class="el">&lt;xs:complexType&gt;</span>
+            <span class="el">&lt;xs:sequence&gt;</span>
+              <span class="el">&lt;xs:element</span> <span class="attr">name</span>=<span class="val">"nom"</span>       <span class="attr">type</span>=<span class="val">"xs:string"</span><span class="el">/&gt;</span>
+              <span class="el">&lt;xs:element</span> <span class="attr">name</span>=<span class="val">"prix"</span>      <span class="attr">type</span>=<span class="val">"typePrix"</span><span class="el">/&gt;</span>
+              <span class="el">&lt;xs:element</span> <span class="attr">name</span>=<span class="val">"categorie"</span> <span class="attr">type</span>=<span class="val">"typeCategorie"</span><span class="el">/&gt;</span>
+              <span class="el">&lt;xs:element</span> <span class="attr">name</span>=<span class="val">"stock"</span>     <span class="attr">type</span>=<span class="val">"xs:nonNegativeInteger"</span><span class="el">/&gt;</span>
+            <span class="el">&lt;/xs:sequence&gt;</span>
+            <span class="el">&lt;xs:attribute</span> <span class="attr">name</span>=<span class="val">"ref"</span> <span class="attr">type</span>=<span class="val">"xs:ID"</span> <span class="attr">use</span>=<span class="val">"required"</span><span class="el">/&gt;</span>
+          <span class="el">&lt;/xs:complexType&gt;</span>
+        <span class="el">&lt;/xs:element&gt;</span>
+      <span class="el">&lt;/xs:sequence&gt;</span>
+    <span class="el">&lt;/xs:complexType&gt;</span>
+  <span class="el">&lt;/xs:element&gt;</span>
+
+<span class="el">&lt;/xs:schema&gt;</span>
+
+<span class="cm">&lt;!-- ★ catalogue.xml valide correspondant ↓ --&gt;</span>
+<span class="el">&lt;catalogue</span>
+  <span class="attr">xmlns:xsi</span>=<span class="val">"http://www.w3.org/2001/XMLSchema-instance"</span>
+  <span class="attr">xsi:noNamespaceSchemaLocation</span>=<span class="val">"catalogue.xsd"</span><span class="el">&gt;</span>
+
+  <span class="el">&lt;produit <span class="attr">ref</span>=<span class="val">"P001"</span>&gt;</span>
+    <span class="el">&lt;nom&gt;</span>Laptop Pro X<span class="el">&lt;/nom&gt;</span>
+    <span class="el">&lt;prix&gt;</span>1299.99<span class="el">&lt;/prix&gt;</span>
+    <span class="el">&lt;categorie&gt;</span>electronique<span class="el">&lt;/categorie&gt;</span>
+    <span class="el">&lt;stock&gt;</span>42<span class="el">&lt;/stock&gt;</span>
+  <span class="el">&lt;/produit&gt;</span>
+
+  <span class="el">&lt;produit <span class="attr">ref</span>=<span class="val">"P002"</span>&gt;</span>
+    <span class="el">&lt;nom&gt;</span>T-Shirt Design<span class="el">&lt;/nom&gt;</span>
+    <span class="el">&lt;prix&gt;</span>24.90<span class="el">&lt;/prix&gt;</span>
+    <span class="el">&lt;categorie&gt;</span>habillement<span class="el">&lt;/categorie&gt;</span>
+    <span class="el">&lt;stock&gt;</span>150<span class="el">&lt;/stock&gt;</span>
+  <span class="el">&lt;/produit&gt;</span>
+
+<span class="el">&lt;/catalogue&gt;</span></pre>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- SECTION 8: QUIZ -->
+  <section id="quiz">
+    <div class="section-header">
+      <span class="section-num">QUIZ</span>
+      <h2>Teste tes Connaissances</h2>
+    </div>
+
+    <div class="quiz">
+      <div class="quiz-q" id="quiz-question">Chargement...</div>
+      <div class="quiz-options" id="quiz-options"></div>
+      <div class="quiz-feedback alert" id="quiz-feedback"></div>
+      <div class="quiz-nav">
+        <span class="quiz-progress" id="quiz-progress">Question 1/6</span>
+        <button class="btn" id="quiz-next" onclick="nextQuestion()" disabled>SUIVANT →</button>
+      </div>
+    </div>
+
+    <div id="quiz-result" style="display:none; text-align:center; padding:2rem;">
+      <div style="font-family:'Orbitron',monospace; font-size:2rem; color:var(--cyan); text-shadow:var(--glow-cyan); margin-bottom:1rem;" id="result-score"></div>
+      <p style="color:var(--text-dim); margin-bottom:1.5rem;" id="result-msg"></p>
+      <button class="btn glow-pulse" onclick="restartQuiz()">🔄 RECOMMENCER</button>
+    </div>
+  </section>
+
+</div>
+
+<footer>
+  <span>CH.03 PART 2</span> — Validation XML · DTD · XSD &nbsp;|&nbsp; Données Semi-Structurées
+</footer>
+
+<script>
+// Particles
+for (let i = 0; i < 20; i++) {
+  const p = document.createElement('div');
+  p.className = 'particle';
+  const colors = ['#00e5ff','#39ff14','#bf5fff','#ffaa00'];
+  p.style.cssText = `left:${Math.random()*100}%;animation-duration:${8+Math.random()*12}s;animation-delay:${Math.random()*10}s;background:${colors[Math.floor(Math.random()*colors.length)]};`;
+  document.body.appendChild(p);
+}
+
+// Progress bar
+window.addEventListener('scroll', () => {
+  const d = document.documentElement;
+  const pct = (d.scrollTop / (d.scrollHeight - d.clientHeight)) * 100;
+  document.getElementById('progress-bar').style.width = pct + '%';
+});
+
+// Scroll reveal
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+}, { threshold: 0.1 });
+document.querySelectorAll('section').forEach(s => observer.observe(s));
+
+// Counter animation
+function animateCounter(el, target, duration) {
+  const start = Date.now();
+  const update = () => {
+    const p = Math.min((Date.now() - start) / duration, 1);
+    el.textContent = Math.floor(p * target);
+    if (p < 1) requestAnimationFrame(update);
+    else el.textContent = target;
+  };
+  requestAnimationFrame(update);
+}
+
+const counterObs = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      document.querySelectorAll('.stat-value[data-count]').forEach(el => {
+        animateCounter(el, parseInt(el.dataset.count), 1800);
+        delete el.dataset.count;
+      });
+      counterObs.disconnect();
+    }
+  });
+});
+const statsRow = document.querySelector('.stats-row');
+if (statsRow) counterObs.observe(statsRow);
+
+// Tabs
+function switchTab(btn, id) {
+  const container = btn.closest('.tabs');
+  container.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  container.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById(id).classList.add('active');
+}
+
+// Accordion
+function toggleAcc(header) {
+  const item = header.parentElement;
+  const body = item.querySelector('.acc-body');
+  const isOpen = item.classList.contains('open');
+  item.classList.toggle('open');
+  body.style.maxHeight = isOpen ? '0' : body.scrollHeight + 'px';
+}
+
+// Copy code
+function copyCode(btn) {
+  const pre = btn.closest('.code-block').querySelector('pre');
+  navigator.clipboard.writeText(pre.innerText).then(() => {
+    btn.textContent = '✓ COPIÉ';
+    setTimeout(() => btn.textContent = 'COPIER', 2000);
+  });
+}
+
+// Quiz
+const questions = [
+  {
+    q: "Quelle est la syntaxe correcte pour déclarer un élément DTD qui peut apparaître 0 ou plusieurs fois ?",
+    opts: ["&lt;!ELEMENT liste (item)&gt;", "&lt;!ELEMENT liste (item?)&gt;", "&lt;!ELEMENT liste (item*)&gt;", "&lt;!ELEMENT liste (item+)&gt;"],
+    answer: 2,
+    expl: "L'opérateur * signifie '0 ou plusieurs fois'. ? = 0 ou 1, + = 1 ou plusieurs, rien = exactement 1."
+  },
+  {
+    q: "Quel type XSD utilise-t-on pour s'assurer qu'un élément contient un entier strictement positif ?",
+    opts: ["xs:integer", "xs:positiveInteger", "xs:nonNegativeInteger", "xs:decimal"],
+    answer: 1,
+    expl: "xs:positiveInteger accepte uniquement les entiers > 0. xs:nonNegativeInteger accepte 0 aussi."
+  },
+  {
+    q: "Comment lier un XML à son schéma XSD sans namespace ?",
+    opts: ["xsi:schemaLocation", "xsi:noNamespaceSchemaLocation", "xsi:DTDLocation", "xmlns:xsd"],
+    answer: 1,
+    expl: "xsi:noNamespaceSchemaLocation est utilisé quand le document XML n'a pas de namespace cible."
+  },
+  {
+    q: "Quelle est la différence entre xs:sequence et xs:all ?",
+    opts: [
+      "xs:sequence impose un ordre, xs:all autorise n'importe quel ordre",
+      "xs:sequence = obligatoire, xs:all = optionnel",
+      "xs:sequence = répétable, xs:all = unique",
+      "Aucune différence, ce sont des synonymes"
+    ],
+    answer: 0,
+    expl: "xs:sequence impose l'ordre défini. xs:all permet d'avoir les éléments dans n'importe quel ordre (chacun 0 ou 1 fois)."
+  },
+  {
+    q: "Quelle facette XSD permet de valider le format avec une expression régulière ?",
+    opts: ["xs:enumeration", "xs:pattern", "xs:length", "xs:format"],
+    answer: 1,
+    expl: "xs:pattern permet de définir une regex que la valeur doit respecter. Ex: pattern='[A-Z]{3}[0-9]{4}'"
+  },
+  {
+    q: "Quelle est la PRINCIPALE limitation des DTD par rapport aux XSD ?",
+    opts: [
+      "Les DTD sont plus complexes à écrire",
+      "Les DTD ne supportent pas les commentaires",
+      "Les DTD n'ont pas de typage fort (tout est du texte)",
+      "Les DTD ne peuvent pas définir d'attributs"
+    ],
+    answer: 2,
+    expl: "En DTD, tous les contenus d'éléments sont du texte (#PCDATA). Impossible de dire 'ceci est un entier' ou 'ceci est une date'."
+  }
+];
+
+let currentQ = 0, score = 0, answered = false;
+
+function loadQuestion() {
+  const q = questions[currentQ];
+  document.getElementById('quiz-question').innerHTML = `Q${currentQ + 1}. ${q.q}`;
+  document.getElementById('quiz-progress').textContent = `Question ${currentQ + 1}/${questions.length}`;
+  document.getElementById('quiz-feedback').style.display = 'none';
+  document.getElementById('quiz-next').disabled = true;
+  answered = false;
+
+  const opts = document.getElementById('quiz-options');
+  opts.innerHTML = '';
+  q.opts.forEach((opt, i) => {
+    const div = document.createElement('div');
+    div.className = 'quiz-opt';
+    div.innerHTML = `<span class="quiz-opt-icon">${String.fromCharCode(65 + i)}</span> ${opt}`;
+    div.onclick = () => selectAnswer(i, div);
+    opts.appendChild(div);
+  });
+}
+
+function selectAnswer(idx, el) {
+  if (answered) return;
+  answered = true;
+  const q = questions[currentQ];
+  const opts = document.querySelectorAll('.quiz-opt');
+  opts.forEach(o => o.style.cursor = 'default');
+  opts[q.answer].classList.add('correct');
+  if (idx !== q.answer) el.classList.add('wrong');
+  else score++;
+
+  const fb = document.getElementById('quiz-feedback');
+  fb.className = `quiz-feedback alert ${idx === q.answer ? 'alert-green' : 'alert-red'}`;
+  fb.innerHTML = `<strong>${idx === q.answer ? '✅ Correct !' : '❌ Incorrect.'}</strong> ${q.expl}`;
+  fb.style.display = 'block';
+  document.getElementById('quiz-next').disabled = false;
+}
+
+function nextQuestion() {
+  currentQ++;
+  if (currentQ < questions.length) {
+    loadQuestion();
+  } else {
+    document.querySelector('.quiz').style.display = 'none';
+    const result = document.getElementById('quiz-result');
+    result.style.display = 'block';
+    const pct = Math.round((score / questions.length) * 100);
+    document.getElementById('result-score').textContent = `${score} / ${questions.length} — ${pct}%`;
+    const msgs = [
+      [0, 40, '📚 Continue à réviser, tu vas y arriver !'],
+      [40, 70, '👍 Pas mal ! Quelques points à revoir.'],
+      [70, 90, '🎉 Très bien ! Tu maîtrises DTD et XSD.'],
+      [90, 101, '🏆 Parfait ! Expert DTD/XSD confirmé !']
+    ];
+    const msg = msgs.find(([lo, hi]) => pct >= lo && pct < hi);
+    document.getElementById('result-msg').textContent = msg[2];
+  }
+}
+
+function restartQuiz() {
+  currentQ = 0; score = 0; answered = false;
+  document.querySelector('.quiz').style.display = 'block';
+  document.getElementById('quiz-result').style.display = 'none';
+  loadQuestion();
+}
+
+loadQuestion();
+</script>
+
+</body>
+</html>
