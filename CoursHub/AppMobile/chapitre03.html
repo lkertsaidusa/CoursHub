@@ -1,0 +1,951 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chapitre III — Notion d'Activité 🤖</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Fira+Code:wght@400;500&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{--green:#3DDC84;--pink:#FF006E;--cyan:#00F5FF;--blue:#4285F4;--orange:#FF8C00;--yellow:#FFD600;--bg:#050814;--card:#0a0e27;}
+html{scroll-behavior:smooth;}
+body{font-family:'Space Mono',monospace;background:var(--bg);color:#fff;overflow-x:hidden;}
+.bg-fixed{position:fixed;inset:0;z-index:-1;background:radial-gradient(ellipse at top,#0a0e27,var(--bg));}
+.bg-grid{position:absolute;inset:0;background-image:linear-gradient(90deg,rgba(61,220,132,.03) 1px,transparent 1px),linear-gradient(rgba(61,220,132,.03) 1px,transparent 1px);background-size:50px 50px;animation:gridScroll 20s linear infinite;}
+@keyframes gridScroll{to{transform:translateY(50px);}}
+.progress-container{position:fixed;top:0;left:0;width:100%;height:3px;z-index:200;}
+.progress-bar{height:100%;width:0%;background:linear-gradient(90deg,var(--green),var(--cyan));transition:width .1s;}
+.nav-dots{position:fixed;right:1.5rem;top:50%;transform:translateY(-50%);z-index:100;display:flex;flex-direction:column;gap:.65rem;}
+.nav-dot{width:11px;height:11px;border-radius:50%;background:rgba(61,220,132,.3);border:2px solid var(--green);cursor:pointer;transition:all .3s;position:relative;}
+.nav-dot.active,.nav-dot:hover{background:var(--green);box-shadow:0 0 12px var(--green);}
+.nav-dot::after{content:attr(data-label);position:absolute;right:1.8rem;top:50%;transform:translateY(-50%);white-space:nowrap;font-size:.62rem;color:var(--green);font-family:'Fira Code',monospace;opacity:0;pointer-events:none;transition:opacity .2s;}
+.nav-dot:hover::after{opacity:1;}
+header{text-align:center;padding:4rem 2rem 2rem;}
+.chap-badge{display:inline-block;background:linear-gradient(135deg,var(--pink),var(--blue));padding:.4rem 1.4rem;border-radius:50px;font-family:'Orbitron',sans-serif;font-size:.85rem;margin-bottom:1rem;box-shadow:0 0 20px rgba(255,0,110,.4);}
+.header-icon{font-size:5rem;animation:float 3s ease-in-out infinite;display:inline-block;filter:drop-shadow(0 0 20px var(--green));}
+@keyframes float{0%,100%{transform:translateY(0);}50%{transform:translateY(-18px);}}
+h1{font-family:'Orbitron',sans-serif;font-size:clamp(1.8rem,5vw,3rem);font-weight:900;background:linear-gradient(135deg,var(--green),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:glitch 6s infinite;}
+@keyframes glitch{0%,89%,100%{transform:translate(0);}91%{transform:translate(-2px,2px);}93%{transform:translate(2px,-2px);}95%{transform:translate(-2px,-2px);}97%{transform:translate(2px,2px);}}
+.subtitle{color:var(--green);font-family:'Fira Code',monospace;margin-top:.5rem;font-size:1rem;}
+.intro-text{max-width:700px;margin:1.5rem auto 0;color:rgba(255,255,255,.7);font-size:.9rem;line-height:1.8;text-align:center;}
+.section{max-width:1150px;margin:0 auto;padding:4rem 2rem;}
+.section-title{font-family:'Orbitron',sans-serif;font-size:clamp(1.3rem,3vw,2rem);color:var(--cyan);text-align:center;margin-bottom:.5rem;}
+.section-sub{text-align:center;color:rgba(255,255,255,.5);font-family:'Fira Code',monospace;font-size:.82rem;margin-bottom:2.5rem;}
+.section-title::after{content:'';display:block;width:80px;height:3px;margin:.6rem auto 0;background:linear-gradient(90deg,transparent,var(--cyan),transparent);}
+.reveal{opacity:0;transform:translateY(50px);transition:opacity .7s ease,transform .7s ease;}
+.reveal.active{opacity:1;transform:translateY(0);}
+.baby-box{background:linear-gradient(135deg,rgba(0,245,255,.07),rgba(61,220,132,.07));border-left:4px solid var(--cyan);border-radius:0 12px 12px 0;padding:1.2rem 1.5rem;margin:1rem 0;font-size:.9rem;color:rgba(255,255,255,.85);line-height:1.9;}
+.baby-box strong{color:var(--cyan);}
+.emoji-big{font-size:2rem;margin-right:.5rem;}
+.code-wrap{background:rgba(0,0,0,.75);border:1px solid rgba(61,220,132,.3);border-radius:14px;padding:1.5rem;font-family:'Fira Code',monospace;font-size:.78rem;line-height:1.9;overflow-x:auto;position:relative;}
+.code-wrap .code-label{position:absolute;top:.6rem;right:.8rem;font-size:.65rem;color:rgba(255,255,255,.3);}
+.kw{color:var(--pink);}.cls{color:var(--cyan);}.str{color:var(--green);}.cmt{color:rgba(255,255,255,.32);font-style:italic;}
+.tag{color:var(--pink);}.attr{color:var(--cyan);}.val{color:var(--green);}
+.analogy{background:rgba(61,220,132,.06);border:2px solid rgba(61,220,132,.3);border-radius:20px;padding:2rem;margin-bottom:2rem;cursor:pointer;transition:all .4s;position:relative;}
+.analogy:hover{border-color:var(--green);box-shadow:0 0 40px rgba(61,220,132,.2);}
+.analogy-header{display:flex;align-items:center;gap:1rem;}
+.analogy-icon{font-size:3rem;flex-shrink:0;}
+.analogy-title{font-family:'Orbitron',sans-serif;font-size:1.1rem;color:var(--green);}
+.analogy-teaser{color:rgba(255,255,255,.6);font-size:.83rem;margin-top:.3rem;}
+.analogy-body{max-height:0;overflow:hidden;transition:max-height .6s ease,opacity .4s;opacity:0;}
+.analogy.open .analogy-body{max-height:1400px;opacity:1;}
+.analogy-body-inner{margin-top:1.5rem;padding-top:1.5rem;border-top:1px solid rgba(61,220,132,.2);}
+.toggle-hint{position:absolute;top:1.2rem;right:1.5rem;color:var(--green);font-size:1.4rem;transition:transform .4s;}
+.analogy.open .toggle-hint{transform:rotate(45deg);}
+
+/* COMPONENTS */
+.components-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-top:2rem;}
+.comp-card{background:var(--card);border-radius:20px;padding:1.8rem;transition:all .4s;border:2px solid transparent;}
+.comp-card:nth-child(1){border-color:rgba(61,220,132,.4);}
+.comp-card:nth-child(2){border-color:rgba(0,245,255,.3);opacity:.5;}
+.comp-card:nth-child(3){border-color:rgba(255,140,0,.3);opacity:.5;}
+.comp-card:nth-child(4){border-color:rgba(255,0,110,.3);opacity:.5;}
+.comp-card:hover{opacity:1;transform:translateY(-5px);}
+.comp-card:nth-child(1):hover{box-shadow:0 0 30px rgba(61,220,132,.2);}
+.comp-icon{font-size:2.5rem;margin-bottom:.8rem;display:block;}
+.comp-title{font-family:'Orbitron',sans-serif;font-size:.9rem;margin-bottom:.8rem;}
+.comp-card:nth-child(1) .comp-title{color:var(--green);}
+.comp-card:nth-child(2) .comp-title{color:var(--cyan);}
+.comp-card:nth-child(3) .comp-title{color:var(--orange);}
+.comp-card:nth-child(4) .comp-title{color:var(--pink);}
+.comp-items{list-style:none;}
+.comp-items li{font-size:.78rem;color:rgba(255,255,255,.7);padding:.25rem 0 .25rem 1rem;position:relative;line-height:1.6;}
+.comp-items li::before{content:'▶';position:absolute;left:0;font-size:.45rem;top:.55rem;color:var(--green);}
+.app-badge{text-align:center;margin:2rem 0;background:linear-gradient(135deg,rgba(61,220,132,.1),rgba(0,245,255,.1));border:1px solid rgba(61,220,132,.3);border-radius:16px;padding:1rem;font-family:'Orbitron',sans-serif;font-size:.9rem;color:var(--green);}
+
+/* STATES */
+.states-demo{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1.5rem;margin-top:2rem;}
+.state-scenario{background:var(--card);border-radius:16px;padding:1.5rem;text-align:center;border:1px solid rgba(61,220,132,.2);transition:all .4s;}
+.state-phone{width:80px;height:128px;border:3px solid rgba(61,220,132,.5);border-radius:14px;margin:0 auto 1rem;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:.3rem;}
+.state-title{font-family:'Orbitron',sans-serif;font-size:.76rem;color:var(--cyan);margin-bottom:.5rem;}
+.state-desc{font-size:.73rem;color:rgba(255,255,255,.6);line-height:1.6;}
+.state-badge{display:inline-block;padding:.2rem .8rem;border-radius:20px;font-size:.67rem;margin-top:.5rem;}
+.badge-active{background:rgba(61,220,132,.2);color:var(--green);border:1px solid var(--green);}
+.badge-pause{background:rgba(255,140,0,.2);color:var(--orange);border:1px solid var(--orange);}
+.badge-stop{background:rgba(255,0,110,.2);color:var(--pink);border:1px solid var(--pink);}
+
+/* LIFECYCLE INTERACTIVE */
+.lifecycle-container{display:grid;grid-template-columns:1fr 1.4fr;gap:2rem;margin-top:2rem;align-items:start;}
+.lifecycle-methods{display:flex;flex-direction:column;gap:.4rem;}
+.method-node{background:var(--card);border:2px solid rgba(61,220,132,.3);border-radius:13px;padding:.85rem 1.3rem;cursor:pointer;transition:all .3s;display:flex;align-items:center;gap:.8rem;position:relative;}
+.method-node:hover{border-color:var(--green);transform:translateX(5px);}
+.method-node.active{border-color:var(--cyan);background:rgba(0,245,255,.07);box-shadow:0 0 18px rgba(0,245,255,.15);transform:translateX(7px);}
+.method-bullet{width:11px;height:11px;border-radius:50%;flex-shrink:0;}
+.b-green{background:var(--green);}.b-cyan{background:var(--cyan);}.b-orange{background:var(--orange);}
+.b-pink{background:var(--pink);}.b-blue{background:var(--blue);}.b-red{background:#f44336;}
+.method-name{font-family:'Fira Code',monospace;font-size:.87rem;color:var(--green);}
+.method-node.active .method-name{color:var(--cyan);}
+.mphase{position:absolute;right:.8rem;font-size:.58rem;color:rgba(255,255,255,.28);font-family:'Fira Code',monospace;}
+.arr-dn{display:flex;justify-content:flex-start;padding-left:1.8rem;color:var(--pink);font-size:.9rem;opacity:.5;line-height:1.2;}
+.method-explain-panel{position:sticky;top:6rem;}
+.explain-placeholder{border:2px dashed rgba(61,220,132,.2);border-radius:16px;padding:3rem;text-align:center;color:rgba(255,255,255,.25);font-size:.85rem;line-height:2;}
+.method-card{background:rgba(0,245,255,.05);border:2px solid rgba(0,245,255,.3);border-radius:20px;padding:1.8rem;animation:popIn .3s cubic-bezier(.34,1.56,.64,1);}
+@keyframes popIn{from{opacity:0;transform:scale(.92) translateY(10px);}to{opacity:1;transform:scale(1) translateY(0);}}
+.mc-header{display:flex;align-items:center;gap:.8rem;margin-bottom:1.2rem;padding-bottom:.8rem;border-bottom:1px solid rgba(0,245,255,.2);}
+.mc-icon{font-size:2.2rem;}
+.mc-title{font-family:'Orbitron',sans-serif;font-size:1rem;color:var(--cyan);}
+.mc-sub{font-size:.7rem;color:var(--pink);font-family:'Fira Code',monospace;margin-top:.2rem;}
+.method-card p{font-size:.83rem;color:rgba(255,255,255,.85);line-height:1.85;margin-bottom:.7rem;}
+.method-card strong{color:var(--cyan);}
+.tip-box{background:rgba(61,220,132,.08);border-left:3px solid var(--green);border-radius:0 8px 8px 0;padding:.7rem 1rem;font-size:.79rem;color:rgba(255,255,255,.8);margin-top:.7rem;line-height:1.7;}
+.tip-box strong{color:var(--green);}
+.warn-box{background:rgba(255,0,110,.08);border-left:3px solid var(--pink);border-radius:0 8px 8px 0;padding:.7rem 1rem;font-size:.79rem;color:rgba(255,255,255,.8);margin-top:.6rem;line-height:1.7;}
+.ptag{display:inline-block;padding:.2rem .7rem;border-radius:20px;font-size:.65rem;font-family:'Fira Code',monospace;margin:.2rem .1rem;}
+.ptag-full{background:rgba(61,220,132,.15);color:var(--green);border:1px solid rgba(61,220,132,.3);}
+.ptag-vis{background:rgba(0,245,255,.15);color:var(--cyan);border:1px solid rgba(0,245,255,.3);}
+.ptag-inter{background:rgba(66,133,244,.15);color:var(--blue);border:1px solid rgba(66,133,244,.3);}
+
+/* ════ LIFECYCLE DIAGRAM (NEW) ════ */
+.lc-diagram-box{margin-top:3rem;background:var(--card);border:1px solid rgba(61,220,132,.25);border-radius:24px;padding:2.5rem 1.5rem;}
+.diag-title{font-family:'Orbitron',sans-serif;font-size:1rem;color:var(--green);text-align:center;margin-bottom:2.5rem;}
+.lc-state{display:inline-flex;align-items:center;justify-content:center;border-radius:50px;font-family:'Orbitron',sans-serif;font-size:.78rem;padding:.6rem 1.6rem;cursor:pointer;transition:all .35s;position:relative;}
+.lc-state:hover{transform:scale(1.08);filter:brightness(1.15);}
+.lc-start{background:linear-gradient(135deg,#112244,#061426);border:2px solid var(--blue);color:var(--blue);box-shadow:0 0 15px rgba(66,133,244,.3);}
+.lc-run{background:linear-gradient(135deg,#0d3020,#06180e);border:2px solid var(--green);color:var(--green);box-shadow:0 0 20px rgba(61,220,132,.35);animation:rpulse 2.5s ease-in-out infinite;}
+@keyframes rpulse{0%,100%{box-shadow:0 0 20px rgba(61,220,132,.35);}50%{box-shadow:0 0 35px rgba(61,220,132,.65);}}
+.lc-pause{background:linear-gradient(135deg,#381800,#1d0d00);border:2px solid var(--orange);color:var(--orange);box-shadow:0 0 12px rgba(255,140,0,.25);}
+.lc-stop{background:linear-gradient(135deg,#28081a,#110008);border:2px solid var(--pink);color:var(--pink);box-shadow:0 0 12px rgba(255,0,110,.25);}
+.lc-dest{background:linear-gradient(135deg,#280808,#110000);border:2px solid #f44336;color:#f44336;box-shadow:0 0 12px rgba(244,67,54,.25);}
+.mbadge{background:rgba(0,0,0,.5);border:1px solid rgba(61,220,132,.35);border-radius:7px;padding:.22rem .55rem;font-family:'Fira Code',monospace;font-size:.62rem;color:var(--cyan);cursor:pointer;transition:all .3s;white-space:nowrap;display:inline-block;margin:.1rem 0;}
+.mbadge:hover{border-color:var(--cyan);background:rgba(0,245,255,.12);color:#fff;}
+.mbadge.opt{color:rgba(255,255,255,.4);border-color:rgba(255,255,255,.15);}
+.mbadge.opt:hover{border-color:var(--orange);color:var(--orange);}
+.vline{width:2px;background:rgba(255,255,255,.2);margin:0 auto;}
+.hline{height:2px;background:rgba(255,255,255,.2);}
+.arr-d{color:rgba(255,255,255,.4);font-size:.8rem;text-align:center;}
+.arr-u{color:rgba(255,255,255,.4);font-size:.8rem;text-align:center;}
+.arr-r{color:rgba(255,255,255,.4);font-size:.8rem;}
+.arr-l{color:rgba(255,255,255,.4);font-size:.8rem;}
+.trigger-lbl{background:rgba(255,140,0,.12);border:1px solid rgba(255,140,0,.25);border-radius:7px;padding:.18rem .5rem;font-size:.6rem;font-family:'Fira Code',monospace;color:var(--orange);text-align:center;line-height:1.5;}
+.killed-lbl{background:rgba(244,67,54,.12);border:1px solid rgba(244,67,54,.25);border-radius:7px;padding:.18rem .5rem;font-size:.58rem;font-family:'Fira Code',monospace;color:#f44336;}
+.opt-lbl{font-size:.57rem;color:rgba(255,255,255,.28);font-family:'Fira Code',monospace;}
+
+/* Diagram layout */
+.diag-top{display:flex;justify-content:center;margin-bottom:.3rem;}
+.diag-mid{display:flex;align-items:flex-start;gap:0;margin:0;}
+.diag-left{display:flex;flex-direction:column;align-items:center;width:220px;flex-shrink:0;}
+.diag-center{display:flex;flex-direction:column;align-items:center;flex:1;min-width:160px;}
+.diag-right{display:flex;flex-direction:column;align-items:center;width:220px;flex-shrink:0;}
+.diag-bottom{display:flex;justify-content:center;margin-top:.5rem;}
+.dc-col{display:flex;flex-direction:column;align-items:center;gap:.15rem;}
+.dc-methods{display:flex;flex-direction:column;align-items:flex-start;gap:.1rem;margin:.3rem 0;}
+.diag-legend{display:flex;gap:1rem;flex-wrap:wrap;justify-content:center;margin-top:2rem;}
+.dleg{display:flex;align-items:center;gap:.4rem;font-size:.7rem;font-family:'Fira Code',monospace;color:rgba(255,255,255,.6);}
+.dleg-dot{width:9px;height:9px;border-radius:50%;}
+
+/* State tooltip */
+#stateExplain{margin-top:1.5rem;}
+
+/* LOG.D */
+.logd-levels{display:grid;grid-template-columns:repeat(5,1fr);gap:.8rem;margin-top:1.5rem;}
+.logd-level{border-radius:12px;padding:1rem;text-align:center;border:1px solid transparent;cursor:pointer;transition:all .3s;}
+.logd-level:hover{transform:translateY(-4px);}
+.lv-v{background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.2);color:rgba(255,255,255,.7);}
+.lv-d{background:rgba(61,220,132,.07);border-color:rgba(61,220,132,.3);color:var(--green);}
+.lv-i{background:rgba(0,245,255,.07);border-color:rgba(0,245,255,.3);color:var(--cyan);}
+.lv-w{background:rgba(255,214,0,.07);border-color:rgba(255,214,0,.3);color:var(--yellow);}
+.lv-e{background:rgba(244,67,54,.07);border-color:rgba(244,67,54,.3);color:#f44336;}
+.lv-letter{font-family:'Orbitron',sans-serif;font-size:1.4rem;font-weight:900;margin-bottom:.3rem;}
+.lv-name{font-family:'Fira Code',monospace;font-size:.68rem;margin-bottom:.3rem;}
+.lv-desc{font-size:.67rem;line-height:1.5;color:rgba(255,255,255,.6);}
+.logcat-terminal{background:rgba(0,0,0,.85);border:1px solid rgba(61,220,132,.3);border-radius:14px;padding:0;margin-top:1.5rem;font-family:'Fira Code',monospace;font-size:.74rem;overflow:hidden;}
+.logcat-bar{background:rgba(255,255,255,.04);padding:.5rem 1.2rem;display:flex;gap:1.5rem;border-bottom:1px solid rgba(255,255,255,.08);}
+.logcat-bar span{font-size:.62rem;color:rgba(255,255,255,.35);}
+.logcat-bar span:first-child{color:var(--green);}
+.logcat-body{padding:1rem 1.2rem;}
+.log-line{display:flex;gap:.7rem;margin:.18rem 0;line-height:1.7;}
+.log-date{color:rgba(255,255,255,.25);}
+.log-pid{color:rgba(255,255,255,.18);}
+.log-d{color:var(--green);}
+.log-i{color:var(--cyan);}
+.log-w{color:var(--yellow);}
+.log-e{color:#f44336;}
+.log-tag{color:var(--pink);}
+.log-msg{color:rgba(255,255,255,.85);}
+.log-sep{color:rgba(255,255,255,.2);font-size:.65rem;padding:.3rem 0;}
+
+/* BUNDLE */
+.bundle-main{display:grid;grid-template-columns:1fr 1fr;gap:2rem;margin-top:2rem;}
+.bundle-bag{background:var(--card);border:2px solid rgba(255,140,0,.3);border-radius:20px;padding:2rem;}
+.btitle{font-family:'Orbitron',sans-serif;color:var(--orange);font-size:.9rem;margin-bottom:1.5rem;}
+.kv-row{display:flex;align-items:center;gap:.5rem;margin:.5rem 0;animation:slideIn .4s ease both;}
+@keyframes slideIn{from{opacity:0;transform:translateX(-20px);}to{opacity:1;transform:translateX(0);}}
+.kv-key{background:rgba(255,0,110,.15);border:1px solid rgba(255,0,110,.4);border-radius:7px;padding:.3rem .65rem;font-family:'Fira Code',monospace;font-size:.73rem;color:var(--pink);min-width:105px;text-align:center;}
+.kv-arr{color:var(--green);font-size:1rem;font-weight:bold;}
+.kv-val{background:rgba(61,220,132,.12);border:1px solid rgba(61,220,132,.3);border-radius:7px;padding:.3rem .65rem;font-family:'Fira Code',monospace;font-size:.73rem;color:var(--green);flex:1;text-align:center;}
+.kv-type{font-size:.58rem;color:rgba(255,255,255,.28);font-family:'Fira Code',monospace;flex-shrink:0;}
+.bm-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-top:1.5rem;}
+.bm-card{background:rgba(0,0,0,.4);border-radius:14px;padding:1.2rem;border:1px solid transparent;transition:all .3s;}
+.bm-card:hover{transform:translateY(-3px);}
+.bm-put{border-color:rgba(61,220,132,.3);}
+.bm-get{border-color:rgba(0,245,255,.3);}
+.bm-put:hover{border-color:var(--green);box-shadow:0 0 18px rgba(61,220,132,.12);}
+.bm-get:hover{border-color:var(--cyan);box-shadow:0 0 18px rgba(0,245,255,.12);}
+.bm-title{font-family:'Orbitron',sans-serif;font-size:.78rem;margin-bottom:.8rem;}
+.bm-put .bm-title{color:var(--green);}
+.bm-get .bm-title{color:var(--cyan);}
+.bm-row{font-family:'Fira Code',monospace;font-size:.7rem;padding:.25rem .45rem;border-radius:5px;margin:.15rem 0;line-height:1.5;}
+.bm-put .bm-row{background:rgba(61,220,132,.07);color:rgba(255,255,255,.8);}
+.bm-get .bm-row{background:rgba(0,245,255,.07);color:rgba(255,255,255,.8);}
+.bm-row .mt{color:var(--cyan);}.bm-row .mk{color:var(--pink);}.bm-row .mv{color:var(--orange);}
+.parcel-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-top:1.5rem;}
+.parcel-card{background:rgba(0,0,0,.4);border-radius:14px;padding:1.5rem;border:1px solid transparent;transition:all .3s;}
+.parcel-card:hover{transform:translateY(-3px);}
+.pc-android{border-color:rgba(66,133,244,.3);}
+.pc-java{border-color:rgba(255,140,0,.3);}
+.pc-android:hover{border-color:var(--blue);box-shadow:0 0 18px rgba(66,133,244,.1);}
+.pc-java:hover{border-color:var(--orange);box-shadow:0 0 18px rgba(255,140,0,.1);}
+.pc-title{font-family:'Orbitron',sans-serif;font-size:.83rem;margin-bottom:1rem;}
+.pc-android .pc-title{color:var(--blue);}
+.pc-java .pc-title{color:var(--orange);}
+.pc-body{font-size:.78rem;color:rgba(255,255,255,.75);line-height:1.8;}
+.pc-body strong{color:rgba(255,255,255,.9);}
+.save-flow{display:flex;align-items:center;gap:.4rem;flex-wrap:wrap;justify-content:center;margin:1.5rem 0;font-family:'Fira Code',monospace;font-size:.73rem;}
+.fn{padding:.45rem .9rem;border-radius:9px;text-align:center;line-height:1.4;}
+.fn-run{background:rgba(61,220,132,.15);border:1px solid var(--green);color:var(--green);}
+.fn-save{background:rgba(255,140,0,.12);border:1px solid var(--orange);color:var(--orange);}
+.fn-dest{background:rgba(255,0,110,.12);border:1px solid var(--pink);color:var(--pink);}
+.fn-create{background:rgba(0,245,255,.1);border:1px solid var(--cyan);color:var(--cyan);}
+.fa{color:rgba(255,255,255,.35);font-size:.9rem;text-align:center;flex-shrink:0;}
+.when-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-top:1.5rem;}
+.when-card{border-radius:14px;padding:1.2rem;border:1px solid transparent;transition:all .3s;}
+.when-card:hover{transform:translateY(-3px);}
+.wy{background:rgba(61,220,132,.07);border-color:rgba(61,220,132,.3);}
+.wn{background:rgba(255,0,110,.07);border-color:rgba(255,0,110,.3);}
+.ww{background:rgba(255,140,0,.07);border-color:rgba(255,140,0,.3);}
+.wi{font-size:1.8rem;margin-bottom:.4rem;display:block;}
+.wt{font-family:'Orbitron',sans-serif;font-size:.75rem;margin-bottom:.4rem;}
+.wy .wt{color:var(--green);}.wn .wt{color:var(--pink);}.ww .wt{color:var(--orange);}
+.wd{font-size:.72rem;color:rgba(255,255,255,.65);line-height:1.6;}
+.sc-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;margin-top:1.5rem;}
+.sc{background:rgba(0,0,0,.4);border-radius:12px;padding:1.2rem;border:1px solid transparent;transition:all .3s;}
+.sc:hover{transform:translateY(-3px);}
+.sc-b{border-color:rgba(255,140,0,.3);}.sc-s{border-color:rgba(0,245,255,.3);}.sc-f{border-color:rgba(61,220,132,.3);}
+.sc-t{font-family:'Orbitron',sans-serif;font-size:.78rem;margin-bottom:.8rem;}
+.sc-b .sc-t{color:var(--orange);}.sc-s .sc-t{color:var(--cyan);}.sc-f .sc-t{color:var(--green);}
+.sc-row{font-size:.71rem;padding:.2rem 0;display:flex;gap:.3rem;align-items:flex-start;line-height:1.5;color:rgba(255,255,255,.7);}
+.ck{color:var(--green);}.cx{color:var(--pink);}
+
+/* MANIFEST */
+.code-line{cursor:pointer;border-radius:4px;padding:0 3px;transition:background .2s;display:block;}
+.code-line:hover{background:rgba(61,220,132,.1);}
+.code-line.selected{background:rgba(61,220,132,.18);}
+.manifest-grid{display:grid;grid-template-columns:1fr 1fr;gap:2rem;margin-top:2rem;}
+.manifest-explain{background:var(--card);border:1px solid rgba(255,0,110,.3);border-radius:16px;padding:1.5rem;min-height:230px;display:flex;flex-direction:column;justify-content:center;}
+.manifest-explain h3{font-family:'Orbitron',sans-serif;font-size:.92rem;color:var(--pink);margin-bottom:.8rem;}
+.manifest-explain p{font-size:.82rem;color:rgba(255,255,255,.8);line-height:1.8;}
+.manifest-explain .ph{color:rgba(255,255,255,.3);font-size:.82rem;text-align:center;}
+
+/* QUIZ */
+.quiz-section{background:linear-gradient(135deg,rgba(61,220,132,.05),rgba(255,0,110,.05));border:1px solid rgba(61,220,132,.2);border-radius:20px;padding:2.5rem;margin-top:3rem;}
+.quiz-title{font-family:'Orbitron',sans-serif;font-size:1.2rem;color:var(--cyan);margin-bottom:2rem;text-align:center;}
+.quiz-q{margin-bottom:1.8rem;}
+.quiz-q p{font-size:.9rem;margin-bottom:.9rem;color:rgba(255,255,255,.9);}
+.quiz-opts{display:flex;flex-wrap:wrap;gap:.6rem;}
+.quiz-opt{background:rgba(0,0,0,.4);border:1px solid rgba(61,220,132,.3);border-radius:9px;padding:.55rem 1rem;cursor:pointer;font-size:.8rem;font-family:'Fira Code',monospace;transition:all .3s;}
+.quiz-opt:hover{border-color:var(--green);background:rgba(61,220,132,.1);}
+.quiz-opt.correct{border-color:var(--green);background:rgba(61,220,132,.2);color:var(--green);}
+.quiz-opt.wrong{border-color:var(--pink);background:rgba(255,0,110,.15);color:var(--pink);}
+.quiz-feedback{font-size:.82rem;margin-top:.65rem;padding:.55rem .9rem;border-radius:8px;display:none;}
+.quiz-feedback.show{display:block;}
+.quiz-feedback.ok{background:rgba(61,220,132,.15);color:var(--green);}
+.quiz-feedback.ko{background:rgba(255,0,110,.15);color:var(--pink);}
+
+footer{text-align:center;padding:3rem;border-top:1px solid rgba(61,220,132,.2);color:rgba(255,255,255,.4);font-size:.8rem;}
+footer span{color:var(--green);}
+@media(max-width:768px){
+  .components-grid,.bundle-main,.bm-grid,.parcel-grid,.sc-grid,.when-grid,.manifest-grid,.lifecycle-container,.states-demo,.logd-levels{grid-template-columns:1fr;}
+  .nav-dots{display:none;}
+  .diag-mid{flex-direction:column;align-items:center;}
+  .diag-left,.diag-right,.diag-center{width:100%;max-width:300px;}
+}
+</style>
+</head>
+<body>
+
+<div class="bg-fixed"><div class="bg-grid"></div></div>
+<div class="progress-container"><div class="progress-bar" id="progressBar"></div></div>
+
+<!-- NAV DOTS -->
+<div class="nav-dots">
+  <div class="nav-dot active" data-section="s0" data-label="Intro"></div>
+  <div class="nav-dot" data-section="s1" data-label="Composants"></div>
+  <div class="nav-dot" data-section="s2" data-label="Définitions"></div>
+  <div class="nav-dot" data-section="s3" data-label="États"></div>
+  <div class="nav-dot" data-section="s4" data-label="Méthodes"></div>
+  <div class="nav-dot" data-section="s4b" data-label="Schéma Cycle"></div>
+  <div class="nav-dot" data-section="s5" data-label="Log.d"></div>
+  <div class="nav-dot" data-section="s6" data-label="Bundle"></div>
+  <div class="nav-dot" data-section="s7" data-label="Manifest"></div>
+  <div class="nav-dot" data-section="s8" data-label="Quiz"></div>
+</div>
+
+<!-- HEADER -->
+<header id="s0">
+  <div class="chap-badge">CHAPITRE III — VERSION BÉBÉ 👶</div>
+  <div class="header-icon">📱</div>
+  <h1>NOTION D'ACTIVITÉ</h1>
+  <p class="subtitle">[ Clique partout · Tout s'explique ]</p>
+  <p class="intro-text">
+    Schéma du cycle de vie animé · 7 méthodes détaillées · Log.d expliqué · Bundle complet<br>
+    <strong style="color:var(--green)">Clique sur n'importe quel élément 🎯</strong>
+  </p>
+</header>
+
+<!-- ═══ S1 : COMPOSANTS ═══ -->
+<section class="section" id="s1">
+  <div class="reveal">
+    <h2 class="section-title">🧩 Les 4 Composants Android</h2>
+    <p class="section-sub">On se concentre sur les Activities</p>
+    <div class="baby-box reveal"><span class="emoji-big">🏙️</span><strong>Une app Android = une ville.</strong> Chaque composant = un bâtiment avec un rôle précis.</div>
+    <div class="app-badge reveal">📦 Application = ensemble de composants Android</div>
+    <div class="components-grid">
+      <div class="comp-card reveal"><span class="comp-icon">🖥️</span><div class="comp-title">Activities ← notre sujet</div><ul class="comp-items"><li>Interface utilisateur visible</li><li>Représente <strong>un seul écran</strong></li><li>A un <strong>cycle de vie</strong></li><li>Étend la classe <strong>Activity</strong></li></ul></div>
+      <div class="comp-card reveal"><span class="comp-icon">⚙️</span><div class="comp-title">Services</div><ul class="comp-items"><li>Pas d'interface</li><li>Arrière-plan</li><li>Étend <strong>Service</strong></li></ul></div>
+      <div class="comp-card reveal"><span class="comp-icon">📡</span><div class="comp-title">Broadcast Receiver</div><ul class="comp-items"><li>Reçoit les Intents</li><li>Peut lancer une Activity</li><li>Étend <strong>BroadcastReceiver</strong></li></ul></div>
+      <div class="comp-card reveal"><span class="comp-icon">🗄️</span><div class="comp-title">Content Provider</div><ul class="comp-items"><li>Données partagées</li><li>Utilise SQLite</li><li>Étend <strong>ContentProvider</strong></li></ul></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ S2 : DEFINITIONS ═══ -->
+<section class="section" id="s2">
+  <div class="reveal">
+    <h2 class="section-title">📖 Définitions</h2>
+    <p class="section-sub">C'est quoi une Activité ?</p>
+    <div class="baby-box reveal"><span class="emoji-big">🎭</span><strong>Activité = scène de théâtre.</strong> Chaque écran = une scène = une activité. Une app contient généralement <strong>plusieurs activités</strong>. Elle est l'équivalent de la méthode <strong>main()</strong> en Java classique.</div>
+    <div class="analogy reveal">
+      <div class="toggle-hint">+</div>
+      <div class="analogy-header"><div class="analogy-icon">💻</div><div><div class="analogy-title">Le code de base d'une activité</div><div class="analogy-teaser">Clique pour voir</div></div></div>
+      <div class="analogy-body"><div class="analogy-body-inner">
+        <div class="code-wrap"><div class="code-label">ExempleActivite.java</div>
+<pre><span class="kw">import</span> android.app.Activity;
+<span class="kw">import</span> android.os.Bundle;
+
+<span class="kw">public class</span> <span class="cls">ExempleActivite</span> <span class="kw">extends</span> <span class="cls">Activity</span> {
+  <span class="cmt">// ↑ HÉRITE de la classe Activity</span>
+
+  <span class="kw">public void</span> <span class="str">onCreate</span>(Bundle stateSaved) {
+    <span class="cmt">// ↑ Méthode principale = le "main()" Android</span>
+    <span class="kw">super</span>.onCreate(stateSaved);   <span class="cmt">// ← toujours appeler super en 1er</span>
+    setContentView(<span class="cls">R</span>.layout.interface);  <span class="cmt">// ← charge l'interface XML</span>
+  }
+}</pre></div>
+      </div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ S3 : ÉTATS ═══ -->
+<section class="section" id="s3">
+  <div class="reveal">
+    <h2 class="section-title">🔴🟡🟢 Les États d'une Activité</h2>
+    <p class="section-sub">Ce qui arrive selon les actions de l'utilisateur</p>
+    <div class="baby-box reveal"><span class="emoji-big">📞</span><strong>Imagine que tu joues à Farm Heroes Saga.</strong> Ton téléphone sonne → pause ! Tu décroches → arrêté. Tu raccroches → retour au jeu !</div>
+    <div class="states-demo">
+      <div class="state-scenario reveal"><div class="state-phone" style="border-color:rgba(61,220,132,.8);"><div>🎮</div><div style="font-size:.5rem;color:var(--green);font-family:'Fira Code',monospace;">Farm Heroes</div></div><div class="state-title">RUNNING</div><div class="state-desc">Au premier plan. Interactions reçues. onResume() appelée.</div><div class="state-badge badge-active">▶ Running</div></div>
+      <div class="state-scenario reveal"><div class="state-phone" style="border-color:rgba(255,140,0,.8);"><div>📞</div><div style="font-size:.9rem;">🎮</div></div><div class="state-title">PAUSED</div><div class="state-desc">Partiellement visible, plus de focus. onPause() appelée.</div><div class="state-badge badge-pause">⏸ Paused</div></div>
+      <div class="state-scenario reveal"><div class="state-phone" style="border-color:rgba(255,0,110,.7);"><div>🗣️</div><div style="font-size:.5rem;color:var(--pink);font-family:'Fira Code',monospace;">(arrière-plan)</div></div><div class="state-title">STOPPED</div><div class="state-desc">Complètement invisible. onStop() appelée. Peut être détruite.</div><div class="state-badge badge-stop">⏹ Stopped</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ S4 : MÉTHODES INTERACTIVES ═══ -->
+<section class="section" id="s4">
+  <div class="reveal">
+    <h2 class="section-title">♻️ Les 7 Méthodes du Cycle de Vie</h2>
+    <p class="section-sub">Clique sur chaque méthode pour son explication détaillée</p>
+    <div class="baby-box reveal"><span class="emoji-big">🌱</span><strong>Activité = plante.</strong> Naissance (onCreate) → croissance → sommeil → réveil → mort. Android appelle ces méthodes <strong>automatiquement</strong>. Toi tu les <strong>remplis</strong> !</div>
+    <div class="lifecycle-container reveal">
+      <div class="lifecycle-methods">
+        <div class="method-node" onclick="expM(this,0)"><div class="method-bullet b-green"></div><div class="method-name">onCreate()</div><div class="mphase">CRÉATION</div></div>
+        <div class="arr-dn">↓</div>
+        <div class="method-node" onclick="expM(this,1)"><div class="method-bullet" style="background:#4CAF50;"></div><div class="method-name">onStart()</div><div class="mphase">DÉMARRAGE</div></div>
+        <div class="arr-dn">↓</div>
+        <div class="method-node" onclick="expM(this,2)"><div class="method-bullet b-cyan"></div><div class="method-name">onResume()</div><div class="mphase">REPRISE</div></div>
+        <div class="arr-dn">↓ &nbsp;<span style="color:var(--green)">🟢 L'activité s'exécute</span></div>
+        <div class="method-node" onclick="expM(this,3)" style="border-color:rgba(255,140,0,.4);"><div class="method-bullet b-orange"></div><div class="method-name">onPause()</div><div class="mphase">PAUSE</div></div>
+        <div class="arr-dn">↓</div>
+        <div class="method-node" onclick="expM(this,4)" style="border-color:rgba(255,0,110,.4);"><div class="method-bullet b-pink"></div><div class="method-name">onStop()</div><div class="mphase">ARRÊT</div></div>
+        <div class="arr-dn">↓ <span style="font-size:.6rem;color:rgba(255,255,255,.28)">deux chemins :</span></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem;">
+          <div class="method-node" onclick="expM(this,5)" style="border-color:rgba(66,133,244,.4);"><div class="method-bullet b-blue"></div><div class="method-name" style="font-size:.79rem;">onRestart()</div></div>
+          <div class="method-node" onclick="expM(this,6)" style="border-color:rgba(244,67,54,.4);"><div class="method-bullet b-red"></div><div class="method-name" style="font-size:.79rem;">onDestroy()</div></div>
+        </div>
+        <div style="margin-top:1.2rem;display:flex;gap:.3rem;flex-wrap:wrap;justify-content:center;">
+          <span class="ptag ptag-full">🟩 Cycle Entier</span>
+          <span class="ptag ptag-vis">🟦 Partie Visible</span>
+          <span class="ptag ptag-inter">🟪 Interaction</span>
+        </div>
+      </div>
+      <div class="method-explain-panel">
+        <div id="methodExplain"><div class="explain-placeholder"><span style="font-size:3rem;display:block;margin-bottom:1rem;">👈</span>Clique sur une méthode<br>pour son explication !<br><br><span style="color:var(--green)">Chaque méthode a son rôle précis.</span></div></div>
+      </div>
+    </div>
+    <!-- code complet -->
+    <div class="analogy reveal" style="margin-top:2rem;">
+      <div class="toggle-hint">+</div>
+      <div class="analogy-header"><div class="analogy-icon">💻</div><div><div class="analogy-title">Code complet — Toutes les 7 méthodes</div><div class="analogy-teaser">Clique pour voir</div></div></div>
+      <div class="analogy-body"><div class="analogy-body-inner">
+        <div class="code-wrap"><div class="code-label">ExempleActivite.java</div>
+<pre><span class="kw">import</span> android.util.Log;
+<span class="kw">public class</span> <span class="cls">ExempleActivite</span> <span class="kw">extends</span> <span class="cls">Activity</span> {
+  String tag = <span class="str">"CycleDeVie"</span>;
+  <span class="kw">public void</span> <span class="str">onCreate</span>(Bundle s)  { <span class="kw">super</span>.onCreate(s);  setContentView(<span class="cls">R</span>.layout.main); Log.d(tag,<span class="str">"onCreate"</span>); }
+  <span class="kw">public void</span> <span class="str">onStart</span>()          { <span class="kw">super</span>.onStart();    Log.d(tag,<span class="str">"onStart"</span>); }
+  <span class="kw">public void</span> <span class="str">onResume</span>()         { <span class="kw">super</span>.onResume();   Log.d(tag,<span class="str">"onResume"</span>); }
+  <span class="kw">public void</span> <span class="str">onPause</span>()          { <span class="kw">super</span>.onPause();    Log.d(tag,<span class="str">"onPause"</span>); }
+  <span class="kw">public void</span> <span class="str">onStop</span>()           { <span class="kw">super</span>.onStop();     Log.d(tag,<span class="str">"onStop"</span>); }
+  <span class="kw">public void</span> <span class="str">onRestart</span>()        { <span class="kw">super</span>.onRestart();  Log.d(tag,<span class="str">"onRestart"</span>); }
+  <span class="kw">public void</span> <span class="str">onDestroy</span>()        { <span class="kw">super</span>.onDestroy();  Log.d(tag,<span class="str">"onDestroy"</span>); }
+}</pre></div>
+      </div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ S4b : SCHÉMA CYCLE DE VIE ═══ -->
+<section class="section" id="s4b">
+  <div class="reveal">
+    <h2 class="section-title">🗺️ Schéma du Cycle de Vie</h2>
+    <p class="section-sub">Le diagramme officiel Android — clique sur les états et les méthodes !</p>
+
+    <div class="lc-diagram-box reveal">
+      <div class="diag-title">Fig. Life Cycle of an Android Activity — Version Interactive Animée</div>
+
+      <!-- TOP: Starting -->
+      <div class="diag-top">
+        <div class="dc-col">
+          <div class="lc-state lc-start" onclick="expState('starting')">🚀 Starting</div>
+          <div class="vline" style="height:8px;"></div>
+          <!-- methods going down to Running -->
+          <div class="dc-methods">
+            <div class="mbadge" onclick="expM(null,0)">① onCreate()</div>
+            <div class="mbadge" onclick="expM(null,1)">② onStart()</div>
+            <div class="mbadge opt">③ onRestoreInstanceState() <span class="opt-lbl">*</span></div>
+            <div class="mbadge" onclick="expM(null,2)">④ onResume()</div>
+          </div>
+          <div class="vline" style="height:8px;"></div>
+          <div class="arr-d">▼</div>
+        </div>
+      </div>
+
+      <!-- MID: Stopped — Running — Paused -->
+      <div class="diag-mid">
+
+        <!-- LEFT: Stopped + onRestart path going UP + onDestroy going DOWN -->
+        <div class="diag-left">
+          <div class="lc-state lc-stop" onclick="expState('stopped')" style="width:100%;justify-content:center;">⏹ Stopped</div>
+
+          <!-- UP arrow: onRestart path -->
+          <div style="align-self:flex-end;display:flex;flex-direction:column;align-items:flex-end;margin-top:.5rem;gap:.1rem;width:100%;">
+            <div class="trigger-lbl" style="align-self:flex-end;">↑ utilisateur retourne</div>
+            <div class="mbadge" onclick="expM(null,5)" style="align-self:flex-end;">① onRestart()</div>
+            <div class="mbadge" onclick="expM(null,1)" style="align-self:flex-end;">② onStart()</div>
+            <div class="mbadge" onclick="expM(null,2)" style="align-self:flex-end;">③ onResume()</div>
+            <div style="align-self:flex-end;display:flex;align-items:center;gap:.2rem;margin-top:.1rem;">
+              <div class="vline" style="height:16px;"></div>
+              <div class="arr-u">▲</div>
+            </div>
+          </div>
+
+          <!-- DOWN arrow: onDestroy path -->
+          <div style="align-self:flex-start;display:flex;flex-direction:column;align-items:flex-start;margin-top:.8rem;gap:.1rem;padding-left:.3rem;width:100%;">
+            <div class="vline" style="height:16px;margin-left:14px;"></div>
+            <div class="arr-d" style="margin-left:8px;">▼</div>
+            <div style="display:flex;gap:.4rem;flex-wrap:wrap;align-items:center;">
+              <div class="mbadge" onclick="expM(null,6)">onDestroy()</div>
+              <div class="killed-lbl">&lt;Process killed&gt;</div>
+            </div>
+            <div class="vline" style="height:16px;margin-left:14px;"></div>
+            <div class="arr-d" style="margin-left:8px;">▼</div>
+          </div>
+        </div>
+
+        <!-- CENTER: Running -->
+        <div class="diag-center">
+          <div class="lc-state lc-run" onclick="expState('running')" style="padding:1rem 2rem;font-size:.9rem;">🟢 Running</div>
+          <div style="font-size:.65rem;color:var(--green);font-family:'Fira Code',monospace;margin-top:.3rem;text-align:center;">L'activité s'exécute !</div>
+
+          <!-- Down: another activity -->
+          <div class="dc-col" style="margin-top:.4rem;">
+            <div class="vline" style="height:12px;"></div>
+            <div class="arr-d">▼</div>
+            <div class="trigger-lbl" style="max-width:140px;text-align:center;">Une autre activité s'intercale</div>
+          </div>
+
+          <!-- Up: onResume returning from Paused -->
+          <div style="margin-top:.8rem;display:flex;flex-direction:column;align-items:center;gap:.1rem;">
+            <div class="mbadge" onclick="expM(null,2)" style="border-color:rgba(61,220,132,.5);color:var(--green);">④ onResume() ↑</div>
+            <div class="trigger-lbl" style="font-size:.57rem;">L'activité revient au devant</div>
+          </div>
+        </div>
+
+        <!-- RIGHT: Paused + arrows -->
+        <div class="diag-right">
+          <div class="lc-state lc-pause" onclick="expState('paused')" style="width:100%;justify-content:center;">⏸ Paused</div>
+
+          <!-- Methods leading to Paused (from Running) -->
+          <div style="align-self:flex-start;display:flex;flex-direction:column;align-items:flex-start;margin-top:.5rem;gap:.1rem;width:100%;padding-left:.3rem;">
+            <div class="trigger-lbl">↓ autre activité au 1er plan</div>
+            <div class="mbadge opt">① onSaveInstanceState() <span class="opt-lbl">*</span></div>
+            <div class="mbadge" onclick="expM(null,3)">② onPause()</div>
+          </div>
+
+          <!-- Paused → Stopped methods -->
+          <div style="align-self:flex-start;display:flex;flex-direction:column;align-items:flex-start;margin-top:.8rem;gap:.1rem;width:100%;padding-left:.3rem;">
+            <div class="trigger-lbl" style="font-size:.56rem;">↓ activité n'est plus visible</div>
+            <div class="mbadge opt">① onSaveInstanceState() <span class="opt-lbl">*</span></div>
+            <div class="mbadge" onclick="expM(null,4)">② onStop()</div>
+            <div class="vline" style="height:12px;margin-left:14px;"></div>
+            <div class="arr-d" style="margin-left:8px;">▼</div>
+            <div class="killed-lbl">&lt;Process killed&gt;</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- BOTTOM: Destroyed -->
+      <div class="diag-bottom" style="margin-top:1.2rem;">
+        <div class="dc-col">
+          <div class="lc-state lc-dest" onclick="expState('destroyed')">💀 Destroyed</div>
+          <div style="font-size:.62rem;color:rgba(255,255,255,.3);font-family:'Fira Code',monospace;margin-top:.3rem;text-align:center;">L'activité est arrêtée</div>
+          <div style="text-align:right;width:100%;margin-top:.4rem;font-size:.58rem;color:rgba(255,255,255,.25);font-family:'Fira Code',monospace;">* = optionnel</div>
+        </div>
+      </div>
+
+      <!-- Legend -->
+      <div class="diag-legend">
+        <div class="dleg"><div class="dleg-dot" style="background:var(--green);"></div>Cycle Entier: onCreate→onDestroy</div>
+        <div class="dleg"><div class="dleg-dot" style="background:var(--cyan);"></div>Partie Visible: onStart→onStop</div>
+        <div class="dleg"><div class="dleg-dot" style="background:var(--blue);"></div>Interaction: onResume→onPause</div>
+        <div class="dleg"><div class="dleg-dot" style="background:rgba(255,255,255,.3);border:1px solid rgba(255,255,255,.2);"></div>* = optionnel</div>
+      </div>
+    </div>
+
+    <!-- State explanation below diagram -->
+    <div id="stateExplain" style="display:none;margin-top:1.5rem;">
+      <div id="stateCard" class="method-card"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ S5 : LOG.D ═══ -->
+<section class="section" id="s5">
+  <div class="reveal">
+    <h2 class="section-title">🔍 Log.d — Le Système de Balisage</h2>
+    <p class="section-sub">Comment déboguer ton appli Android</p>
+
+    <div class="baby-box reveal"><span class="emoji-big">📟</span><strong>Log.d = des post-it dans ton code.</strong> Tu places des messages à différents endroits → quand l'appli tourne, tu vois tout dans la console <strong>Logcat</strong> d'Android Studio. Ton meilleur ami pour déboguer ! 🕵️</div>
+
+    <div class="code-wrap reveal" style="margin:1.5rem 0;">
+      <div class="code-label">Syntaxe de base</div>
+<pre>Log.<span class="str">d</span>(<span class="str">"MonTag"</span>, <span class="str">"Mon message"</span>);
+<span class="cmt"> ↑       ↑           ↑</span>
+<span class="cmt">méthode  étiquette  message à afficher dans Logcat</span>
+
+<span class="cmt">// Exemple réel avec le cycle de vie :</span>
+<span class="kw">String</span> TAG = <span class="str">"CycleDeVie"</span>;           <span class="cmt">// ton étiquette</span>
+Log.d(TAG, <span class="str">"dans onCreate()"</span>);         <span class="cmt">// debug = vert</span>
+Log.i(TAG, <span class="str">"Score = "</span> + score);        <span class="cmt">// info  = bleu</span>
+Log.w(TAG, <span class="str">"GPS désactivé !"</span>);         <span class="cmt">// warning = jaune</span>
+Log.e(TAG, <span class="str">"ERREUR connexion"</span>);         <span class="cmt">// error = rouge</span></pre>
+    </div>
+
+    <h3 class="reveal" style="font-family:'Orbitron',sans-serif;color:var(--cyan);text-align:center;font-size:.95rem;margin-bottom:1rem;">Les 5 niveaux de Log (du moins grave au plus grave)</h3>
+    <div class="logd-levels reveal">
+      <div class="logd-level lv-v"><div class="lv-letter">V</div><div class="lv-name">Verbose</div><div class="lv-desc">Tout, absolument tout. Très bavard. Rarement en production.</div></div>
+      <div class="logd-level lv-d"><div class="lv-letter">D</div><div class="lv-name">Debug ← le + utilisé</div><div class="lv-desc">Messages de debug. C'est <strong>Log.d()</strong>. Pour suivre le cycle de vie et les variables.</div></div>
+      <div class="logd-level lv-i"><div class="lv-letter">I</div><div class="lv-name">Info</div><div class="lv-desc">Infos utiles. Ex: "Utilisateur connecté", "Données chargées".</div></div>
+      <div class="logd-level lv-w"><div class="lv-letter">W</div><div class="lv-name">Warning</div><div class="lv-desc">Avertissement. Quelque chose d'inhabituel, pas forcément une erreur.</div></div>
+      <div class="logd-level lv-e"><div class="lv-letter">E</div><div class="lv-name">Error</div><div class="lv-desc">Erreurs graves. Crash, exception. À surveiller en priorité !</div></div>
+    </div>
+
+    <!-- Logcat simulation -->
+    <div class="logcat-terminal reveal">
+      <div class="logcat-bar"><span>📟 Logcat</span><span>Android Monitor</span><span>com.exemple.monapp (3048)</span><span>Debug ▾</span></div>
+      <div class="logcat-body">
+        <div class="log-sep">// Lancement de l'appli ↓</div>
+        <div class="log-line"><span class="log-date">02-20 16:39:38.626</span><span class="log-pid">3048</span><span class="log-d">D</span><span class="log-tag">CycleDeVie:</span><span class="log-msg">dans la méthode onCreate()</span></div>
+        <div class="log-line"><span class="log-date">02-20 16:39:38.626</span><span class="log-pid">3048</span><span class="log-d">D</span><span class="log-tag">CycleDeVie:</span><span class="log-msg">Dans la méthode onStart()</span></div>
+        <div class="log-line"><span class="log-date">02-20 16:39:38.627</span><span class="log-pid">3048</span><span class="log-d">D</span><span class="log-tag">CycleDeVie:</span><span class="log-msg">Dans la méthode onResume()</span></div>
+        <div class="log-sep">// L'utilisateur reçoit un appel ↓</div>
+        <div class="log-line"><span class="log-date">02-20 16:41:05.120</span><span class="log-pid">3048</span><span class="log-w">W</span><span class="log-tag">CycleDeVie:</span><span class="log-msg">Dans la méthode onPause()</span></div>
+        <div class="log-sep">// Fin de l'appel ↓</div>
+        <div class="log-line"><span class="log-date">02-20 16:43:22.441</span><span class="log-pid">3048</span><span class="log-d">D</span><span class="log-tag">CycleDeVie:</span><span class="log-msg">Dans la méthode onResume()</span></div>
+      </div>
+    </div>
+
+    <div class="baby-box reveal" style="margin-top:1.2rem;"><span class="emoji-big">💡</span><strong>Le TAG = l'étiquette de filtrage.</strong> Dans Logcat tu peux taper "CycleDeVie" et voir uniquement TES messages parmi les milliers de logs Android. Convention : <strong>TAG = nom de ta classe</strong>.</div>
+  </div>
+</section>
+
+<!-- ═══ S6 : BUNDLE ═══ -->
+<section class="section" id="s6">
+  <div class="reveal">
+    <h2 class="section-title">📦 Bundle — Sauvegarde de l'État</h2>
+    <p class="section-sub">Le tableau associatif typé qui sauve tes données !</p>
+
+    <div class="baby-box reveal"><span class="emoji-big">🎮</span><strong>Problème :</strong> Score à 1500 pts. Android ferme l'appli (mémoire insuffisante). Tu reviens… score = 0. 😱<br><strong>Solution :</strong> Bundle sauvegarde l'état AVANT la destruction et le restaure après.</div>
+
+    <!-- Bundle = tableau assoc -->
+    <div class="bundle-main reveal">
+      <div class="bundle-bag">
+        <div class="btitle">📦 Bundle = Tableau Associatif TYPÉ</div>
+        <p style="font-size:.76rem;color:rgba(255,255,255,.5);margin-bottom:1.2rem;">Comme un sac avec des compartiments étiquetés. Clé = String, Valeur = type précis !</p>
+        <div class="kv-row" style="animation-delay:.1s"><div class="kv-key">"score"</div><div class="kv-arr">→</div><div class="kv-val">1500</div><span class="kv-type">int</span></div>
+        <div class="kv-row" style="animation-delay:.2s"><div class="kv-key">"nomJoueur"</div><div class="kv-arr">→</div><div class="kv-val">"Alice"</div><span class="kv-type">String</span></div>
+        <div class="kv-row" style="animation-delay:.3s"><div class="kv-key">"estConnecte"</div><div class="kv-arr">→</div><div class="kv-val">true</div><span class="kv-type">boolean</span></div>
+        <div class="kv-row" style="animation-delay:.4s"><div class="kv-key">"vitesse"</div><div class="kv-arr">→</div><div class="kv-val">3.14</div><span class="kv-type">float</span></div>
+        <div class="kv-row" style="animation-delay:.5s"><div class="kv-key">"monObjet"</div><div class="kv-arr">→</div><div class="kv-val">Joueur{...}</div><span class="kv-type">Parcelable</span></div>
+        <div style="margin-top:.9rem;padding-top:.9rem;border-top:1px solid rgba(255,255,255,.08);font-size:.7rem;color:rgba(255,255,255,.4);font-family:'Fira Code',monospace;">Bundle est <strong style="color:var(--orange)">typé</strong> : le type de chaque valeur est connu.</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:1rem;">
+        <div class="code-wrap"><div class="code-label">Sauvegarder dans Bundle</div>
+<pre><span class="kw">@Override</span>
+<span class="kw">protected void</span> <span class="str">onSaveInstanceState</span>(Bundle out) {
+  out.putInt(<span class="str">"score"</span>, ScoreCourant);       <span class="cmt">← int</span>
+  out.putString(<span class="str">"nom"</span>, nomJoueur);         <span class="cmt">← String</span>
+  out.putBoolean(<span class="str">"connecte"</span>, estConnecte); <span class="cmt">← boolean</span>
+  <span class="kw">super</span>.onSaveInstanceState(out);
+}</pre></div>
+        <div class="code-wrap"><div class="code-label">Récupérer depuis Bundle</div>
+<pre><span class="kw">@Override</span>
+<span class="kw">protected void</span> <span class="str">onRestoreInstanceState</span>(Bundle s) {
+  <span class="kw">super</span>.onRestoreInstanceState(s);
+  ScoreCourant = s.getInt(<span class="str">"score"</span>);       <span class="cmt">← même clé !</span>
+  nomJoueur    = s.getString(<span class="str">"nom"</span>);       <span class="cmt">← même clé !</span>
+  estConnecte  = s.getBoolean(<span class="str">"connecte"</span>); <span class="cmt">← même clé !</span>
+}</pre></div>
+      </div>
+    </div>
+
+    <!-- méthodes put/get -->
+    <h3 class="reveal" style="font-family:'Orbitron',sans-serif;color:var(--cyan);text-align:center;font-size:.95rem;margin:2.5rem 0 .5rem;">📚 Toutes les méthodes put___ et get___</h3>
+    <div class="bm-grid reveal">
+      <div class="bm-card bm-put">
+        <div class="bm-title">📥 Méthodes pour STOCKER</div>
+        <div class="bm-row"><span class="mt">void</span> put<span class="mk">Boolean</span>(<span class="mv">String</span> key, <span class="mt">boolean</span> value)</div>
+        <div class="bm-row"><span class="mt">void</span> put<span class="mk">Int</span>(<span class="mv">String</span> key, <span class="mt">int</span> value)</div>
+        <div class="bm-row"><span class="mt">void</span> put<span class="mk">String</span>(<span class="mv">String</span> key, <span class="mt">String</span> value)</div>
+        <div class="bm-row"><span class="mt">void</span> put<span class="mk">Float</span>(<span class="mv">String</span> key, <span class="mt">float</span> value)</div>
+        <div class="bm-row"><span class="mt">void</span> put<span class="mk">Long</span>(<span class="mv">String</span> key, <span class="mt">long</span> value)</div>
+        <div class="bm-row"><span class="mt">void</span> put<span class="mk">Parcelable</span>(<span class="mv">String</span> key, <span class="mt">Parcelable</span> v)</div>
+        <div class="bm-row"><span class="mt">void</span> put<span class="mk">Serializable</span>(<span class="mv">String</span> key, <span class="mt">Serializable</span> v)</div>
+      </div>
+      <div class="bm-card bm-get">
+        <div class="bm-title">📤 Méthodes pour RÉCUPÉRER</div>
+        <div class="bm-row"><span class="mt">boolean</span> get<span class="mk">Boolean</span>(<span class="mv">String</span> key)</div>
+        <div class="bm-row"><span class="mt">int</span> get<span class="mk">Int</span>(<span class="mv">String</span> key)</div>
+        <div class="bm-row"><span class="mt">String</span> get<span class="mk">String</span>(<span class="mv">String</span> key)</div>
+        <div class="bm-row"><span class="mt">float</span> get<span class="mk">Float</span>(<span class="mv">String</span> key)</div>
+        <div class="bm-row"><span class="mt">long</span> get<span class="mk">Long</span>(<span class="mv">String</span> key)</div>
+        <div class="bm-row"><span class="mt">Parcelable</span> get<span class="mk">Parcelable</span>(<span class="mv">String</span> key)</div>
+        <div class="bm-row"><span class="mt">Serializable</span> get<span class="mk">Serializable</span>(<span class="mv">String</span> key)</div>
+      </div>
+    </div>
+    <div class="baby-box reveal" style="margin-top:1rem;"><span class="emoji-big">🔑</span>La <strong>clé</strong> dans get doit être <strong>exactement identique</strong> (même casse) à celle dans put. Si tu fais <code style="color:var(--pink)">putInt("score", 100)</code> → tu dois faire <code style="color:var(--green)">getInt("score")</code> et pas "Score" ni "SCORE" !</div>
+
+    <!-- Parcelable vs Serializable -->
+    <h3 class="reveal" style="font-family:'Orbitron',sans-serif;color:var(--blue);text-align:center;font-size:.95rem;margin:2.5rem 0 .5rem;">🎁 Parcelable vs Serializable — Les objets complexes</h3>
+    <div class="baby-box reveal"><span class="emoji-big">🏗️</span><strong>Problème :</strong> Tu as un objet Java (<code>class Joueur</code> avec nom, score, niveau). Comment le mettre dans un Bundle ?<br>Les types simples (int, String) → direct. Pour un <strong>objet complexe</strong> → il faut lui apprendre à se "démonter" et se "remonter" !</div>
+    <div class="parcel-grid reveal">
+      <div class="parcel-card pc-android">
+        <div class="pc-title">🚀 Parcelable — La voie Android</div>
+        <div class="pc-body">
+          <p><strong>Parcelable</strong> est une interface Android qui décrit comment stocker un objet dans un <strong>Parcel</strong> (flux de données binaires ultra-rapide).</p>
+          <p style="margin-top:.7rem;">Tu dois implémenter :<br>
+          • <code style="color:var(--green)">writeToParcel()</code> → écrire les champs<br>
+          • <code style="color:var(--cyan)">CREATOR</code> → reconstruire l'objet</p>
+          <p style="margin-top:.7rem;">✅ <strong>Plus rapide</strong> que Serializable<br>✅ <strong>Recommandé</strong> sur Android<br>❌ Plus de code à écrire</p>
+        </div>
+        <div class="code-wrap" style="margin-top:.8rem;font-size:.68rem;">
+<pre><span class="kw">public class</span> <span class="cls">Joueur</span> <span class="kw">implements</span> <span class="cls">Parcelable</span> {
+  String nom; <span class="kw">int</span> score;
+  <span class="kw">public void</span> writeToParcel(Parcel out, <span class="kw">int</span> f) {
+    out.writeString(nom);
+    out.writeInt(score);
+  }
+  <span class="cmt">// + CREATOR pour reconstruire...</span>
+}
+<span class="cmt">// Usage :</span>
+bundle.putParcelable(<span class="str">"joueur"</span>, monJoueur);
+Joueur j = bundle.getParcelable(<span class="str">"joueur"</span>);</pre></div>
+      </div>
+      <div class="parcel-card pc-java">
+        <div class="pc-title">📦 Serializable — La voie Java</div>
+        <div class="pc-body">
+          <p><strong>Serializable</strong> est une interface Java standard. Elle convertit l'objet en flux d'octets <strong>automatiquement</strong>.</p>
+          <p style="margin-top:.7rem;">Tu n'as presque rien à écrire :<br>
+          • Juste <code style="color:var(--orange)">implements Serializable</code><br>
+          • Java fait tout le reste !</p>
+          <p style="margin-top:.7rem;">✅ <strong>Très simple</strong> à implémenter<br>❌ <strong>Plus lent</strong> que Parcelable<br>❌ Crée des objets temporaires en mémoire</p>
+        </div>
+        <div class="code-wrap" style="margin-top:.8rem;font-size:.68rem;">
+<pre><span class="kw">public class</span> <span class="cls">Joueur</span> <span class="kw">implements</span> <span class="cls">Serializable</span> {
+  String nom; <span class="kw">int</span> score;
+  <span class="cmt">// C'est tout ! Java gère le reste 😊</span>
+}
+<span class="cmt">// Usage :</span>
+bundle.putSerializable(<span class="str">"joueur"</span>, monJoueur);
+Joueur j = (Joueur) bundle.getSerializable(<span class="str">"joueur"</span>);</pre></div>
+      </div>
+    </div>
+
+    <!-- Save/Restore flow -->
+    <h3 class="reveal" style="font-family:'Orbitron',sans-serif;color:var(--green);text-align:center;font-size:.95rem;margin:2.5rem 0 1rem;">🔄 Flux complet Sauvegarde → Restauration</h3>
+    <div class="save-flow reveal">
+      <div class="fn fn-run">▶ Resumed<br>(visible)</div>
+      <div class="fa">→<br><span style="font-size:.58rem;color:var(--orange)">onSaveInstanceState()</span></div>
+      <div class="fn fn-dest">💀 Destroyed</div>
+      <div class="fa">→<br><span style="font-size:.58rem;color:rgba(255,255,255,.28)">Android recrée</span></div>
+      <div class="fn fn-create">🌱 Created<br>onCreate(Bundle)</div>
+      <div class="fa">→<br><span style="font-size:.58rem;color:var(--cyan)">onRestoreInstanceState()</span></div>
+      <div class="fn fn-run">▶ Resumed<br>✅ données OK !</div>
+    </div>
+
+    <!-- Quand utiliser Bundle -->
+    <h3 class="reveal" style="font-family:'Orbitron',sans-serif;color:var(--cyan);text-align:center;font-size:.95rem;margin:2.5rem 0 .5rem;">🤔 Quand utiliser Bundle ? (obligatoire ou facultatif ?)</h3>
+    <div class="when-grid reveal">
+      <div class="when-card wy"><span class="wi">✅</span><div class="wt">OUI — Données de session UI</div><div class="wd">Score, position scroll, texte saisi, onglet actif… Données <strong>temporaires</strong> liées à l'interface.</div></div>
+      <div class="when-card wy"><span class="wi">✅</span><div class="wt">OUI — Rotation d'écran !</div><div class="wd">Android <strong>détruit et recrée</strong> l'activité à la rotation. Sans Bundle → tout disparaît. Cas le plus fréquent !</div></div>
+      <div class="when-card wn"><span class="wi">❌</span><div class="wt">NON — Données persistantes</div><div class="wd">Profil, historique, paramètres → utilise <strong>SQLite</strong>, <strong>SharedPreferences</strong> ou <strong>fichiers</strong>.</div></div>
+      <div class="when-card ww"><span class="wi">⚠️</span><div class="wt">FACULTATIF — Apps très simples</div><div class="wd">Aucun état à sauvegarder ? Bundle peut être omis. Mais si l'user saisit → l'implémenter !</div></div>
+    </div>
+
+    <!-- 3 options -->
+    <h3 class="reveal" style="font-family:'Orbitron',sans-serif;color:var(--cyan);text-align:center;font-size:.95rem;margin:2.5rem 0 .5rem;">📊 Comparaison : Bundle vs SQLite vs Fichiers</h3>
+    <div class="sc-grid reveal">
+      <div class="sc sc-b"><div class="sc-t">📦 Bundle</div><div class="sc-row"><span class="ck">✅</span>Simple et automatique</div><div class="sc-row"><span class="cx">❌</span>Temporaire (session)</div><div class="sc-row"><span class="cx">❌</span>Limité en taille</div><div style="margin-top:.7rem;font-size:.68rem;color:var(--orange);font-family:'Fira Code',monospace;">→ Données UI temporaires</div></div>
+      <div class="sc sc-s"><div class="sc-t">🗄️ SQLite</div><div class="sc-row"><span class="ck">✅</span>Persistant (survit réinstall)</div><div class="sc-row"><span class="ck">✅</span>Structuré (SQL)</div><div class="sc-row"><span class="cx">❌</span>Plus complexe à coder</div><div style="margin-top:.7rem;font-size:.68rem;color:var(--cyan);font-family:'Fira Code',monospace;">→ Profils, historiques</div></div>
+      <div class="sc sc-f"><div class="sc-t">📄 Fichiers</div><div class="sc-row"><span class="ck">✅</span>Persistant</div><div class="sc-row"><span class="ck">✅</span>Photos, médias, JSON</div><div class="sc-row"><span class="cx">❌</span>Lecture/écriture manuelle</div><div style="margin-top:.7rem;font-size:.68rem;color:var(--green);font-family:'Fira Code',monospace;">→ Médias, documents</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ S7 : MANIFEST ═══ -->
+<section class="section" id="s7">
+  <div class="reveal">
+    <h2 class="section-title">📋 L'Activité dans le Manifest</h2>
+    <p class="section-sub">Clique sur chaque ligne pour comprendre</p>
+    <div class="baby-box reveal"><span class="emoji-big">🪪</span><strong>Règle absolue :</strong> Toute Activity DOIT être déclarée dans AndroidManifest.xml. Sinon → l'appli plante avec <code style="color:var(--pink)">ActivityNotFoundException</code> ! 💥</div>
+    <div class="manifest-grid reveal">
+      <div class="code-wrap">
+<pre>
+<span class="code-line" onclick="expManifest(this,'activity')"><span class="tag">&lt;activity</span></span>
+<span class="code-line" onclick="expManifest(this,'name')">  <span class="attr">android:name</span>=<span class="val">".ExempleActivite"</span></span>
+<span class="code-line" onclick="expManifest(this,'label')">  <span class="attr">android:label</span>=<span class="val">"@string/app_name"</span><span class="tag">&gt;</span></span>
+<span class="code-line">  <span class="tag">&lt;intent-filter&gt;</span></span>
+<span class="code-line" onclick="expManifest(this,'main')">    <span class="tag">&lt;action</span> <span class="attr">android:name</span>=<span class="val">"android.intent.action.MAIN"</span><span class="tag">/&gt;</span></span>
+<span class="code-line" onclick="expManifest(this,'launcher')">    <span class="tag">&lt;category</span> <span class="attr">android:name</span>=<span class="val">"android.intent.category.LAUNCHER"</span><span class="tag">/&gt;</span></span>
+<span class="code-line">  <span class="tag">&lt;/intent-filter&gt;</span></span>
+<span class="code-line"><span class="tag">&lt;/activity&gt;</span></span>
+</pre>
+      </div>
+      <div class="manifest-explain"><div id="manifestExplain"><div class="ph">👆 Clique sur une ligne du code pour l'expliquer !</div></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ S8 : QUIZ ═══ -->
+<section class="section" id="s8">
+  <div class="reveal">
+    <h2 class="section-title">🎯 Quiz Final</h2>
+    <p class="section-sub">Teste tout ce que tu as appris !</p>
+    <div class="quiz-section">
+      <div class="quiz-title">🧠 7 Questions — Clique pour répondre !</div>
+
+      <div class="quiz-q"><p>1. 🔄 Au lancement d'une activité, quel est l'ordre des méthodes ?</p>
+        <div class="quiz-opts">
+          <div class="quiz-opt" onclick="qa(this,'correct','✅ Exact ! onCreate → onStart → onResume. Puis l\'activité est active.')">onCreate → onStart → onResume</div>
+          <div class="quiz-opt" onclick="qa(this,'wrong','Non ! onStart vient APRÈS onCreate.')">onStart → onCreate → onResume</div>
+          <div class="quiz-opt" onclick="qa(this,'wrong','Non ! onResume est le dernier des trois.')">onResume → onStart → onCreate</div>
+        </div><div class="quiz-feedback" id="qf0"></div>
+      </div>
+
+      <div class="quiz-q"><p>2. 📦 Bundle est un tableau de type… ?</p>
+        <div class="quiz-opts">
+          <div class="quiz-opt" onclick="qa(this,'correct','✅ Exact ! Bundle = tableau associatif TYPÉ. Clé String → Valeur d\'un type précis (int, String, boolean...).')">Tableau associatif typé (Clé String → Valeur typée)</div>
+          <div class="quiz-opt" onclick="qa(this,'wrong','Non ! Un tableau ordinaire utilise des index entiers.')">Tableau ordinaire (index entier)</div>
+          <div class="quiz-opt" onclick="qa(this,'wrong','Non ! HashMap n\'est pas typé comme Bundle.')">HashMap non typé</div>
+        </div><div class="quiz-feedback" id="qf1"></div>
+      </div>
+
+      <div class="quiz-q"><p>3. 📞 L'utilisateur reçoit un appel. Quelle méthode est appelée EN PREMIER ?</p>
+        <div class="quiz-opts">
+          <div class="quiz-opt" onclick="qa(this,'correct','✅ Bravo ! onPause() est appelée quand une autre activité passe au premier plan.')">onPause()</div>
+          <div class="quiz-opt" onclick="qa(this,'wrong','onStop() vient après onPause(), quand l\'activité n\'est plus visible.')">onStop()</div>
+          <div class="quiz-opt" onclick="qa(this,'wrong','onDestroy() est la toute dernière étape.')">onDestroy()</div>
+        </div><div class="quiz-feedback" id="qf2"></div>
+      </div>
+
+      <div class="quiz-q"><p>4. 🔍 <code style="color:var(--cyan)">Log.d("TAG", "msg")</code> — à quoi sert le "TAG" ?</p>
+        <div class="quiz-opts">
+          <div class="quiz-opt" onclick="qa(this,'correct','✅ Exact ! Le TAG est une étiquette String pour filtrer les messages dans Logcat.')">Étiquette pour filtrer dans Logcat</div>
+          <div class="quiz-opt" onclick="qa(this,'wrong','Non ! Le TAG n\'affecte pas le niveau du log.')">Définir le niveau (debug/info/error)</div>
+          <div class="quiz-opt" onclick="qa(this,'wrong','Non ! Le TAG est juste un filtre textuel.')">Identifiant de l\'activité dans le Manifest</div>
+        </div><div class="quiz-feedback" id="qf3"></div>
+      </div>
+
+      <div class="quiz-q"><p>5. 🎁 Quelle est la différence entre Parcelable et Serializable ?</p>
+        <div class="quiz-opts">
+          <div class="quiz-opt" onclick="qa(this,'correct','✅ Correct ! Parcelable (Android) est plus rapide mais demande plus de code. Serializable (Java) est plus simple mais plus lent.')">Parcelable (Android) plus rapide ; Serializable (Java) plus simple</div>
+          <div class="quiz-opt" onclick="qa(this,'wrong','C\'est l\'inverse ! Parcelable est plus rapide.')">Serializable est plus rapide ; Parcelable plus simple</div>
+          <div class="quiz-opt" onclick="qa(this,'wrong','Non ! Les deux stockent des objets complexes.')">Parcelable pour String ; Serializable pour int</div>
+        </div><div class="quiz-feedback" id="qf4"></div>
+      </div>
+
+      <div class="quiz-q"><p>6. 🔑 Tu appelles <code style="color:var(--cyan)">bundle.putInt("score", 1500)</code>. Comment récupères-tu la valeur ?</p>
+        <div class="quiz-opts">
+          <div class="quiz-opt" onclick="qa(this,'correct','✅ Exact ! La clé doit être identique (même casse) pour retrouver la valeur.')">bundle.getInt("score")</div>
+          <div class="quiz-opt" onclick="qa(this,'wrong','La clé est sensible à la casse. "Score" ≠ "score".')">bundle.getInt("Score")</div>
+          <div class="quiz-opt" onclick="qa(this,'wrong','getInteger() n\'existe pas dans Bundle.')">bundle.getInteger("score")</div>
+        </div><div class="quiz-feedback" id="qf5"></div>
+      </div>
+
+      <div class="quiz-q"><p>7. ♻️ Quelle méthode est appelée quand l'activité redémarre après avoir été stoppée ?</p>
+        <div class="quiz-opts">
+          <div class="quiz-opt" onclick="qa(this,'correct','✅ onRestart() → onStart() → onResume(). C\'est le chemin du redémarrage.')">onRestart()</div>
+          <div class="quiz-opt" onclick="qa(this,'wrong','onCreate est la toute première création, pas le redémarrage.')">onCreate()</div>
+          <div class="quiz-opt" onclick="qa(this,'wrong','onResume vient après onRestart.')">onResume()</div>
+        </div><div class="quiz-feedback" id="qf6"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>Développement d'Applications Mobiles — <span>3ème Année LMD Informatique 2024-2025</span><br>A. Hammache · UMMTO</footer>
+
+<script>
+// Progress
+window.addEventListener('scroll',()=>{
+  const h=document.documentElement,st=h.scrollTop||document.body.scrollTop,sh=h.scrollHeight-h.clientHeight;
+  document.getElementById('progressBar').style.width=(st/sh*100)+'%';
+});
+// Reveal
+const obs=new IntersectionObserver(e=>{e.forEach(x=>{if(x.isIntersecting)x.target.classList.add('active');});},{threshold:.07});
+document.querySelectorAll('.reveal').forEach(el=>obs.observe(el));
+// Nav
+const sects=['s0','s1','s2','s3','s4','s4b','s5','s6','s7','s8'];
+const dots=document.querySelectorAll('.nav-dot');
+dots.forEach((d,i)=>d.addEventListener('click',()=>document.getElementById(sects[i]).scrollIntoView({behavior:'smooth'})));
+window.addEventListener('scroll',()=>{let c=0;sects.forEach((id,i)=>{const el=document.getElementById(id);if(el&&window.scrollY>=el.offsetTop-200)c=i;});dots.forEach((d,i)=>d.classList.toggle('active',i===c));});
+// Analogies
+document.querySelectorAll('.analogy').forEach(a=>a.addEventListener('click',()=>a.classList.toggle('open')));
+
+// State data
+const stateD={
+  starting:{icon:'🚀',title:'Starting — Démarrage',c:'var(--blue)',text:'État <strong>initial avant que l\'activité existe</strong>. Android reçoit la demande de lancement. Il enchaîne : <strong>onCreate → onStart → (onRestoreInstanceState optionnel) → onResume</strong>. Après, l\'activité est Running !'},
+  running:{icon:'🟢',title:'Running — En cours',c:'var(--green)',text:'L\'activité est <strong>au premier plan</strong>. L\'utilisateur interagit. onResume() a été appelée et l\'activité attend les touches/clics. C\'est l\'état "normal" de fonctionnement.'},
+  paused:{icon:'⏸',title:'Paused — En pause',c:'var(--orange)',text:'Une autre activité est partiellement devant (boîte de dialogue, appel…). L\'activité est <strong>encore visible</strong> mais n\'a plus le focus. <strong>onPause()</strong> a été appelée. Si la mémoire manque, le process peut être tué ici.'},
+  stopped:{icon:'⏹',title:'Stopped — Arrêtée',c:'var(--pink)',text:'L\'activité est <strong>complètement invisible</strong>. <strong>onStop()</strong> a été appelée. Peut repartir via <strong>onRestart()</strong> ou être détruite via <strong>onDestroy()</strong>. Le process peut être tué directement si besoin.'},
+  destroyed:{icon:'💀',title:'Destroyed — Détruite',c:'#f44336',text:'L\'activité est <strong>définitivement terminée</strong>. Causes : bouton retour, appel à <strong>finish()</strong>, ou le système manquait de mémoire. Après cet état, l\'activité n\'existe plus.'}
+};
+function expState(key){
+  const d=stateD[key];
+  const div=document.getElementById('stateExplain');
+  div.style.display='block';
+  div.innerHTML=`<div class="method-card"><div class="mc-header"><div class="mc-icon">${d.icon}</div><div><div class="mc-title" style="color:${d.c};">${d.title}</div><div class="mc-sub">État Android Activity</div></div></div><p>${d.text}</p></div>`;
+  div.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+// Method data
+const mD=[
+  {i:'🌱',t:'onCreate()',s:'Création — appelée 1 seule fois',
+   p:'C\'est la <strong>toute première méthode</strong>. Initialisations : charger l\'interface (<strong>setContentView()</strong>), initialiser les variables, récupérer les données du Bundle.',
+   d:'Le paramètre <strong>Bundle savedInstanceState</strong> est null à la première création, ou contient les données sauvegardées si l\'activité est recréée (ex: rotation écran).',
+   tip:'Toujours appeler <strong>super.onCreate()</strong> en premier ! Puis <strong>setContentView(R.layout.xxx)</strong>.',w:null,
+   pt:['ptag-full'],pl:['Cycle Entier']},
+  {i:'👀',t:'onStart()',s:'Démarrage — activité bientôt visible',
+   p:'Appelée après onCreate(). L\'activité est <strong>sur le point d\'être visible</strong> mais pas encore interactive. Si elle obtient le focus → <strong>onResume()</strong>. Sinon → <strong>onStop()</strong>.',
+   d:'Phase très courte. Tu peux démarrer des animations légères ici.',
+   tip:'Rarement nécessaire de surcharger onStart(). onCreate() et onResume() suffisent la plupart du temps.',w:null,
+   pt:['ptag-full','ptag-vis'],pl:['Cycle Entier','Partie Visible']},
+  {i:'🎮',t:'onResume()',s:'Reprise — activité interactive',
+   p:'L\'activité est <strong>au premier plan et interactive</strong>. L\'utilisateur peut toucher l\'écran. Appelée aussi quand on revient d\'une pause (fin d\'appel).',
+   d:'Ici tu peux ré-initialiser les ressources libérées dans onPause() : GPS, caméra, animations.',
+   tip:'C\'est le symétrique de <strong>onPause()</strong>. Ce que tu libères dans onPause → tu le recharges dans onResume.',w:null,
+   pt:['ptag-inter'],pl:['Interaction']},
+  {i:'⏸️',t:'onPause()',s:'Pause — autre activité au premier plan',
+   p:'Appelée quand <strong>une autre activité passe devant</strong> (appel entrant, dialogue). L\'activité est encore partiellement visible. Ici on <strong>libère les ressources coûteuses</strong>.',
+   d:'Arrêter les animations, les tâches de fond. Libérer GPS et Caméra. Arrêter la lecture audio.',
+   tip:'Libère le GPS et la caméra ici ! Ces ressources consomment beaucoup de batterie.',
+   w:'⚠️ onPause() doit être <strong>RAPIDE</strong>. Android peut forcer l\'arrêt si c\'est trop long !',
+   pt:['ptag-vis'],pl:['Fin Partie Visible']},
+  {i:'🙈',t:'onStop()',s:'Arrêt — activité invisible',
+   p:'L\'activité <strong>n\'est plus visible du tout</strong>. Appelée quand une autre appli prend tout l\'écran.',
+   d:'Après onStop(), l\'activité peut être détruite <strong>sans que onDestroy() soit appelée</strong> si le système manque de mémoire. Sauvegarde les données importantes ici !',
+   tip:'Sauvegarde les données importantes dans onStop() car onDestroy() peut ne jamais être appelée.',
+   w:'⚠️ Après onStop(), le processus peut être tué à tout moment !',
+   pt:['ptag-full','ptag-vis'],pl:['Cycle Entier','Fin Visible']},
+  {i:'🔄',t:'onRestart()',s:'Redémarrage — après un stop',
+   p:'Appelée quand une activité <strong>stoppée revient</strong> au premier plan. Chemin : <strong>onRestart → onStart → onResume</strong>.',
+   d:'Similaire à onCreate() mais pour une activité qui existait déjà. Rarement besoin de la surcharger.',
+   tip:'Dans 99% des cas, onResume() suffit. onRestart() est rarement surchargé.',w:null,
+   pt:['ptag-full'],pl:['Cycle Entier']},
+  {i:'💀',t:'onDestroy()',s:'Destruction — fin de vie',
+   p:'L\'activité est <strong>définitivement détruite</strong>. Causes : bouton retour, appel à <strong>finish()</strong>, ou manque de mémoire.',
+   d:'Libère toutes les ressources restantes : threads, connexions, listeners.',
+   tip:'Libère tout ce qui n\'a pas été libéré avant. C\'est la dernière chance !',
+   w:'⚠️ <strong>onDestroy() n\'est pas toujours appelée !</strong> Android peut tuer le process directement. Ne compte pas sur elle seule.',
+   pt:['ptag-full'],pl:['Fin Cycle Entier']}
+];
+
+function expM(el,idx){
+  if(el){document.querySelectorAll('.method-node').forEach(n=>n.classList.remove('active'));el.classList.add('active');}
+  const d=mD[idx];
+  const ph=d.pt.map((c,i)=>`<span class="ptag ${c}">${d.pl[i]}</span>`).join('');
+  const wb=d.w?`<div class="warn-box">${d.w}</div>`:'';
+  document.getElementById('methodExplain').innerHTML=`<div class="method-card"><div class="mc-header"><div class="mc-icon">${d.i}</div><div><div class="mc-title">${d.t}</div><div class="mc-sub">${d.s}</div></div></div><p>${d.p}</p><p style="color:rgba(255,255,255,.65);font-size:.8rem;">${d.d}</p><div class="tip-box">💡 <strong>Tip :</strong> ${d.tip}</div>${wb}<div style="margin-top:.8rem;">${ph}</div></div>`;
+}
+
+// Manifest
+const mfD={
+  activity:{t:'🎭 &lt;activity&gt;',p:'Déclare un écran (Activity) de l\'application. <strong>Toute Activity Java doit être ici</strong>. Sinon → ActivityNotFoundException ! L\'appli plante.'},
+  name:{t:'📝 android:name',p:'Nom de la classe Java. Le <strong>point (.)</strong> = "même package que le manifest". <strong>.ExempleActivite</strong> = com.exemple.monapp.ExempleActivite'},
+  label:{t:'🏷️ android:label',p:'Titre affiché en haut de l\'écran. <strong>@string/app_name</strong> = cherche dans res/values/strings.xml la chaîne "app_name". Utiliser des ressources string facilite la traduction.'},
+  main:{t:'🚀 action.MAIN',p:'Déclare que c\'est le <strong>point d\'entrée principal</strong>. Équivalent de main() en Java. Cette activité se lance quand on ouvre l\'appli.'},
+  launcher:{t:'📲 category.LAUNCHER',p:'L\'appli apparaît dans le <strong>lanceur du téléphone</strong>. Sans ça → l\'appli est installée mais invisible. On ne peut pas la lancer depuis l\'écran d\'accueil !'}
+};
+function expManifest(el,key){
+  const d=mfD[key]; if(!d) return;
+  document.querySelectorAll('.code-line').forEach(l=>l.classList.remove('selected'));
+  el.classList.add('selected');
+  document.getElementById('manifestExplain').innerHTML=`<h3>${d.t}</h3><p>${d.p}</p>`;
+}
+
+// Quiz
+let ans=new Array(7).fill(false);
+function qa(el,type,msg){
+  const par=el.closest('.quiz-q');
+  const qi=[...document.querySelectorAll('.quiz-q')].indexOf(par);
+  if(ans[qi])return;
+  ans[qi]=true;
+  par.querySelectorAll('.quiz-opt').forEach(o=>o.style.pointerEvents='none');
+  el.classList.add(type);
+  const fb=par.querySelector('.quiz-feedback');
+  fb.textContent=msg;
+  fb.className='quiz-feedback show '+(type==='correct'?'ok':'ko');
+}
+</script>
+</body>
+</html>
