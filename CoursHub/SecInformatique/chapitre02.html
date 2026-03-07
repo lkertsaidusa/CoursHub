@@ -1,0 +1,1455 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SEC INFO — Chapitre 2 · Cryptographie Classique</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&family=DM+Sans:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #03070d;
+  --bg2: #071220;
+  --neon: #00ffe7;
+  --neon2: #ff2d78;
+  --neon3: #f5c518;
+  --neon4: #7b2dff;
+  --neon5: #00b4ff;
+  --gold: #ffd700;
+  --text: #c8e6f5;
+  --muted: #3d6680;
+  --card: rgba(0,255,231,0.03);
+  --border: rgba(0,255,231,0.12);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;overflow-x:hidden}
+
+#bg-canvas{position:fixed;inset:0;z-index:0;opacity:.35;pointer-events:none}
+#scanlines{position:fixed;inset:0;z-index:1;pointer-events:none;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.07) 2px,rgba(0,0,0,.07) 4px)}
+
+#progress{position:fixed;top:0;left:0;height:2px;z-index:1000;background:linear-gradient(90deg,var(--neon),var(--neon3),var(--neon2));box-shadow:0 0 12px var(--neon);transition:width .1s}
+
+#sidenav{position:fixed;right:20px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:10px;z-index:500}
+.snav-item{display:flex;align-items:center;gap:10px;cursor:pointer;justify-content:flex-end}
+.snav-label{font-family:'Share Tech Mono',monospace;font-size:.65rem;color:var(--muted);letter-spacing:2px;text-transform:uppercase;opacity:0;transform:translateX(10px);transition:opacity .3s,transform .3s;white-space:nowrap}
+.snav-item:hover .snav-label,.snav-item.active .snav-label{opacity:1;transform:translateX(0)}
+.snav-dot{width:8px;height:8px;border-radius:50%;border:1.5px solid var(--muted);transition:all .3s;flex-shrink:0}
+.snav-item.active .snav-dot,.snav-item:hover .snav-dot{border-color:var(--neon);background:var(--neon);box-shadow:0 0 8px var(--neon)}
+
+.page-section{position:relative;z-index:2;min-height:100vh;padding:100px 60px;max-width:1200px;margin:0 auto;display:flex;flex-direction:column;justify-content:center}
+.page-section-compact{position:relative;z-index:2;min-height:unset;padding:80px 60px;max-width:1200px;margin:0 auto;display:flex;flex-direction:column;justify-content:center}
+@media(max-width:700px){.page-section{padding:80px 20px}.page-section-compact{padding:60px 20px}}
+
+#hero{max-width:100%;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:60px 20px;background:radial-gradient(ellipse 60% 50% at 50% 50%,rgba(245,197,24,.05) 0%,transparent 70%)}
+.hero-eyebrow{font-family:'Share Tech Mono',monospace;font-size:.8rem;color:var(--muted);letter-spacing:5px;text-transform:uppercase;margin-bottom:20px;animation:fade-down .8s .2s both}
+.hero-title{font-family:'Orbitron',sans-serif;font-size:clamp(2.5rem,8vw,7rem);font-weight:900;line-height:1;color:var(--neon3);text-shadow:0 0 60px rgba(245,197,24,.5),0 0 120px rgba(245,197,24,.2);animation:fade-up .8s .4s both,glow-gold 3s 1.2s infinite}
+@keyframes glow-gold{0%,100%{text-shadow:0 0 60px rgba(245,197,24,.5),0 0 120px rgba(245,197,24,.2)}50%{text-shadow:0 0 80px rgba(245,197,24,.9),0 0 160px rgba(245,197,24,.5)}}
+.hero-sub{font-family:'Orbitron',sans-serif;font-size:clamp(.85rem,2vw,1.1rem);color:var(--muted);letter-spacing:4px;text-transform:uppercase;margin-top:10px;animation:fade-up .8s .5s both}
+.hero-desc{font-size:clamp(1rem,2.5vw,1.25rem);max-width:600px;margin:30px auto 0;line-height:1.7;color:var(--text);opacity:.8;animation:fade-up .8s .7s both}
+.hero-desc em{color:var(--neon3);font-style:normal;font-weight:700}
+
+.hero-terminal{margin-top:40px;max-width:580px;width:100%;background:rgba(5,15,10,.9);border:1px solid rgba(245,197,24,.15);border-radius:14px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.5),0 0 0 1px rgba(245,197,24,.05);animation:fade-up .8s .9s both}
+.term-titlebar{height:32px;background:rgba(245,197,24,.04);border-bottom:1px solid rgba(245,197,24,.08);display:flex;align-items:center;padding:0 14px;gap:7px}
+.tdot{width:11px;height:11px;border-radius:50%}.td-r{background:#ff5f57}.td-y{background:#ffbd2e}.td-g{background:#28c941}
+.term-title-text{font-family:'Share Tech Mono',monospace;font-size:.7rem;color:var(--muted);margin:0 auto;letter-spacing:2px}
+.term-body{padding:20px;font-family:'Share Tech Mono',monospace;font-size:.82rem;line-height:2}
+.t-prompt{color:var(--neon3)}.t-cmd{color:#a8d5c8}.t-ok{color:#28c941}.t-warn{color:var(--neon3)}.t-err{color:var(--neon2)}.t-comment{color:var(--muted)}
+.t-blink{display:inline-block;width:7px;height:14px;background:var(--neon3);animation:blink 1s infinite;vertical-align:middle}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+
+.scroll-cue{margin-top:50px;animation:fade-up .8s 1.2s both;display:flex;flex-direction:column;align-items:center;gap:8px;color:var(--muted);font-family:'Share Tech Mono',monospace;font-size:.7rem;letter-spacing:3px;text-transform:uppercase}
+.scroll-mouse{width:24px;height:38px;border:2px solid var(--muted);border-radius:12px;display:flex;justify-content:center;padding-top:5px;animation:float 2s infinite}
+.scroll-wheel{width:3px;height:6px;border-radius:2px;background:var(--neon3);animation:scroll-down 2s infinite}
+@keyframes scroll-down{0%{transform:translateY(0);opacity:1}100%{transform:translateY(10px);opacity:0}}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(6px)}}
+
+.sec-badge{font-family:'Share Tech Mono',monospace;font-size:.72rem;color:var(--neon3);letter-spacing:4px;text-transform:uppercase;margin-bottom:8px;opacity:.8}
+.sec-title{font-family:'Orbitron',sans-serif;font-size:clamp(1.6rem,4vw,2.8rem);font-weight:700;line-height:1.2;margin-bottom:6px}
+.sec-title .c1{color:var(--neon)}.sec-title .c2{color:var(--neon2)}.sec-title .c3{color:var(--neon3)}.sec-title .c4{color:var(--neon4)}.sec-title .c5{color:var(--neon5)}
+.sec-line{width:60px;height:2px;margin-bottom:30px}
+.sec-line-1{background:linear-gradient(90deg,var(--neon),transparent)}
+.sec-line-2{background:linear-gradient(90deg,var(--neon2),transparent)}
+.sec-line-3{background:linear-gradient(90deg,var(--neon3),transparent)}
+.sec-line-4{background:linear-gradient(90deg,var(--neon4),transparent)}
+.sec-intro{font-size:1.05rem;line-height:1.8;color:var(--text);opacity:.8;max-width:720px;margin-bottom:40px}
+.sec-intro strong{color:var(--neon3);font-weight:700}
+
+.concept-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}
+.concept-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:28px;cursor:pointer;transition:all .3s;position:relative;overflow:hidden}
+.concept-card::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 80% 20%,rgba(245,197,24,.04),transparent 70%);opacity:0;transition:opacity .3s}
+.concept-card::after{content:'→ Voir détails';position:absolute;bottom:14px;right:16px;font-family:'Share Tech Mono',monospace;font-size:.6rem;color:var(--neon3);letter-spacing:2px;opacity:0;transform:translateX(6px);transition:opacity .25s,transform .25s}
+.concept-card:hover{border-color:rgba(245,197,24,.35);transform:translateY(-4px);box-shadow:0 16px 40px rgba(0,0,0,.4),0 0 20px rgba(245,197,24,.06)}
+.concept-card:hover::before{opacity:1}
+.concept-card:hover::after{opacity:1;transform:translateX(0)}
+.cc-icon{font-size:2.2rem;margin-bottom:14px;display:block}
+.cc-label{font-family:'Share Tech Mono',monospace;font-size:.65rem;letter-spacing:3px;text-transform:uppercase;margin-bottom:6px;color:var(--muted)}
+.cc-title{font-family:'Orbitron',sans-serif;font-size:.95rem;font-weight:700;margin-bottom:10px;color:var(--neon3)}
+.cc-desc{font-size:.88rem;line-height:1.7;color:var(--text);opacity:.8}
+
+.schema-box{background:rgba(0,0,0,.4);border:1px solid rgba(245,197,24,.15);border-radius:16px;padding:40px;margin:30px 0;position:relative;overflow:hidden}
+.schema-box::before{content:'PRINCIPE DU CHIFFREMENT';position:absolute;top:14px;left:20px;font-family:'Share Tech Mono',monospace;font-size:.65rem;color:rgba(245,197,24,.3);letter-spacing:3px}
+.schema-flow{display:flex;align-items:center;justify-content:center;gap:0;flex-wrap:wrap;margin-top:10px}
+.schema-node{display:flex;flex-direction:column;align-items:center;gap:8px;padding:18px 24px;border-radius:12px;min-width:100px;text-align:center;position:relative}
+.schema-node .sn-icon{font-size:1.8rem}
+.schema-node .sn-label{font-family:'Share Tech Mono',monospace;font-size:.68rem;letter-spacing:1px;text-transform:uppercase}
+.schema-node .sn-val{font-family:'Share Tech Mono',monospace;font-size:.78rem;padding:4px 10px;border-radius:6px;margin-top:4px}
+.sn-plain{background:rgba(0,255,231,.07);border:1px solid rgba(0,255,231,.2)}
+.sn-key{background:rgba(245,197,24,.07);border:1px solid rgba(245,197,24,.2)}
+.sn-cipher{background:rgba(255,45,120,.07);border:1px solid rgba(255,45,120,.2)}
+.sn-decrypt{background:rgba(123,45,255,.07);border:1px solid rgba(123,45,255,.2)}
+.schema-arrow{display:flex;align-items:center;padding:0 8px;color:var(--muted);font-size:1.5rem;flex-direction:column;gap:4px}
+.schema-arrow .sa-algo{font-family:'Share Tech Mono',monospace;font-size:.6rem;color:var(--neon3);letter-spacing:1px;white-space:nowrap;background:rgba(245,197,24,.08);padding:3px 8px;border-radius:4px;border:1px solid rgba(245,197,24,.15)}
+
+.interactive-box{background:rgba(0,0,0,.35);border:1px solid rgba(0,255,231,.15);border-radius:16px;padding:36px;margin:20px 0}
+.int-title{font-family:'Orbitron',sans-serif;font-size:.85rem;font-weight:700;color:var(--neon3);letter-spacing:2px;text-transform:uppercase;margin-bottom:20px;display:flex;align-items:center;gap:10px}
+.int-title::before{content:'⚡';font-size:1.1rem}
+.input-group{margin-bottom:20px}
+.input-label{font-family:'Share Tech Mono',monospace;font-size:.7rem;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;display:block}
+.crypto-input{background:rgba(0,255,231,.04);border:1px solid rgba(0,255,231,.2);border-radius:8px;padding:12px 16px;font-family:'Share Tech Mono',monospace;font-size:.92rem;color:var(--text);width:100%;transition:border-color .3s;outline:none}
+.crypto-input:focus{border-color:rgba(0,255,231,.5);box-shadow:0 0 20px rgba(0,255,231,.08)}
+.slider-wrap{display:flex;align-items:center;gap:16px;margin-top:4px}
+.slider-wrap input[type=range]{flex:1;-webkit-appearance:none;height:4px;background:rgba(0,255,231,.15);border-radius:2px;outline:none}
+.slider-wrap input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--neon3);cursor:pointer;box-shadow:0 0 10px rgba(245,197,24,.5)}
+.slider-val{font-family:'Orbitron',monospace;font-size:1.4rem;font-weight:900;color:var(--neon3);min-width:40px;text-align:center}
+.output-field{background:rgba(255,45,120,.04);border:1px solid rgba(255,45,120,.2);border-radius:8px;padding:14px 16px;font-family:'Share Tech Mono',monospace;font-size:.92rem;color:var(--neon2);min-height:52px;word-break:break-all;transition:all .2s}
+
+/* ===== ALPHABET DISPLAY — CLIQUABLE (remplace le clavier) ===== */
+.alphabet-display{display:flex;flex-wrap:wrap;gap:4px;margin-top:16px}
+.alpha-letter{width:32px;height:32px;display:flex;align-items:center;justify-content:center;border-radius:6px;font-family:'Share Tech Mono',monospace;font-size:.72rem;border:1px solid var(--border);transition:all .3s;position:relative;cursor:pointer;user-select:none}
+.alpha-letter:hover{border-color:rgba(245,197,24,.4);background:rgba(245,197,24,.06);transform:scale(1.1)}
+.alpha-letter.plain-letter{color:var(--neon);}
+.alpha-letter.cipher-letter{color:var(--text);opacity:.6;}
+.alpha-letter.plain-selected{background:rgba(245,197,24,.2);border-color:var(--neon3);color:var(--neon3);transform:scale(1.18);z-index:2;box-shadow:0 0 14px rgba(245,197,24,.5);}
+.alpha-letter.cipher-selected{background:rgba(255,45,120,.18);border-color:var(--neon2);color:var(--neon2);transform:scale(1.18);z-index:2;box-shadow:0 0 14px rgba(255,45,120,.5);}
+.alpha-divider{width:100%;margin:6px 0;height:1px;background:var(--border)}
+.alpha-hint{font-family:'Share Tech Mono',monospace;font-size:.65rem;color:var(--muted);letter-spacing:1px;margin-top:6px;margin-bottom:2px;}
+
+.formula-box{background:rgba(245,197,24,.04);border:1px solid rgba(245,197,24,.15);border-radius:10px;padding:16px 20px;font-family:'Share Tech Mono',monospace;font-size:.88rem;color:var(--neon3);line-height:2;margin:16px 0}
+.formula-block{background:linear-gradient(135deg,rgba(245,197,24,.06),rgba(245,197,24,.02));border:1px solid rgba(245,197,24,.3);border-radius:16px;padding:28px 32px;margin:20px 0;position:relative;overflow:hidden}
+.formula-block::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--neon3),rgba(245,197,24,.1))}
+.formula-block-title{font-family:'Share Tech Mono',monospace;font-size:.65rem;letter-spacing:3px;text-transform:uppercase;color:var(--neon3);margin-bottom:20px;display:flex;align-items:center;gap:10px;opacity:.8}
+.formula-block-title::before{content:'';width:24px;height:2px;background:var(--neon3)}
+.formula-row{display:flex;align-items:center;gap:16px;padding:12px 0;border-bottom:1px solid rgba(245,197,24,.08);flex-wrap:wrap}
+.formula-row:last-child{border-bottom:none}
+.formula-row .fr-icon{font-size:1.2rem;flex-shrink:0}
+.formula-row .fr-label{color:var(--muted);font-size:.72rem;min-width:100px;font-family:'Share Tech Mono',monospace;letter-spacing:1px}
+.formula-row .fr-eq{color:var(--neon3);flex:1;font-family:'Share Tech Mono',monospace;font-size:1rem;font-weight:700;letter-spacing:.5px}
+.formula-note{font-size:.78rem;color:var(--muted);line-height:1.7;margin-top:14px;padding-top:14px;border-top:1px solid rgba(245,197,24,.1);font-family:'Share Tech Mono',monospace}
+
+.freq-chart-wrap{background:rgba(0,0,0,.35);border:1px solid var(--border);border-radius:16px;padding:30px;margin:20px 0;overflow-x:auto}
+.freq-chart{display:flex;align-items:flex-end;gap:4px;height:160px;min-width:600px}
+.freq-bar-group{display:flex;flex-direction:column;align-items:center;gap:2px;flex:1;position:relative}
+.freq-bar-group:hover .freq-hover-label{opacity:1;transform:translateY(0)}
+.freq-hover-label{position:absolute;top:-44px;left:50%;transform:translateX(-50%) translateY(4px);background:rgba(5,15,25,.97);border:1px solid rgba(245,197,24,.3);border-radius:6px;padding:4px 8px;font-family:'Share Tech Mono',monospace;font-size:.6rem;color:var(--neon3);white-space:nowrap;pointer-events:none;opacity:0;transition:opacity .2s,transform .2s;z-index:10;box-shadow:0 4px 12px rgba(0,0,0,.5)}
+.freq-bar{width:100%;border-radius:3px 3px 0 0;transition:height .5s cubic-bezier(.4,0,.2,1),opacity .3s,filter .2s;cursor:pointer;min-height:2px;position:relative}
+.freq-bar-group:hover .freq-bar{filter:brightness(1.3)}
+.freq-letter{font-family:'Share Tech Mono',monospace;font-size:.6rem;color:var(--muted);margin-top:4px;text-transform:uppercase}
+.freq-val{font-family:'Share Tech Mono',monospace;font-size:.52rem;color:var(--muted)}
+
+.vigenere-table{overflow-x:auto;margin:16px 0}
+.vigenere-table table{border-collapse:collapse;font-family:'Share Tech Mono',monospace;font-size:.65rem}
+.vigenere-table td,.vigenere-table th{width:24px;height:24px;text-align:center;border:1px solid rgba(255,255,255,.05);transition:all .2s;cursor:default}
+.vigenere-table th{color:var(--neon3);background:rgba(245,197,24,.08);font-weight:700}
+.vigenere-table td{color:var(--text);opacity:.6}
+.vigenere-table td.row-highlight{background:rgba(0,255,231,.08);color:var(--neon);opacity:1}
+.vigenere-table td.col-highlight{background:rgba(255,45,120,.08);color:var(--neon2);opacity:1}
+.vigenere-table td.intersect{background:rgba(245,197,24,.25);color:var(--neon3);opacity:1;font-weight:700;transform:scale(1.1);box-shadow:0 0 8px rgba(245,197,24,.4)}
+
+.vig-steps{display:flex;flex-direction:column;gap:10px;margin-top:16px}
+.vig-step{display:flex;align-items:center;gap:14px;padding:12px 16px;border-radius:10px;border:1px solid var(--border);font-size:.88rem;opacity:.5;transition:all .3s}
+.vig-step.active{opacity:1;border-color:rgba(245,197,24,.35);background:rgba(245,197,24,.04)}
+.vig-step-num{width:28px;height:28px;border-radius:50%;font-family:'Orbitron',monospace;font-size:.72rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;border:1.5px solid}
+
+.playfair-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;max-width:280px;margin:0 auto}
+.pf-cell{aspect-ratio:1;display:flex;align-items:center;justify-content:center;border-radius:8px;font-family:'Orbitron',sans-serif;font-size:.9rem;font-weight:700;border:1px solid var(--border);transition:all .3s;cursor:default;background:var(--card)}
+.pf-cell:hover{transform:scale(1.12);box-shadow:0 4px 16px rgba(0,0,0,.4);z-index:2}
+.pf-cell.key-letter{background:rgba(245,197,24,.15);border-color:rgba(245,197,24,.4);color:var(--neon3)}
+.pf-cell.key-letter:hover{background:rgba(245,197,24,.25);box-shadow:0 0 14px rgba(245,197,24,.25)}
+.pf-cell.normal-letter{color:var(--text);opacity:.7}
+.pf-cell.normal-letter:hover{opacity:1;border-color:rgba(255,255,255,.2)}
+.pf-cell.highlight-row{background:rgba(0,255,231,.1);border-color:var(--neon);color:var(--neon)}
+.pf-cell.highlight-col{background:rgba(255,45,120,.1);border-color:var(--neon2);color:var(--neon2)}
+.pf-cell.highlight-src{background:rgba(245,197,24,.2);border-color:var(--neon3);color:var(--neon3);box-shadow:0 0 12px rgba(245,197,24,.3)}
+.pf-cell.highlight-dst{background:rgba(123,45,255,.2);border-color:var(--neon4);color:var(--neon4);box-shadow:0 0 12px rgba(123,45,255,.3)}
+
+.transpo-grid{display:grid;gap:4px;margin:16px 0}
+.transpo-cell{padding:10px 8px;text-align:center;border-radius:6px;font-family:'Share Tech Mono',monospace;font-size:.85rem;font-weight:700;border:1px solid var(--border);background:var(--card);transition:all .4s}
+.transpo-cell:hover{transform:scale(1.08);z-index:2;box-shadow:0 4px 12px rgba(0,0,0,.4)}
+.transpo-cell.plain{color:var(--neon);border-color:rgba(0,255,231,.2);background:rgba(0,255,231,.05)}
+.transpo-cell.reading{color:var(--neon3);border-color:rgba(245,197,24,.3);background:rgba(245,197,24,.08);transform:scale(1.05);box-shadow:0 0 10px rgba(245,197,24,.2)}
+.transpo-cell.done{color:var(--neon2);border-color:rgba(255,45,120,.25);background:rgba(255,45,120,.06)}
+
+.matrix-viz{display:flex;align-items:center;gap:16px;flex-wrap:wrap;justify-content:center;margin:16px 0}
+.matrix-bracket{font-size:3rem;color:var(--neon4);font-weight:100;line-height:1}
+.matrix-content{display:grid;gap:6px}
+.matrix-cell{width:44px;height:44px;display:flex;align-items:center;justify-content:center;border-radius:8px;font-family:'Orbitron',monospace;font-size:.82rem;font-weight:700;border:1px solid rgba(123,45,255,.25);background:rgba(123,45,255,.08);color:var(--neon4);transition:all .3s;cursor:default}
+.matrix-cell:hover{background:rgba(123,45,255,.2);border-color:var(--neon4);box-shadow:0 0 12px rgba(123,45,255,.25);transform:scale(1.1)}
+.matrix-cell.highlight{background:rgba(123,45,255,.25);border-color:var(--neon4);box-shadow:0 0 10px rgba(123,45,255,.3)}
+.matrix-op{font-family:'Share Tech Mono',monospace;font-size:1.2rem;color:var(--muted)}
+
+/* POWER BAR TOOLTIP FIX — force z-index above everything */
+.power-bar-wrap{position:relative;z-index:10}
+.power-tooltip-host{position:absolute;transform:translateX(-50%)}
+.power-tooltip-dot{width:14px;height:14px;border-radius:50%;border:2px solid #070f1a;cursor:default}
+.power-tooltip-label{position:absolute;bottom:calc(100% + 12px);left:50%;transform:translateX(-50%) translateY(4px);background:rgba(5,15,25,.98);border:1px solid rgba(245,197,24,.4);border-radius:8px;padding:6px 12px;font-family:'Share Tech Mono',monospace;font-size:.65rem;color:var(--neon3);white-space:nowrap;pointer-events:none;opacity:0;transition:opacity .2s,transform .2s;z-index:99999 !important;box-shadow:0 8px 24px rgba(0,0,0,.7);letter-spacing:.5px}
+.power-tooltip-label::after{content:'';position:absolute;top:100%;left:50%;transform:translateX(-50%);border:6px solid transparent;border-top-color:rgba(245,197,24,.4)}
+.power-tooltip-host:hover .power-tooltip-label{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ===== ATTACK TYPE CARDS ===== */
+.attack-type-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-top:10px}
+@media(max-width:800px){.attack-type-grid{grid-template-columns:1fr}}
+.atk-card{border-radius:16px;overflow:hidden;border:1px solid var(--border);background:var(--card);position:relative;transition:transform .3s,box-shadow .3s,border-color .3s}
+.atk-card:hover{transform:translateY(-6px)}
+.atk-card-header{padding:22px 22px 16px;position:relative}
+.atk-card-tag{font-family:'Share Tech Mono',monospace;font-size:.62rem;letter-spacing:3px;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.atk-card-tag-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.atk-card-title{font-family:'Orbitron',sans-serif;font-size:1rem;font-weight:900;line-height:1.2;margin-bottom:6px}
+.atk-card-acronym{font-family:'Share Tech Mono',monospace;font-size:.72rem;opacity:.6;margin-bottom:12px}
+.atk-card-body{padding:0 22px 22px;font-size:.86rem;line-height:1.7;opacity:.8}
+.atk-power-bar{height:4px;width:100%;margin:0 0 0}
+.atk-power-fill{height:100%;border-radius:0;transition:width 1s cubic-bezier(.4,0,.2,1)}
+.atk-possession{margin-top:14px;display:flex;flex-direction:column;gap:6px}
+.atk-poss-row{display:flex;align-items:center;gap:10px;font-family:'Share Tech Mono',monospace;font-size:.72rem;padding:7px 12px;border-radius:7px;border:1px solid}
+.atk-poss-icon{font-size:1rem;flex-shrink:0}
+.atk-example{margin-top:14px;padding:12px 14px;border-radius:8px;font-family:'Share Tech Mono',monospace;font-size:.75rem;line-height:1.6;border-left:3px solid}
+
+.code-block{background:#060e18;border:1px solid rgba(255,255,255,.07);border-radius:12px;overflow:hidden;margin:16px 0;font-family:'Share Tech Mono',monospace}
+.code-block-header{display:flex;align-items:center;gap:8px;padding:10px 16px;background:rgba(255,255,255,.03);border-bottom:1px solid rgba(255,255,255,.06)}
+.code-block-dots{display:flex;gap:5px}
+.cbd{width:10px;height:10px;border-radius:50%}
+.code-block-label{font-size:.62rem;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-left:auto}
+.code-block-body{padding:18px 20px;font-size:.82rem;line-height:2;overflow-x:auto}
+.cb-row{display:flex;align-items:baseline;gap:0;white-space:pre}
+.cb-comment{color:rgba(100,160,130,.6);font-size:.72rem}
+.cb-plain{color:var(--neon)}
+.cb-key{color:var(--neon3)}
+.cb-cipher{color:var(--neon2)}
+.cb-num{color:var(--neon4)}
+.cb-op{color:rgba(200,230,245,.35)}
+.cb-result{color:#28c941;font-weight:700}
+.cb-arrow{color:var(--muted);margin:0 6px}
+
+/* TOOLTIP (for formulas) */
+.has-tooltip{position:relative;display:inline-block}
+.has-tooltip .tooltip{position:absolute;bottom:calc(100% + 10px);left:50%;transform:translateX(-50%) translateY(4px);background:rgba(5,15,25,.97);border:1px solid rgba(245,197,24,.35);border-radius:8px;padding:8px 14px;font-family:'Share Tech Mono',monospace;font-size:.7rem;color:var(--neon3);white-space:nowrap;pointer-events:none;opacity:0;transition:opacity .2s,transform .2s;z-index:99999;box-shadow:0 8px 24px rgba(0,0,0,.6);letter-spacing:.5px}
+.has-tooltip:hover .tooltip{opacity:1;transform:translateX(-50%) translateY(0)}
+.has-tooltip .tooltip::after{content:'';position:absolute;top:100%;left:50%;transform:translateX(-50%);border:6px solid transparent;border-top-color:rgba(245,197,24,.35)}
+
+.formula-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(245,197,24,.07);border:1px solid rgba(245,197,24,.18);border-radius:8px;padding:6px 14px;font-family:'Share Tech Mono',monospace;font-size:.8rem;color:var(--neon3);cursor:default;transition:background .2s}
+.formula-badge:hover{background:rgba(245,197,24,.14)}
+
+#modal-overlay{position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,.85);backdrop-filter:blur(10px);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .3s;padding:20px}
+#modal-overlay.open{opacity:1;pointer-events:all}
+#modal-box{background:#070f1a;border:1px solid rgba(245,197,24,.2);border-radius:20px;max-width:700px;width:100%;max-height:90vh;overflow-y:auto;transform:scale(.92) translateY(20px);transition:transform .35s cubic-bezier(.34,1.56,.64,1);position:relative;box-shadow:0 40px 120px rgba(0,0,0,.8),0 0 0 1px rgba(245,197,24,.05)}
+#modal-overlay.open #modal-box{transform:scale(1) translateY(0)}
+.modal-topbar{display:flex;align-items:center;padding:16px 20px 0;gap:7px}
+.modal-close{position:absolute;top:16px;right:20px;width:32px;height:32px;border-radius:50%;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.05);color:var(--muted);font-size:1.1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s}
+.modal-close:hover{border-color:var(--neon2);color:var(--neon2)}
+#modal-body{padding:28px 28px 32px}
+.modal-icon{font-size:2.5rem;margin-bottom:12px;display:block}
+.modal-title{font-family:'Orbitron',sans-serif;font-size:1.3rem;font-weight:700;margin-bottom:6px}
+.modal-category{font-family:'Share Tech Mono',monospace;font-size:.72rem;color:var(--muted);letter-spacing:3px;text-transform:uppercase;margin-bottom:20px}
+.modal-section{margin-bottom:22px}
+.modal-sec-title{font-family:'Orbitron',sans-serif;font-size:.75rem;letter-spacing:2px;text-transform:uppercase;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+.modal-text{font-size:.92rem;line-height:1.8;opacity:.85}
+.modal-analogy{background:rgba(245,197,24,.05);border:1px solid rgba(245,197,24,.2);border-radius:10px;padding:16px;font-size:.88rem;color:var(--neon3);line-height:1.7;display:flex;gap:10px;margin:16px 0}
+.modal-code{background:rgba(0,0,0,.5);border:1px solid rgba(245,197,24,.1);border-radius:10px;padding:16px;font-family:'Share Tech Mono',monospace;font-size:.8rem;line-height:1.8;margin:12px 0;overflow-x:auto;color:var(--neon3)}
+.modal-steps{display:flex;flex-direction:column;gap:10px;margin:12px 0}
+.modal-step{display:flex;align-items:flex-start;gap:12px;font-size:.88rem;line-height:1.6}
+.modal-step-num{width:24px;height:24px;border-radius:50%;flex-shrink:0;font-family:'Orbitron',monospace;font-size:.7rem;display:flex;align-items:center;justify-content:center;font-weight:700}
+.modal-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:16px}
+.modal-tag{font-family:'Share Tech Mono',monospace;font-size:.68rem;padding:4px 12px;border-radius:20px;letter-spacing:1px;border:1px solid}
+
+.quiz-shell{max-width:720px;margin:0 auto}
+.quiz-progress{display:flex;gap:6px;margin-bottom:24px}
+.qp-dot{flex:1;height:3px;background:rgba(255,255,255,.1);border-radius:2px;transition:background .3s}
+.qp-dot.done{background:var(--neon3)}
+.qp-dot.current{background:var(--neon2);animation:pulse-bar .8s infinite}
+@keyframes pulse-bar{0%,100%{opacity:1}50%{opacity:.5}}
+.quiz-card{background:rgba(5,15,20,.8);border:1px solid var(--border);border-radius:16px;padding:32px;backdrop-filter:blur(10px)}
+.q-counter{font-family:'Share Tech Mono',monospace;font-size:.7rem;color:var(--muted);letter-spacing:3px;text-transform:uppercase;margin-bottom:14px}
+.q-text{font-size:1.1rem;font-weight:600;line-height:1.6;margin-bottom:24px}
+.q-opts{display:flex;flex-direction:column;gap:10px}
+.q-opt{padding:14px 20px;border-radius:10px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.02);cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:14px;font-size:.93rem;user-select:none}
+.q-opt:hover{background:rgba(245,197,24,.04);border-color:rgba(245,197,24,.25);transform:translateX(4px)}
+.q-opt.correct{background:rgba(40,201,65,.08);border-color:#28c941;color:#28c941}
+.q-opt.wrong{background:rgba(255,45,120,.08);border-color:var(--neon2);color:var(--neon2)}
+.q-letter{width:28px;height:28px;border-radius:50%;flex-shrink:0;border:1.5px solid rgba(255,255,255,.15);font-family:'Orbitron',monospace;font-size:.7rem;font-weight:700;display:flex;align-items:center;justify-content:center;transition:all .2s}
+.q-opt.correct .q-letter{border-color:#28c941;background:rgba(40,201,65,.15)}
+.q-opt.wrong .q-letter{border-color:var(--neon2);background:rgba(255,45,120,.15)}
+.q-feedback{margin-top:16px;padding:16px 20px;border-radius:10px;font-size:.88rem;line-height:1.7;display:none}
+.q-feedback.show{display:block;animation:pop-in .3s both}
+.q-feedback.good{background:rgba(40,201,65,.07);border:1px solid rgba(40,201,65,.3);color:#28c941}
+.q-feedback.bad{background:rgba(255,45,120,.07);border:1px solid rgba(255,45,120,.3);color:var(--neon2)}
+.q-next{margin-top:18px;padding:12px 28px;background:transparent;border:1.5px solid var(--neon3);color:var(--neon3);border-radius:30px;font-family:'Orbitron',sans-serif;font-size:.78rem;font-weight:700;letter-spacing:2px;cursor:pointer;transition:all .3s;display:none;text-transform:uppercase}
+.q-next.show{display:inline-block;animation:fade-up .3s both}
+.q-next:hover{background:var(--neon3);color:var(--bg);box-shadow:0 0 20px var(--neon3)}
+.quiz-result{text-align:center;padding:40px;display:none}
+.quiz-result.show{display:block;animation:pop-in .5s both}
+.qr-score{font-family:'Orbitron',sans-serif;font-size:5rem;font-weight:900;text-shadow:0 0 40px currentColor;margin-bottom:10px}
+.qr-label{font-family:'Share Tech Mono',monospace;font-size:.8rem;color:var(--muted);letter-spacing:3px;margin-bottom:30px}
+.qr-msg{font-size:1.15rem;line-height:1.7}
+.qr-restart{margin-top:24px;padding:14px 32px;background:linear-gradient(135deg,var(--neon3),#ff8c00);color:var(--bg);border:none;border-radius:30px;font-family:'Orbitron',sans-serif;font-size:.8rem;font-weight:700;letter-spacing:2px;cursor:pointer;transition:all .3s;box-shadow:0 8px 24px rgba(245,197,24,.3)}
+.qr-restart:hover{transform:translateY(-2px);box-shadow:0 12px 32px rgba(245,197,24,.4)}
+
+.gloss-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px}
+.gloss-item{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px 18px;cursor:pointer;transition:all .3s;position:relative;overflow:hidden}
+.gloss-item::after{content:'→';position:absolute;right:16px;top:50%;transform:translateY(-50%) translateX(4px);color:var(--neon3);opacity:0;font-family:'Orbitron',sans-serif;font-size:.8rem;transition:all .25s}
+.gloss-item:hover{background:rgba(245,197,24,.04);border-color:rgba(245,197,24,.25);transform:translateX(4px);padding-right:32px}
+.gloss-item:hover::after{opacity:1;transform:translateY(-50%) translateX(0)}
+.gloss-term{font-family:'Orbitron',sans-serif;font-size:.78rem;font-weight:700;color:var(--neon3);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px}
+.gloss-def{font-size:.82rem;color:var(--muted);line-height:1.5}
+
+@keyframes fade-up{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fade-down{from{opacity:0;transform:translateY(-20px)}to{opacity:1;transform:translateY(0)}}
+@keyframes pop-in{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:scale(1)}}
+.reveal{opacity:0;transform:translateY(24px);transition:opacity .7s,transform .7s}
+.reveal.visible{opacity:1;transform:translateY(0)}
+.reveal-l{opacity:0;transform:translateX(-24px);transition:opacity .6s,transform .6s}
+.reveal-l.visible{opacity:1;transform:translateX(0)}
+.reveal-r{opacity:0;transform:translateX(24px);transition:opacity .6s,transform .6s}
+.reveal-r.visible{opacity:1;transform:translateX(0)}
+
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:rgba(245,197,24,.3);border-radius:3px}::-webkit-scrollbar-thumb:hover{background:rgba(245,197,24,.6)}
+
+footer{position:relative;z-index:2;text-align:center;padding:60px 20px;border-top:1px solid var(--border);font-family:'Share Tech Mono',monospace;font-size:.8rem;color:var(--muted)}
+footer .f-gold{color:var(--neon3)}footer .f-pink{color:var(--neon2)}
+
+.divider{width:100%;height:1px;background:linear-gradient(90deg,transparent,var(--border),transparent);margin:20px 0}
+.info-box{background:rgba(0,180,255,.04);border:1px solid rgba(0,180,255,.2);border-radius:10px;padding:16px 20px;font-size:.88rem;color:var(--neon5);line-height:1.7;margin:12px 0;display:flex;gap:10px}
+.warning-box{background:rgba(255,45,120,.04);border:1px solid rgba(255,45,120,.2);border-radius:10px;padding:16px 20px;font-size:.88rem;color:var(--neon2);line-height:1.7;margin:12px 0;display:flex;gap:10px}
+.success-box{background:rgba(40,201,65,.04);border:1px solid rgba(40,201,65,.2);border-radius:10px;padding:16px 20px;font-size:.88rem;color:#28c941;line-height:1.7;margin:12px 0;display:flex;gap:10px}
+.tag-row{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
+.tag{font-family:'Share Tech Mono',monospace;font-size:.68rem;padding:4px 12px;border-radius:20px;letter-spacing:1px;border:1px solid}
+
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+@media(max-width:700px){.two-col{grid-template-columns:1fr}}
+
+.affine-result-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(70px,1fr));gap:6px;margin:14px 0}
+.affine-pair{background:rgba(0,0,0,.3);border:1px solid var(--border);border-radius:8px;padding:8px;text-align:center;font-family:'Share Tech Mono',monospace;font-size:.72rem;transition:all .3s;cursor:pointer}
+.affine-pair .plain{color:var(--neon);display:block;font-size:.65rem;margin-bottom:2px}
+.affine-pair .cipher{color:var(--neon2);display:block;font-size:.82rem;font-weight:700}
+.affine-pair.active{background:rgba(245,197,24,.1);border-color:var(--neon3)}
+.affine-pair.cipher-active{background:rgba(255,45,120,.15);border-color:var(--neon2);transform:scale(1.08);box-shadow:0 0 12px rgba(255,45,120,.4);}
+
+.analysis-table{width:100%;border-collapse:collapse;font-family:'Share Tech Mono',monospace;font-size:.78rem;margin:16px 0}
+.analysis-table th{background:rgba(245,197,24,.08);color:var(--neon3);padding:10px 14px;text-align:left;border:1px solid rgba(245,197,24,.15);font-size:.7rem;letter-spacing:2px;text-transform:uppercase}
+.analysis-table td{padding:8px 14px;border:1px solid var(--border);color:var(--text);opacity:.8;transition:all .2s}
+.analysis-table tr{transition:background .2s}
+.analysis-table tbody tr{cursor:pointer;position:relative}
+.analysis-table tbody tr:hover td{background:rgba(245,197,24,.06);opacity:1;border-color:rgba(245,197,24,.2)}
+.analysis-table tbody tr:hover td:first-child{color:var(--neon3)}
+.analysis-table tbody tr td:last-child::after{content:' ↗';opacity:0;font-size:.65rem;color:var(--neon3);transition:opacity .2s}
+.analysis-table tbody tr:hover td:last-child::after{opacity:1}
+.analysis-table .freq-high{color:var(--neon2);font-weight:700}
+.analysis-table .freq-med{color:var(--neon3)}
+.analysis-table .freq-low{color:var(--muted)}
+</style>
+</head>
+<body>
+
+<canvas id="bg-canvas"></canvas>
+<div id="scanlines"></div>
+<div id="progress"></div>
+<nav id="sidenav"></nav>
+
+<!-- MODAL -->
+<div id="modal-overlay" onclick="closeModal(event)">
+  <div id="modal-box">
+    <div class="modal-topbar"><div class="tdot td-r"></div><div class="tdot td-y"></div><div class="tdot td-g"></div></div>
+    <button class="modal-close" onclick="closeModal(null,true)">✕</button>
+    <div id="modal-body"></div>
+  </div>
+</div>
+
+<!-- HERO -->
+<section id="hero" data-nav="Intro">
+  <p class="hero-eyebrow">UMMTO · Sécurité Informatique · Chapitre 02</p>
+  <h1 class="hero-title">CRYPTOGRAPHIE</h1>
+  <p class="hero-sub">Classique — L'Art de Cacher les Secrets</p>
+  <p class="hero-desc">Depuis Jules César jusqu'aux matrices de Hill. Comprends <em>vraiment</em> comment les anciens cachaient leurs messages — tout est <em>interactif</em>.</p>
+  <div class="hero-terminal">
+    <div class="term-titlebar">
+      <div class="tdot td-r"></div><div class="tdot td-y"></div><div class="tdot td-g"></div>
+      <span class="term-title-text">terminal — crypto_classique.sh</span>
+    </div>
+    <div class="term-body">
+      <div><span class="t-prompt">$ </span><span class="t-cmd">init-chapter --num=2 --topic=cryptographie</span></div>
+      <div id="term-output"></div>
+      <div id="term-last"><span class="t-prompt">$ </span><span class="t-blink"></span></div>
+    </div>
+  </div>
+  <div class="scroll-cue">
+    <div class="scroll-mouse"><div class="scroll-wheel"></div></div>
+    <span>Démarre le décryptage</span>
+  </div>
+</section>
+
+<!-- CONCEPTS DE BASE -->
+<section class="page-section" id="sec-concepts" data-nav="Concepts">
+  <div class="sec-badge">// 01 · concepts fondamentaux</div>
+  <h2 class="sec-title">Les <span class="c3">Concepts</span> de Base</h2>
+  <div class="sec-line sec-line-3"></div>
+  <p class="sec-intro reveal">Avant de plonger dans les algorithmes, maîtrisons le vocabulaire. <strong>Clique</strong> sur chaque carte pour les détails et les analogies.</p>
+  <div class="concept-grid">
+    <div class="concept-card reveal" onclick="showModal('cryptologie')"><span class="cc-icon">🔬</span><div class="cc-label">Science mère · Clique pour en savoir plus</div><div class="cc-title">Cryptologie</div><div class="cc-desc">La science globale qui englobe la cryptographie ET la cryptanalyse. C'est le domaine académique au sens large.</div></div>
+    <div class="concept-card reveal" style="transition-delay:.1s" onclick="showModal('cryptographie')"><span class="cc-icon">🔐</span><div class="cc-label">Protection · Clique pour en savoir plus</div><div class="cc-title">Cryptographie</div><div class="cc-desc">Ensemble des techniques pour rendre un message inintelligible. Le côté "construction" : on crée des systèmes sécurisés.</div></div>
+    <div class="concept-card reveal" style="transition-delay:.2s" onclick="showModal('cryptanalyse')"><span class="cc-icon">⚔️</span><div class="cc-label">Attaque · Clique pour en savoir plus</div><div class="cc-title">Cryptanalyse</div><div class="cc-desc">L'art de casser les codes. On cherche à retrouver le texte clair sans connaître la clé, ou à trouver la clé elle-même.</div></div>
+    <div class="concept-card reveal" style="transition-delay:.3s" onclick="showModal('stegano')"><span class="cc-icon">🎭</span><div class="cc-label">Dissimulation · Clique pour en savoir plus</div><div class="cc-title">Stéganographie</div><div class="cc-desc">Cacher l'existence même du message. Différent du chiffrement : personne ne sait qu'il y a un message caché.</div></div>
+  </div>
+  <div class="schema-box reveal" style="margin-top:40px">
+    <div class="schema-flow">
+      <div class="schema-node sn-plain"><span class="sn-icon">📄</span><span class="sn-label">Texte clair</span><span class="sn-val" style="color:var(--neon)">P</span></div>
+      <div class="schema-arrow"><span style="font-size:.9rem">+</span><div class="schema-node sn-key" style="padding:10px 14px"><span class="sn-icon" style="font-size:1.2rem">🗝️</span><span class="sn-label" style="font-size:.6rem">Clé Ke</span></div></div>
+      <div class="schema-arrow"><span>⟶</span><span class="sa-algo">E(P,Ke)</span></div>
+      <div class="schema-node sn-cipher"><span class="sn-icon">🔒</span><span class="sn-label">Texte chiffré</span><span class="sn-val" style="color:var(--neon2)">C</span></div>
+      <div class="schema-arrow"><span>⟶</span><span class="sa-algo" style="background:rgba(123,45,255,.08);color:var(--neon4);border-color:rgba(123,45,255,.2)">D(C,Kd)</span></div>
+      <div class="schema-arrow"><span style="font-size:.9rem">+</span><div class="schema-node sn-decrypt" style="padding:10px 14px"><span class="sn-icon" style="font-size:1.2rem">🗝️</span><span class="sn-label" style="font-size:.6rem">Clé Kd</span></div></div>
+      <div class="schema-arrow"><span>⟶</span></div>
+      <div class="schema-node sn-plain"><span class="sn-icon">📄</span><span class="sn-label">Texte clair</span><span class="sn-val" style="color:var(--neon)">P</span></div>
+    </div>
+    <div style="margin-top:20px;text-align:center">
+      <div class="info-box" style="display:inline-flex;max-width:600px"><span>💡</span><span>Si Ke = Kd → chiffrement <strong>symétrique</strong>. Si Ke ≠ Kd → chiffrement <strong>asymétrique</strong> (clé publique/privée).</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- CRYPTANALYSE -->
+<section class="page-section" id="sec-cryptanalyse" data-nav="Cryptanalyse">
+  <div class="sec-badge">// 02 · comment on casse les codes</div>
+  <h2 class="sec-title">Types de <span class="c2">Cryptanalyse</span></h2>
+  <div class="sec-line sec-line-2"></div>
+  <p class="sec-intro reveal">Tout dépend de ce que l'attaquant possède. Plus il a d'informations, plus il est puissant. Ces trois niveaux définissent le <strong>modèle de menace</strong> d'un système crypto.</p>
+
+  <!-- Échelle de puissance CORRIGÉE — z-index fix -->
+  <div class="reveal" style="display:flex;align-items:center;gap:0;margin-bottom:32px;background:rgba(0,0,0,.3);border:1px solid var(--border);border-radius:12px;overflow:visible">
+    <div style="padding:14px 20px;font-family:'Share Tech Mono',monospace;font-size:.65rem;color:var(--muted);letter-spacing:2px;white-space:nowrap;border-right:1px solid var(--border)">PUISSANCE<br>ATTAQUANT</div>
+    <div class="power-bar-wrap" style="flex:1;display:flex;align-items:center;padding:0 20px;gap:0;height:52px">
+      <div style="position:absolute;left:20px;right:20px;height:6px;background:linear-gradient(90deg,rgba(255,45,120,.3),rgba(245,197,24,.5),rgba(0,255,231,.7));border-radius:3px;pointer-events:none"></div>
+      <!-- COA -->
+      <div class="power-tooltip-host" style="left:calc(20px + 0%);">
+        <div class="power-tooltip-dot" style="background:var(--neon2);box-shadow:0 0 8px var(--neon2)"></div>
+        <div class="power-tooltip-label" style="color:var(--neon2);border-color:rgba(255,45,120,.4)">COA — Niveau le plus bas</div>
+      </div>
+      <!-- KPA -->
+      <div class="power-tooltip-host" style="left:50%;">
+        <div class="power-tooltip-dot" style="background:var(--neon3);box-shadow:0 0 8px var(--neon3)"></div>
+        <div class="power-tooltip-label">KPA — Niveau intermédiaire</div>
+      </div>
+      <!-- CPA -->
+      <div class="power-tooltip-host" style="right:20px;left:auto;transform:translateX(50%);">
+        <div class="power-tooltip-dot" style="background:var(--neon);box-shadow:0 0 8px var(--neon)"></div>
+        <div class="power-tooltip-label" style="color:var(--neon);border-color:rgba(0,255,231,.4)">CPA — Niveau le plus fort</div>
+      </div>
+    </div>
+    <div style="padding:14px 20px;font-family:'Share Tech Mono',monospace;font-size:.65rem;color:var(--neon);letter-spacing:2px;white-space:nowrap;border-left:1px solid var(--border);text-align:right">MAX<br>PUISSANCE</div>
+  </div>
+
+  <div class="attack-type-grid">
+    <!-- COA -->
+    <div class="atk-card reveal" style="border-color:rgba(255,45,120,.2)">
+      <div class="atk-power-bar"><div class="atk-power-fill" style="width:33%;background:linear-gradient(90deg,rgba(255,45,120,.7),rgba(255,45,120,.4))"></div></div>
+      <div class="atk-card-header">
+        <div class="atk-card-tag" style="color:var(--neon2)"><div class="atk-card-tag-dot" style="background:var(--neon2);box-shadow:0 0 6px var(--neon2)"></div>Niveau 1 · Le plus difficile</div>
+        <div class="atk-card-title" style="color:var(--neon2)">Texte Chiffré<br>Seulement</div>
+        <div class="atk-card-acronym">Ciphertext-Only Attack — COA</div>
+        <div class="atk-possession">
+          <div class="atk-poss-row" style="background:rgba(255,45,120,.06);border-color:rgba(255,45,120,.2);color:var(--neon2)"><span class="atk-poss-icon">🔒</span> A accès aux <strong>textes chiffrés C</strong></div>
+          <div class="atk-poss-row" style="background:rgba(0,0,0,.2);border-color:rgba(255,255,255,.06);color:var(--muted);text-decoration:line-through;opacity:.5"><span class="atk-poss-icon">📄</span> Textes en clair P — inconnus</div>
+        </div>
+      </div>
+      <div class="atk-card-body">Seulement les messages chiffrés. Aucun repère de référence. Il doit tout déduire des <strong>patterns statistiques</strong>.<div class="atk-example" style="background:rgba(255,45,120,.05);border-color:var(--neon2);color:var(--text);margin-top:12px">🧩 Tu as des lettres codées mais jamais vu l'original. Tu cherches des répétitions, des fréquences anormales...</div><div class="tag-row" style="margin-top:12px"><span class="tag" style="color:var(--neon2);border-color:rgba(255,45,120,.3)">Analyse de fréquences</span><span class="tag" style="color:var(--muted);border-color:rgba(61,102,128,.3)">Statistiques</span></div></div>
+    </div>
+    <!-- KPA -->
+    <div class="atk-card reveal" style="border-color:rgba(245,197,24,.2);transition-delay:.1s">
+      <div class="atk-power-bar"><div class="atk-power-fill" style="width:66%;background:linear-gradient(90deg,rgba(245,197,24,.7),rgba(245,197,24,.4))"></div></div>
+      <div class="atk-card-header">
+        <div class="atk-card-tag" style="color:var(--neon3)"><div class="atk-card-tag-dot" style="background:var(--neon3);box-shadow:0 0 6px var(--neon3)"></div>Niveau 2 · Intermédiaire</div>
+        <div class="atk-card-title" style="color:var(--neon3)">Texte en Clair<br>Connu</div>
+        <div class="atk-card-acronym">Known-Plaintext Attack — KPA</div>
+        <div class="atk-possession">
+          <div class="atk-poss-row" style="background:rgba(245,197,24,.06);border-color:rgba(245,197,24,.2);color:var(--neon3)"><span class="atk-poss-icon">🔒</span> A accès aux <strong>textes chiffrés C</strong></div>
+          <div class="atk-poss-row" style="background:rgba(245,197,24,.06);border-color:rgba(245,197,24,.2);color:var(--neon3)"><span class="atk-poss-icon">📄</span> A accès à certains <strong>textes en clair P</strong></div>
+        </div>
+      </div>
+      <div class="atk-card-body">Des paires (clair, chiffré) obtenues par la même clé. Objectif : retrouver <strong>K</strong> pour déchiffrer tout le reste.<div class="atk-example" style="background:rgba(245,197,24,.04);border-color:var(--neon3);color:var(--text);margin-top:12px">📝 WWII : les Alliés forçaient les Allemands à chiffrer "RIEN À SIGNALER" pour obtenir des paires et attaquer Enigma.</div><div class="tag-row" style="margin-top:12px"><span class="tag" style="color:var(--neon3);border-color:rgba(245,197,24,.3)">Paires (P, C)</span><span class="tag" style="color:var(--muted);border-color:rgba(61,102,128,.3)">Déduction de K</span></div></div>
+    </div>
+    <!-- CPA -->
+    <div class="atk-card reveal" style="border-color:rgba(0,255,231,.2);transition-delay:.2s">
+      <div class="atk-power-bar"><div class="atk-power-fill" style="width:100%;background:linear-gradient(90deg,rgba(0,255,231,.7),rgba(0,255,231,.4))"></div></div>
+      <div class="atk-card-header">
+        <div class="atk-card-tag" style="color:var(--neon)"><div class="atk-card-tag-dot" style="background:var(--neon);box-shadow:0 0 6px var(--neon)"></div>Niveau 3 · Le plus puissant</div>
+        <div class="atk-card-title" style="color:var(--neon)">Texte en Clair<br>Choisi</div>
+        <div class="atk-card-acronym">Chosen-Plaintext Attack — CPA</div>
+        <div class="atk-possession">
+          <div class="atk-poss-row" style="background:rgba(0,255,231,.06);border-color:rgba(0,255,231,.2);color:var(--neon)"><span class="atk-poss-icon">🔒</span> A accès aux <strong>textes chiffrés C</strong></div>
+          <div class="atk-poss-row" style="background:rgba(0,255,231,.06);border-color:rgba(0,255,231,.2);color:var(--neon)"><span class="atk-poss-icon">🎯</span> <strong>Choisit</strong> ses propres textes à chiffrer</div>
+        </div>
+      </div>
+      <div class="atk-card-body">Accès à un <strong>oracle de chiffrement</strong>. Il soumet les inputs qu'il veut pour extraire des infos sur K.<div class="atk-example" style="background:rgba(0,255,231,.04);border-color:var(--neon);color:var(--text);margin-top:12px">🎯 Accès à la machine à coder : tu envoies "AAAAAAA" puis "BBBBBBB" pour observer les patterns et déduire K.</div><div class="tag-row" style="margin-top:12px"><span class="tag" style="color:var(--neon);border-color:rgba(0,255,231,.3)">Oracle</span><span class="tag" style="color:var(--neon4);border-color:rgba(123,45,255,.3)">Standard de sécurité</span></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- CODE DE CÉSAR -->
+<section class="page-section" id="sec-cesar" data-nav="César">
+  <div class="sec-badge">// 03 · substitution monoalphabétique</div>
+  <h2 class="sec-title">Le Chiffrement de <span class="c3">César</span></h2>
+  <div class="sec-line sec-line-3"></div>
+  <p class="sec-intro reveal">Le plus ancien code connu. Jules César l'utilisait pour ses communications militaires. Simple mais fondamental — et facilement cassable ! <strong>Clique sur une lettre</strong> pour voir son équivalent chiffré.</p>
+
+  <div class="two-col">
+    <div class="reveal-l">
+      <div class="formula-block">
+        <div class="formula-block-title">Formules Mathématiques</div>
+        <div class="formula-row"><span class="fr-icon">🔐</span><span class="fr-label">Chiffrement</span><span class="fr-eq">C = (P + K) <span class="has-tooltip">mod 26<div class="tooltip">Reste de la division par 26 — revient à A après Z</div></span></span></div>
+        <div class="formula-row"><span class="fr-icon">🔓</span><span class="fr-label">Déchiffrement</span><span class="fr-eq">P = (C − K + 26) mod 26</span></div>
+        <div class="formula-note">P = position lettre claire (A=0, B=1 … Z=25) &nbsp;·&nbsp; K = clé (1 à 25) &nbsp;·&nbsp; C = position lettre chiffrée</div>
+      </div>
+      <div class="warning-box"><span>⚠️</span><span><strong>Vulnérabilité :</strong> Seulement <strong>25 clés possibles</strong>. Force brute instantanée. Analyse de fréquences encore plus rapide.</span></div>
+    </div>
+    <div class="reveal-r">
+      <div class="code-block">
+        <div class="code-block-header"><div class="code-block-dots"><div class="cbd" style="background:#ff5f57"></div><div class="cbd" style="background:#ffbd2e"></div><div class="cbd" style="background:#28c941"></div></div><span class="code-block-label">exemple — K = 3</span></div>
+        <div class="code-block-body">
+<div class="cb-row"><span class="cb-comment">// Texte en clair</span></div>
+<div class="cb-row"><span class="cb-plain">Clair </span><span class="cb-op">: </span><span class="cb-plain">S  E  C  U  R  I  T  E</span></div>
+<div class="cb-row"><span class="cb-num">N°    </span><span class="cb-op">:</span><span class="cb-num">18  4  2 20 17  8 19  4</span></div>
+<div class="cb-row" style="height:8px"></div>
+<div class="cb-row"><span class="cb-comment">// +3 sur chaque lettre</span></div>
+<div class="cb-row"><span class="cb-key">+K    </span><span class="cb-op">: </span><span class="cb-key"> 3  3  3  3  3  3  3  3</span></div>
+<div class="cb-row"><span class="cb-num">= N°  </span><span class="cb-op">:</span><span class="cb-num">21  7  5 23 20 11 22  7</span></div>
+<div class="cb-row" style="height:8px"></div>
+<div class="cb-row"><span class="cb-comment">// Résultat chiffré</span></div>
+<div class="cb-row"><span class="cb-cipher">Chiff </span><span class="cb-op">: </span><span class="cb-cipher">V  H  F  X  U  L  W  H</span></div>
+<div class="cb-row" style="height:6px"></div>
+<div class="cb-row"><span class="cb-op">"securite" </span><span class="cb-arrow">→</span><span class="cb-result"> "VHFXULWH"</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- INTERACTIVE CAESAR — sans clavier, avec alphabet cliquable -->
+  <div class="interactive-box reveal" style="margin-top:30px">
+    <div class="int-title">Démo Interactive — Chiffrement de César</div>
+    <div class="two-col">
+      <div>
+        <div class="input-group">
+          <label class="input-label">Texte à chiffrer</label>
+          <input type="text" class="crypto-input" id="cesar-input" value="SECURITE" oninput="updateCesar()" placeholder="Entrez votre texte...">
+        </div>
+        <div class="input-group">
+          <label class="input-label">Clé K (décalage)</label>
+          <div class="slider-wrap">
+            <input type="range" min="1" max="25" value="3" id="cesar-key" oninput="updateCesar()">
+            <div class="slider-val" id="cesar-key-val">3</div>
+          </div>
+        </div>
+        <div>
+          <label class="input-label">Résultat chiffré</label>
+          <div class="output-field" id="cesar-output">VHFXULWH</div>
+        </div>
+      </div>
+      <div>
+        <div class="alpha-hint">🖱️ Clique sur une lettre <span style="color:var(--neon)">(cyan)</span> → son équivalent chiffré <span style="color:var(--neon2)">(rose)</span> s'illumine</div>
+        <label class="input-label" style="margin-top:10px">Texte clair</label>
+        <div class="alphabet-display" id="cesar-plain-alpha"></div>
+        <div class="alpha-divider"></div>
+        <label class="input-label">Texte chiffré (résultat)</label>
+        <div class="alphabet-display" id="cesar-cipher-alpha"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Analyse de fréquences -->
+  <div style="margin-top:40px">
+    <h3 style="font-family:'Orbitron',sans-serif;font-size:1rem;font-weight:700;color:var(--neon3);letter-spacing:2px;text-transform:uppercase;margin-bottom:6px">📊 Cryptanalyse par Analyse de Fréquences</h3>
+    <div class="divider"></div>
+    <p class="reveal" style="font-size:.92rem;opacity:.8;margin-bottom:20px;line-height:1.7">Chaque langue a une signature statistique unique. En français, certaines lettres reviennent beaucoup plus souvent que d'autres. Si on connaît ces fréquences, on peut déchiffrer un César sans connaître la clé !</p>
+    <div class="freq-chart-wrap reveal">
+      <div style="font-family:'Share Tech Mono',monospace;font-size:.65rem;color:var(--muted);letter-spacing:2px;margin-bottom:16px;display:flex;gap:20px">
+        <span style="display:flex;align-items:center;gap:6px"><span style="width:12px;height:12px;background:rgba(0,255,231,.6);border-radius:2px;display:inline-block"></span>Français</span>
+        <span style="display:flex;align-items:center;gap:6px"><span style="width:12px;height:12px;background:rgba(255,45,120,.5);border-radius:2px;display:inline-block"></span>Anglais</span>
+      </div>
+      <div class="freq-chart" id="freq-chart"></div>
+    </div>
+    <div class="info-box reveal"><span>🔍</span><span><strong>Exemple du cours :</strong> Dans un texte chiffré de 100 lettres, 'T' apparaît 25 fois (25%). En français 'E' ~15% est la lettre la plus fréquente → T correspond à E → K = T - E = 19 - 4 = <strong style="color:var(--neon3)">15</strong>. Le message se déchiffre immédiatement !</span></div>
+  </div>
+</section>
+
+<!-- CHIFFREMENT AFFINE -->
+<section class="page-section" id="sec-affine" data-nav="Affine">
+  <div class="sec-badge">// 04 · généralisation du César</div>
+  <h2 class="sec-title">Chiffrement <span class="c2">Affine</span></h2>
+  <div class="sec-line sec-line-2"></div>
+  <p class="sec-intro reveal">Le chiffrement affine est une version plus puissante du César. Au lieu d'un simple décalage, on utilise une <strong>multiplication et un décalage</strong>. La clé est maintenant une paire (a, b).</p>
+
+  <div class="two-col">
+    <div class="reveal-l">
+      <div class="formula-block">
+        <div class="formula-block-title">Formules Mathématiques</div>
+        <div class="formula-row"><span class="fr-icon">🔐</span><span class="fr-label">Chiffrement</span><span class="fr-eq">C = (a × P + b) mod 26</span></div>
+        <div class="formula-row"><span class="fr-icon">🔓</span><span class="fr-label">Déchiffrement</span><span class="fr-eq">P = a⁻¹ × (C − b) mod 26</span></div>
+        <div class="formula-row"><span class="fr-icon">⚠️</span><span class="fr-label" style="color:var(--neon2)">Condition</span><span class="fr-eq" style="color:var(--neon2)">pgcd(a, 26) = 1 <span class="has-tooltip" style="cursor:help;text-decoration:underline dotted;color:var(--neon3)">(?)<div class="tooltip">a doit être inversible mod 26, sinon on ne peut pas déchiffrer</div></span></span></div>
+        <div class="formula-note">Valeurs valides de a : 1, 3, 5, 7, 9, 11, 15, 17, 19, 21, 23, 25<br>Si a = 1 → on retrouve le chiffre de César (b = décalage)</div>
+      </div>
+      <div class="info-box"><span>🔢</span><span>12 valeurs de a × 26 valeurs de b = <strong>312 clés</strong> possibles. Mieux que César (25) mais toujours cassable par force brute.</span></div>
+    </div>
+    <div class="reveal-r">
+      <div class="code-block">
+        <div class="code-block-header"><div class="code-block-dots"><div class="cbd" style="background:#ff5f57"></div><div class="cbd" style="background:#ffbd2e"></div><div class="cbd" style="background:#28c941"></div></div><span class="code-block-label">exemple — a=5, b=8</span></div>
+        <div class="code-block-body">
+<div class="cb-row"><span class="cb-comment">// Chiffrement : C = (5×P + 8) mod 26</span></div>
+<div class="cb-row"><span class="cb-plain">A</span><span class="cb-op">(0)  → </span><span class="cb-num">(5×0+8)</span><span class="cb-op">%26 = 8  → </span><span class="cb-cipher">I</span></div>
+<div class="cb-row"><span class="cb-plain">B</span><span class="cb-op">(1)  → </span><span class="cb-num">(5×1+8)</span><span class="cb-op">%26 = 13 → </span><span class="cb-cipher">N</span></div>
+<div class="cb-row"><span class="cb-plain">C</span><span class="cb-op">(2)  → </span><span class="cb-num">(5×2+8)</span><span class="cb-op">%26 = 18 → </span><span class="cb-cipher">S</span></div>
+<div class="cb-row" style="height:10px"></div>
+<div class="cb-row"><span class="cb-comment">// Déchiffrement : trouver a⁻¹</span></div>
+<div class="cb-row"><span class="cb-key">5⁻¹ mod 26 = 21</span></div>
+<div class="cb-row"><span class="cb-op">car </span><span class="cb-num">5 × 21 = 105 = 4×26 + 1</span><span class="cb-result"> ≡ 1</span></div>
+<div class="cb-row" style="height:4px"></div>
+<div class="cb-row"><span class="cb-op">P = </span><span class="cb-key">21</span><span class="cb-op"> × (C − 8) mod 26</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="interactive-box reveal" style="margin-top:30px">
+    <div class="int-title">Démo Interactive — Chiffrement Affine</div>
+    <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:20px">
+      <div style="flex:1;min-width:200px">
+        <label class="input-label">Texte à chiffrer</label>
+        <input type="text" class="crypto-input" id="affine-input" value="BONJOUR" oninput="updateAffine()" placeholder="Texte...">
+      </div>
+      <div style="min-width:120px">
+        <label class="input-label">Valeur de a</label>
+        <select class="crypto-input" id="affine-a" onchange="updateAffine()" style="cursor:pointer">
+          <option value="1">a = 1 (César)</option><option value="3" selected>a = 3</option><option value="5">a = 5</option><option value="7">a = 7</option><option value="9">a = 9</option><option value="11">a = 11</option><option value="15">a = 15</option><option value="17">a = 17</option><option value="19">a = 19</option><option value="21">a = 21</option><option value="23">a = 23</option><option value="25">a = 25</option>
+        </select>
+      </div>
+      <div style="min-width:120px">
+        <label class="input-label">Valeur de b (0-25)</label>
+        <div class="slider-wrap">
+          <input type="range" min="0" max="25" value="7" id="affine-b" oninput="updateAffine()">
+          <div class="slider-val" id="affine-b-val" style="font-size:1rem">7</div>
+        </div>
+      </div>
+    </div>
+    <div><label class="input-label">Résultat</label><div class="output-field" id="affine-output"></div></div>
+    <div style="margin-top:20px">
+      <div class="alpha-hint">🖱️ Clique sur une cellule <span style="color:var(--neon)">(cyan)</span> → son équivalent chiffré <span style="color:var(--neon2)">(rose)</span> s'illumine</div>
+      <label class="input-label" style="margin-top:10px">Table de substitution — clique sur A→Z pour voir l'équivalent chiffré</label>
+      <div class="affine-result-grid" id="affine-table"></div>
+    </div>
+  </div>
+</section>
+
+<!-- VIGENÈRE -->
+<section class="page-section" id="sec-vigenere" data-nav="Vigenère">
+  <div class="sec-badge">// 05 · substitution polyalphabétique</div>
+  <h2 class="sec-title">Le Chiffrement de <span class="c4">Vigenère</span></h2>
+  <div class="sec-line sec-line-4"></div>
+  <p class="sec-intro reveal">L'amélioration majeure du César. Au lieu d'un seul décalage, on utilise un <strong>mot-clé</strong> — chaque lettre du message utilise un décalage différent. Un même caractère peut donc être chiffré de plusieurs façons différentes !</p>
+
+  <div class="two-col">
+    <div class="reveal-l">
+      <div class="formula-block" style="border-color:rgba(123,45,255,.2);background:rgba(123,45,255,.03)">
+        <div class="formula-block-title" style="color:var(--neon4)">Principe</div>
+        <div class="formula-row"><span class="fr-icon">🔐</span><span class="fr-label">Chiffrement</span><span class="fr-eq" style="color:var(--neon4)">Cᵢ = (Pᵢ + Kᵢ) mod 26</span></div>
+        <div class="formula-row"><span class="fr-icon">🔓</span><span class="fr-label">Déchiffrement</span><span class="fr-eq" style="color:var(--neon4)">Pᵢ = (Cᵢ − Kᵢ + 26) mod 26</span></div>
+        <div class="formula-note" style="color:rgba(123,45,255,.7)">Kᵢ = valeur numérique de la i-ème lettre du mot-clé<br>Le mot-clé est répété cycliquement sur le message</div>
+      </div>
+      <div class="success-box"><span>✅</span><span><strong>Avantage :</strong> Un même caractère est chiffré différemment selon sa position. L'analyse de fréquences simple ne fonctionne plus !</span></div>
+    </div>
+    <div class="reveal-r">
+      <div class="code-block">
+        <div class="code-block-header"><div class="code-block-dots"><div class="cbd" style="background:#ff5f57"></div><div class="cbd" style="background:#ffbd2e"></div><div class="cbd" style="background:#28c941"></div></div><span class="code-block-label">exemple du cours — clé BONJOUR</span></div>
+        <div class="code-block-body" style="font-size:.76rem">
+<div class="cb-row"><span class="cb-plain">Clair  </span><span class="cb-op">: S  E  C  U  R  I  T  E</span></div>
+<div class="cb-row"><span class="cb-num">N°     </span><span class="cb-op">:18  4  2 20 17  8 19  4</span></div>
+<div class="cb-row" style="height:6px"></div>
+<div class="cb-row"><span class="cb-key">Clé    </span><span class="cb-op">: B  O  N  J  O  U  R  B</span></div>
+<div class="cb-row"><span class="cb-key">N°     </span><span class="cb-op">: 1 14 13  9 14 20 17  1</span></div>
+<div class="cb-row" style="height:6px"></div>
+<div class="cb-row"><span class="cb-op">Somme  </span><span class="cb-op">:19 18 15  3  5  2 10  5</span></div>
+<div class="cb-row"><span class="cb-cipher">Chiff  </span><span class="cb-op">: T  S  P  D  F  C  K  F</span></div>
+<div class="cb-row" style="height:6px"></div>
+<div class="cb-row"><span class="cb-op">"SECURITE" </span><span class="cb-arrow">→</span><span class="cb-result"> "TSPDFCKF"</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Interactive Vigenere -->
+  <div class="interactive-box reveal" style="margin-top:30px">
+    <div class="int-title">Démo Interactive — Vigenère</div>
+    <div class="two-col">
+      <div>
+        <div class="input-group">
+          <label class="input-label">Texte en clair</label>
+          <input type="text" class="crypto-input" id="vig-plain" value="SECURITE" oninput="updateVigenere()" placeholder="Message...">
+        </div>
+        <div class="input-group">
+          <label class="input-label">Mot-clé</label>
+          <input type="text" class="crypto-input" id="vig-key" value="BONJOUR" oninput="updateVigenere()" placeholder="CLEF...">
+        </div>
+        <label class="input-label">Texte chiffré</label>
+        <div class="output-field" id="vig-output">TSPDFCKF</div>
+        <div style="margin-top:16px">
+          <div class="alpha-hint">🖱️ Clique sur une lettre clair <span style="color:var(--neon)">(cyan)</span> → son chiffré avec la clé actuelle <span style="color:var(--neon2)">(rose)</span> s'illumine</div>
+          <label class="input-label" style="margin-top:8px">Texte clair (A–Z)</label>
+          <div class="alphabet-display" id="vig-plain-alpha"></div>
+          <div class="alpha-divider"></div>
+          <label class="input-label">Texte chiffré avec clé[0]</label>
+          <div class="alphabet-display" id="vig-cipher-alpha"></div>
+        </div>
+      </div>
+      <div>
+        <label class="input-label">Décomposition lettre par lettre</label>
+        <div id="vig-steps" class="vig-steps"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Vigenere Square -->
+  <div style="margin-top:40px">
+    <h3 style="font-family:'Orbitron',sans-serif;font-size:.9rem;font-weight:700;color:var(--neon4);letter-spacing:2px;text-transform:uppercase;margin-bottom:16px">🗺️ Carré de Vigenère interactif</h3>
+    <div style="display:grid;grid-template-columns:auto 1fr;gap:24px;align-items:start">
+      <div>
+        <p style="font-size:.82rem;opacity:.6;margin-bottom:12px;font-family:'Share Tech Mono',monospace">Ligne=clé · Colonne=clair · Intersection=chiffré</p>
+        <div class="vigenere-table" id="vig-square-wrap"></div>
+      </div>
+      <div style="position:sticky;top:120px">
+        <div style="background:rgba(123,45,255,.05);border:1px solid rgba(123,45,255,.2);border-radius:14px;padding:22px">
+          <div style="font-family:'Share Tech Mono',monospace;font-size:.6rem;color:var(--neon4);letter-spacing:3px;text-transform:uppercase;margin-bottom:16px">COMMENT UTILISER LE CARRÉ</div>
+          <div style="display:flex;flex-direction:column;gap:12px;font-size:.84rem;line-height:1.6">
+            <div style="display:flex;gap:10px;align-items:flex-start"><span style="background:rgba(255,45,120,.15);border:1px solid rgba(255,45,120,.3);border-radius:4px;padding:2px 8px;font-family:'Share Tech Mono',monospace;font-size:.7rem;color:var(--neon2);flex-shrink:0">1</span><span>Trouve la <strong style="color:var(--neon2)">ligne</strong> correspondant à la lettre de ton <strong style="color:var(--neon2)">mot-clé</strong></span></div>
+            <div style="display:flex;gap:10px;align-items:flex-start"><span style="background:rgba(0,255,231,.1);border:1px solid rgba(0,255,231,.2);border-radius:4px;padding:2px 8px;font-family:'Share Tech Mono',monospace;font-size:.7rem;color:var(--neon);flex-shrink:0">2</span><span>Trouve la <strong style="color:var(--neon)">colonne</strong> correspondant à ta lettre du <strong style="color:var(--neon)">texte clair</strong></span></div>
+            <div style="display:flex;gap:10px;align-items:flex-start"><span style="background:rgba(245,197,24,.1);border:1px solid rgba(245,197,24,.2);border-radius:4px;padding:2px 8px;font-family:'Share Tech Mono',monospace;font-size:.7rem;color:var(--neon3);flex-shrink:0">3</span><span>La <strong style="color:var(--neon3)">cellule à l'intersection</strong> est la lettre chiffrée</span></div>
+          </div>
+          <div style="margin-top:18px;padding-top:14px;border-top:1px solid rgba(123,45,255,.15)">
+            <div style="font-family:'Share Tech Mono',monospace;font-size:.6rem;color:var(--muted);letter-spacing:2px;margin-bottom:10px">EXEMPLE SURVOLÉ</div>
+            <div id="vig-hover-info" style="font-family:'Share Tech Mono',monospace;font-size:.82rem;min-height:60px;display:flex;flex-direction:column;gap:6px"><span style="color:var(--muted);font-size:.75rem">Survole une cellule du tableau…</span></div>
+          </div>
+          <div style="margin-top:18px;padding-top:14px;border-top:1px solid rgba(123,45,255,.15)">
+            <div style="font-family:'Share Tech Mono',monospace;font-size:.6rem;color:var(--muted);letter-spacing:2px;margin-bottom:10px">PROPRIÉTÉ CLÉ</div>
+            <div style="font-size:.82rem;line-height:1.6;opacity:.8">Un même caractère (ex: <span style="color:var(--neon3);font-family:'Share Tech Mono',monospace">E</span>) peut devenir <span style="color:var(--neon2);font-family:'Share Tech Mono',monospace">F</span>, <span style="color:var(--neon2);font-family:'Share Tech Mono',monospace">T</span>, ou <span style="color:var(--neon2);font-family:'Share Tech Mono',monospace">Z</span> selon la lettre du mot-clé → <strong>résistance à l'analyse de fréquences.</strong></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PLAYFAIR -->
+<section class="page-section" id="sec-playfair" data-nav="Playfair">
+  <div class="sec-badge">// 06 · substitution de polygrammes</div>
+  <h2 class="sec-title">Chiffrement de <span class="c2">Playfair</span></h2>
+  <div class="sec-line sec-line-2"></div>
+  <p class="sec-intro reveal">Playfair chiffre des <strong>paires de lettres (bigrammes)</strong> à la fois, pas une lettre à la fois. Cela rend l'analyse de fréquences classique inefficace car il y a 676 bigrammes possibles.</p>
+
+  <div class="two-col">
+    <div class="reveal-l">
+      <h3 style="font-family:'Orbitron',sans-serif;font-size:.85rem;font-weight:700;color:var(--neon3);letter-spacing:1px;margin-bottom:14px;text-transform:uppercase">Construction de la Grille</h3>
+      <p style="font-size:.88rem;line-height:1.7;opacity:.8;margin-bottom:16px">1. Écrire le mot-clé (sans doublons)<br>2. Compléter avec les lettres restantes de l'alphabet<br>3. On supprime le W et on garde les 25 autres lettres (variante française)<br>4. Remplir la grille 5×5 ligne par ligne</p>
+      <div class="info-box"><span>🔑</span><span>Exemple avec mot-clé <strong>"SALUT"</strong> (version du cours, sans W)</span></div>
+      <label class="input-label" style="margin-top:16px">Mot-clé pour générer la grille</label>
+      <input type="text" class="crypto-input" id="pf-key-input" value="SALUT" oninput="updatePlayfair()" maxlength="25" placeholder="Mot-clé...">
+    </div>
+    <div class="reveal-r" style="display:flex;flex-direction:column;align-items:center">
+      <label class="input-label" style="margin-bottom:12px">Grille Playfair générée</label>
+      <div class="playfair-grid" id="pf-grid"></div>
+      <div style="margin-top:14px;font-family:'Share Tech Mono',monospace;font-size:.7rem;color:var(--muted);text-align:center">🟡 = lettres du mot-clé · ⬜ = lettres restantes</div>
+    </div>
+  </div>
+
+  <div style="margin-top:40px">
+    <h3 style="font-family:'Orbitron',sans-serif;font-size:.9rem;font-weight:700;color:var(--neon3);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px">📜 Les 4 Règles de Chiffrement</h3>
+    <p style="font-size:.82rem;color:var(--muted);font-family:'Share Tech Mono',monospace;margin-bottom:20px">Clique sur une règle pour voir un exemple détaillé</p>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px" class="reveal">
+      <div class="concept-card" onclick="showModal('pf_r1')" style="border-color:rgba(245,197,24,.2);cursor:pointer"><span class="cc-icon">🔲</span><div class="cc-label">Règle 1 · Clique pour l'exemple</div><div class="cc-title" style="font-size:.82rem">Rectangle</div><div class="cc-desc">Les deux lettres forment les coins d'un rectangle → les chiffrées sont les <em>autres</em> coins (même ligne).<br><br><span style="color:var(--neon3);font-family:'Share Tech Mono',monospace">AF → TC</span></div></div>
+      <div class="concept-card" onclick="showModal('pf_r2')" style="border-color:rgba(0,255,231,.2);cursor:pointer"><span class="cc-icon">↔️</span><div class="cc-label">Règle 2 · Clique pour l'exemple</div><div class="cc-title" style="font-size:.82rem">Même Ligne</div><div class="cc-desc">Deux lettres sur la même ligne → on prend les lettres à leur <em>droite</em> (circulaire).<br><br><span style="color:var(--neon);font-family:'Share Tech Mono',monospace">SL → AU</span></div></div>
+      <div class="concept-card" onclick="showModal('pf_r3')" style="border-color:rgba(255,45,120,.2);cursor:pointer"><span class="cc-icon">↕️</span><div class="cc-label">Règle 3 · Clique pour l'exemple</div><div class="cc-title" style="font-size:.82rem">Même Colonne</div><div class="cc-desc">Deux lettres dans la même colonne → on prend les lettres <em>en dessous</em> (circulaire).<br><br><span style="color:var(--neon2);font-family:'Share Tech Mono',monospace">TR → FZ</span></div></div>
+      <div class="concept-card" onclick="showModal('pf_r4')" style="border-color:rgba(123,45,255,.2);cursor:pointer"><span class="cc-icon">✖️</span><div class="cc-label">Règle 4 · Clique pour l'exemple</div><div class="cc-title" style="font-size:.82rem">Lettres Identiques</div><div class="cc-desc">Les deux lettres d'une paire sont identiques → on insère un <em>X</em> pour séparer.<br><br><span style="color:var(--neon4);font-family:'Share Tech Mono',monospace">LL → LX + L_</span></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- HILL -->
+<section class="page-section" id="sec-hill" data-nav="Hill">
+  <div class="sec-badge">// 07 · substitution matricielle</div>
+  <h2 class="sec-title">Chiffrement de <span class="c4">Hill</span></h2>
+  <div class="sec-line sec-line-4"></div>
+  <p class="sec-intro reveal">Hill utilise l'<strong>algèbre linéaire</strong> pour chiffrer des blocs de m lettres en même temps. La clé est une <strong>matrice carrée</strong>. C'est le premier chiffrement polygraphique pratique !</p>
+
+  <div class="two-col">
+    <div class="reveal-l">
+      <div class="formula-block" style="border-color:rgba(123,45,255,.2);background:rgba(123,45,255,.03)">
+        <div class="formula-block-title" style="color:var(--neon4)">Principe Hill (m=2)</div>
+        <div class="formula-row"><span class="fr-icon">🔐</span><span class="fr-label">Chiffrement</span><span class="fr-eq" style="color:var(--neon4)">C = K × P <span class="has-tooltip">mod 26<div class="tooltip">Chaque composante du vecteur résultat modulo 26</div></span></span></div>
+        <div class="formula-row"><span class="fr-icon">🔓</span><span class="fr-label">Déchiffrement</span><span class="fr-eq" style="color:var(--neon4)">P = K⁻¹ × C mod 26</span></div>
+        <div class="formula-row"><span class="fr-icon">⚠️</span><span class="fr-label" style="color:var(--neon2)">Condition</span><span class="fr-eq" style="color:var(--neon2)">pgcd(det(K), 26) = 1</span></div>
+        <div class="formula-note">K = matrice carrée m×m inversible mod 26 · P = vecteur de m lettres (A=0…Z=25)</div>
+      </div>
+      <div class="info-box"><span>🧮</span><span>Pour m=2, on chiffre 2 lettres simultanément (matrice 2×2). Pour m=3 → matrice 3×3. Plus m est grand, plus c'est difficile à casser par fréquences.</span></div>
+    </div>
+    <div class="reveal-r">
+      <div class="code-block">
+        <div class="code-block-header"><div class="code-block-dots"><div class="cbd" style="background:#ff5f57"></div><div class="cbd" style="background:#ffbd2e"></div><div class="cbd" style="background:#28c941"></div></div><span class="code-block-label">exemple m=2 — K=[[3,3],[2,5]]</span></div>
+        <div class="code-block-body" style="font-size:.79rem">
+<div class="cb-row"><span class="cb-comment">// Texte clair : "HE" → P = [7, 4]</span></div>
+<div class="cb-row"><span class="cb-plain">H </span><span class="cb-op">= 7,  </span><span class="cb-plain">E </span><span class="cb-op">= 4</span></div>
+<div class="cb-row" style="height:8px"></div>
+<div class="cb-row"><span class="cb-comment">// C = K × P mod 26</span></div>
+<div class="cb-row"><span class="cb-key">C₁ </span><span class="cb-op">= (</span><span class="cb-num">3×7 + 3×4</span><span class="cb-op">) mod 26</span></div>
+<div class="cb-row"><span class="cb-op">   = </span><span class="cb-num">33</span><span class="cb-op"> mod 26 = </span><span class="cb-num">7</span><span class="cb-op"> → </span><span class="cb-cipher">H</span></div>
+<div class="cb-row" style="height:4px"></div>
+<div class="cb-row"><span class="cb-key">C₂ </span><span class="cb-op">= (</span><span class="cb-num">2×7 + 5×4</span><span class="cb-op">) mod 26</span></div>
+<div class="cb-row"><span class="cb-op">   = </span><span class="cb-num">34</span><span class="cb-op"> mod 26 = </span><span class="cb-num">8</span><span class="cb-op"> → </span><span class="cb-cipher">I</span></div>
+<div class="cb-row" style="height:8px"></div>
+<div class="cb-row"><span class="cb-op">"HE" </span><span class="cb-arrow">→</span><span class="cb-result"> "HI"</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="reveal" style="margin-top:30px;background:rgba(0,0,0,.3);border:1px solid rgba(123,45,255,.15);border-radius:16px;padding:32px">
+    <h3 style="font-family:'Orbitron',sans-serif;font-size:.85rem;font-weight:700;color:var(--neon4);letter-spacing:2px;text-transform:uppercase;margin-bottom:24px">🔢 Visualisation de l'Opération Matricielle</h3>
+    <div class="matrix-viz">
+      <div><div style="font-family:'Share Tech Mono',monospace;font-size:.65rem;color:var(--muted);text-align:center;margin-bottom:8px">CLÉ K</div><div style="display:flex;align-items:center"><div class="matrix-bracket">[</div><div class="matrix-content" style="grid-template-columns:1fr 1fr"><div class="matrix-cell">3</div><div class="matrix-cell">3</div><div class="matrix-cell">2</div><div class="matrix-cell">5</div></div><div class="matrix-bracket">]</div></div></div>
+      <div class="matrix-op">×</div>
+      <div><div style="font-family:'Share Tech Mono',monospace;font-size:.65rem;color:var(--muted);text-align:center;margin-bottom:8px">CLAIR P</div><div style="display:flex;align-items:center"><div class="matrix-bracket">[</div><div class="matrix-content" style="grid-template-columns:1fr"><div class="matrix-cell" id="hill-p1">7</div><div class="matrix-cell" id="hill-p2">4</div></div><div class="matrix-bracket">]</div></div><div style="font-family:'Share Tech Mono',monospace;font-size:.65rem;color:var(--neon);text-align:center;margin-top:4px">"HE"</div></div>
+      <div class="matrix-op">=</div>
+      <div><div style="font-family:'Share Tech Mono',monospace;font-size:.65rem;color:var(--muted);text-align:center;margin-bottom:8px">CHIFFRÉ C</div><div style="display:flex;align-items:center"><div class="matrix-bracket" style="color:var(--neon3)">[</div><div class="matrix-content" style="grid-template-columns:1fr"><div class="matrix-cell" style="border-color:rgba(245,197,24,.3);background:rgba(245,197,24,.1);color:var(--neon3)">7</div><div class="matrix-cell" style="border-color:rgba(245,197,24,.3);background:rgba(245,197,24,.1);color:var(--neon3)">8</div></div><div class="matrix-bracket" style="color:var(--neon3)">]</div></div><div style="font-family:'Share Tech Mono',monospace;font-size:.65rem;color:var(--neon3);text-align:center;margin-top:4px">"HI"</div></div>
+      <div class="matrix-op" style="font-size:.85rem;color:var(--muted)">mod 26</div>
+    </div>
+    <div class="info-box" style="margin-top:16px"><span>⚡</span><span>Hill résiste à l'analyse de fréquences simple car m lettres sont mélangées ensemble. Mais il est vulnérable à l'attaque <strong>texte en clair connu</strong> (KPA) : avec assez de paires, on peut recalculer K.</span></div>
+  </div>
+</section>
+
+<!-- TRANSPOSITION -->
+<section class="page-section-compact" id="sec-transpo" data-nav="Transposition">
+  <div class="sec-badge">// 08 · permutation des positions</div>
+  <h2 class="sec-title">Chiffrement par <span class="c1">Transposition</span></h2>
+  <div class="sec-line sec-line-1"></div>
+  <p class="sec-intro reveal">La transposition ne <em>remplace</em> pas les lettres — elle <em>réorganise</em> leur ordre. Les mêmes lettres, mais dans un ordre différent. On distingue la transposition simple et complexe par colonnes.</p>
+
+  <div class="interactive-box reveal">
+    <div class="int-title" style="color:var(--neon)">Transposition Simple par Colonnes — Démo Animée</div>
+    <div class="two-col">
+      <div>
+        <div class="input-group">
+          <label class="input-label">Texte en clair</label>
+          <input type="text" class="crypto-input" id="transpo-input" value="CHIFFREMENTDECESAR" oninput="updateTranspo()">
+        </div>
+        <div class="input-group">
+          <label class="input-label">Nombre de colonnes (n)</label>
+          <div class="slider-wrap">
+            <input type="range" min="2" max="8" value="5" id="transpo-cols" oninput="updateTranspo()">
+            <div class="slider-val" id="transpo-cols-val" style="font-size:1rem">5</div>
+          </div>
+        </div>
+        <div>
+          <label class="input-label">Texte chiffré (lecture par colonnes)</label>
+          <div class="output-field" id="transpo-output" style="border-color:rgba(0,255,231,.2)"></div>
+        </div>
+      </div>
+      <div>
+        <label class="input-label">Grille (→ lecture ligne, ↓ lecture colonne)</label>
+        <div id="transpo-grid" style="overflow-x:auto"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Transpo Complexe — CORRIGÉ -->
+  <div style="margin-top:40px">
+    <h3 style="font-family:'Orbitron',sans-serif;font-size:.9rem;font-weight:700;color:var(--neon);letter-spacing:2px;text-transform:uppercase;margin-bottom:16px">🔑 Transposition Complexe avec Clé Numérique</h3>
+    <div class="two-col">
+      <div class="reveal-l">
+        <div class="formula-block" style="border-color:rgba(0,255,231,.15);background:rgba(0,255,231,.03)">
+          <div class="formula-block-title" style="color:var(--neon)">Principe</div>
+          <div class="formula-row"><span class="fr-icon" style="color:var(--neon)">1.</span><span class="fr-eq" style="color:var(--text);font-size:.82rem">Définir une clé numérique (ex: <span style="color:var(--neon3)">1 5 4 2 3</span>)</span></div>
+          <div class="formula-row"><span class="fr-icon" style="color:var(--neon)">2.</span><span class="fr-eq" style="color:var(--text);font-size:.82rem">Placer le message en lignes (nb cols = longueur clé)</span></div>
+          <div class="formula-row"><span class="fr-icon" style="color:var(--neon)">3.</span><span class="fr-eq" style="color:var(--text);font-size:.82rem">Lire les colonnes dans <span class="has-tooltip" style="color:var(--neon3);text-decoration:underline dotted;cursor:help">l'ordre croissant de la clé<div class="tooltip">La colonne avec la valeur 1 en premier, puis 2, etc.</div></span></span></div>
+          <div class="formula-note">Pour déchiffrer : replacer le texte dans les colonnes (ordre clé) puis lire en ligne.</div>
+        </div>
+        <div class="info-box"><span>💪</span><span>La clé <strong>1 5 4 2 3</strong> : lire colonne 1 (val=1), puis col 4 (val=2), puis col 5 (val=3), puis col 3 (val=4), puis col 2 (val=5).</span></div>
+      </div>
+      <div class="reveal-r">
+        <!-- CORRIGÉ : résultat "CRTSHEDAIMERFECFNE" non, complexe = CRTSFECFNEIMERHEDA -->
+        <div class="code-block">
+          <div class="code-block-header"><div class="code-block-dots"><div class="cbd" style="background:#ff5f57"></div><div class="cbd" style="background:#ffbd2e"></div><div class="cbd" style="background:#28c941"></div></div><span class="code-block-label">exemple — clé 1 5 4 2 3</span></div>
+          <div class="code-block-body" style="font-size:.76rem">
+<div class="cb-row"><span class="cb-comment">// Grille : "CHIFFREMENTDECESAR"</span></div>
+<div class="cb-row"><span class="cb-key"> 1    5    4    2    3 </span><span class="cb-comment"> ← clé</span></div>
+<div class="cb-row"><span class="cb-op">─────────────────────────</span></div>
+<div class="cb-row"><span class="cb-plain"> C    H    I    F    F</span></div>
+<div class="cb-row"><span class="cb-plain"> R    E    M    E    N</span></div>
+<div class="cb-row"><span class="cb-plain"> T    D    E    C    E</span></div>
+<div class="cb-row"><span class="cb-plain"> S    A    R    _    _</span></div>
+<div class="cb-row"><span class="cb-op">─────────────────────────</span></div>
+<div class="cb-row"><span class="cb-comment">// Ordre de lecture: val1→col1, val2→col4,</span></div>
+<div class="cb-row"><span class="cb-comment">// val3→col5, val4→col3, val5→col2</span></div>
+<div class="cb-row"><span class="cb-cipher">col1</span><span class="cb-op">: CRTS · </span><span class="cb-cipher">col4</span><span class="cb-op">: FEC · </span><span class="cb-cipher">col5</span><span class="cb-op">: FNE</span></div>
+<div class="cb-row"><span class="cb-cipher">col3</span><span class="cb-op">: IMER · </span><span class="cb-cipher">col2</span><span class="cb-op">: HEDA</span></div>
+<div class="cb-row" style="height:6px"></div>
+<div class="cb-row"><span class="cb-op">"CHIFFREMENTDECESAR" </span><span class="cb-arrow">→</span></div>
+<div class="cb-row"><span class="cb-result"> "CRTSFECFNEIMERHEDA"</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- COMPARATIF -->
+<section class="page-section-compact" id="sec-compare" data-nav="Comparatif">
+  <div class="sec-badge">// 09 · bilan et comparaison</div>
+  <h2 class="sec-title">Tableau <span class="c3">Comparatif</span></h2>
+  <div class="sec-line sec-line-3"></div>
+  <p class="sec-intro reveal">Récapitulatif de tous les algorithmes classiques. Leurs forces, faiblesses, et ce qu'ils protègent — ou pas. <strong>Clique</strong> pour les détails.</p>
+  <div style="overflow-x:auto" class="reveal">
+    <table class="analysis-table">
+      <thead><tr><th>Algorithme</th><th>Type</th><th>Taille clé</th><th>Nb clés possibles</th><th>Faiblesse principale</th><th>Sécurité</th></tr></thead>
+      <tbody>
+        <tr onclick="showModal('comp_cesar')"><td style="color:var(--neon3);font-weight:700">César</td><td>Substitution mono</td><td>1 entier (1-25)</td><td class="freq-low">25</td><td class="freq-high">Force brute triviale</td><td class="freq-high">⬛⬛⬛⬛⬛ 0/5</td></tr>
+        <tr onclick="showModal('comp_affine')"><td style="color:var(--neon3);font-weight:700">Affine</td><td>Substitution mono</td><td>Paire (a,b)</td><td class="freq-med">312</td><td class="freq-high">Analyse fréquences + FB</td><td class="freq-high">🟥⬛⬛⬛⬛ 1/5</td></tr>
+        <tr onclick="showModal('comp_mono')"><td style="color:var(--neon3);font-weight:700">Mono. Aléatoire</td><td>Substitution mono</td><td>26 chars</td><td style="color:var(--neon)">26! ≈ 4×10²⁶</td><td class="freq-med">Analyse fréquences</td><td class="freq-med">🟨🟨⬛⬛⬛ 2/5</td></tr>
+        <tr onclick="showModal('comp_vigenere')"><td style="color:var(--neon4);font-weight:700">Vigenère</td><td>Substitution poly</td><td>Mot-clé (variable)</td><td style="color:var(--neon)">26^n</td><td class="freq-med">Test Kasiski, IC</td><td class="freq-med">🟨🟨🟨⬛⬛ 3/5</td></tr>
+        <tr onclick="showModal('comp_playfair')"><td style="color:var(--neon4);font-weight:700">Playfair</td><td>Polygramme (m=2)</td><td>Mot-clé → grille</td><td style="color:var(--neon)">25! / variations</td><td class="freq-med">Analyse bigrammes</td><td class="freq-med">🟨🟨🟨⬛⬛ 3/5</td></tr>
+        <tr onclick="showModal('comp_hill')"><td style="color:var(--neon2);font-weight:700">Hill</td><td>Polygramme (m×m)</td><td>Matrice m×m</td><td style="color:var(--neon)">Très grand</td><td class="freq-high">Vulnérable KPA</td><td class="freq-med">🟨🟨🟨🟨⬛ 4/5</td></tr>
+        <tr onclick="showModal('comp_transpo')"><td style="color:var(--neon);font-weight:700">Transposition</td><td>Permutation</td><td>Clé numérique</td><td style="color:var(--neon)">n! (n=cols)</td><td class="freq-med">Analyse de l'index de coïncidence</td><td class="freq-med">🟨🟨🟨⬛⬛ 3/5</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p style="font-family:'Share Tech Mono',monospace;font-size:.7rem;color:var(--muted);margin-top:10px">→ Clique sur une ligne pour le détail complet de l'algorithme</p>
+</section>
+
+<!-- QUIZ -->
+<section class="page-section-compact" id="sec-quiz" data-nav="Quiz">
+  <div class="sec-badge">// 10 · teste-toi !</div>
+  <h2 class="sec-title">Mini <span class="c3">Quiz</span></h2>
+  <div class="sec-line sec-line-3"></div>
+  <p class="sec-intro reveal">8 questions pour vérifier que tu maîtrises la crypto classique 🎮</p>
+  <div class="quiz-shell">
+    <div class="quiz-progress" id="qprogress"></div>
+    <div id="qcard" class="quiz-card"></div>
+    <div id="qresult" class="quiz-result"></div>
+  </div>
+</section>
+
+<!-- GLOSSAIRE -->
+<section class="page-section-compact" id="sec-gloss" data-nav="Glossaire">
+  <div class="sec-badge">// 11 · référence rapide</div>
+  <h2 class="sec-title"><span class="c3">Glossaire</span> Crypto</h2>
+  <div class="sec-line sec-line-3"></div>
+  <p class="sec-intro reveal">Tous les termes clés du chapitre. Clique pour la définition complète.</p>
+  <div class="gloss-grid reveal">
+    <div class="gloss-item" onclick="showModal('g_plaintext')"><div class="gloss-term">Texte en Clair (P)</div><div class="gloss-def">Message original lisible. Input du chiffrement.</div></div>
+    <div class="gloss-item" onclick="showModal('g_cipher')"><div class="gloss-term">Texte Chiffré (C)</div><div class="gloss-def">Message transformé, incompréhensible sans la clé.</div></div>
+    <div class="gloss-item" onclick="showModal('g_key')"><div class="gloss-term">Clé (K)</div><div class="gloss-def">Information secrète utilisée par l'algorithme de chiffrement.</div></div>
+    <div class="gloss-item" onclick="showModal('g_kasiski')"><div class="gloss-term">Test de Kasiski</div><div class="gloss-def">Méthode pour trouver la longueur de la clé d'un chiffre de Vigenère.</div></div>
+    <div class="gloss-item" onclick="showModal('g_ic')"><div class="gloss-term">Indice de Coïncidence</div><div class="gloss-def">Mesure statistique pour distinguer substitution mono vs polyalphabétique.</div></div>
+    <div class="gloss-item" onclick="showModal('g_modular')"><div class="gloss-term">Arithmétique Modulaire</div><div class="gloss-def">Calcul "en boucle" — mod 26 pour revenir dans l'alphabet.</div></div>
+    <div class="gloss-item" onclick="showModal('g_pgcd')"><div class="gloss-term">PGCD / pgcd</div><div class="gloss-def">Plus Grand Commun Diviseur. Crucial pour vérifier l'inversibilité des clés.</div></div>
+    <div class="gloss-item" onclick="showModal('g_inverse')"><div class="gloss-term">Inverse Modulaire</div><div class="gloss-def">a⁻¹ mod n tel que a × a⁻¹ ≡ 1 mod n. Nécessaire pour déchiffrer.</div></div>
+    <div class="gloss-item" onclick="showModal('g_bigramme')"><div class="gloss-term">Bigramme</div><div class="gloss-def">Groupe de 2 lettres. Playfair et Hill opèrent sur des bigrammes.</div></div>
+    <div class="gloss-item" onclick="showModal('g_polyalpha')"><div class="gloss-term">Polyalphabétique</div><div class="gloss-def">Utilise plusieurs alphabets substitués cycliquement. Vigenère en est l'exemple.</div></div>
+  </div>
+</section>
+
+<footer>
+  <p><span class="f-gold">CRYPTO CLASSIQUE</span> · Chapitre 2 · Sécurité Informatique</p>
+  <p style="margin-top:6px">Mme S. BELATTAF · UMMTO · Made with <span class="f-pink">♥</span> pour mieux comprendre</p>
+</footer>
+
+<script>
+/* ============ CANVAS BG ============ */
+const cvs=document.getElementById('bg-canvas');const ctx=cvs.getContext('2d');
+function resizeCanvas(){cvs.width=innerWidth;cvs.height=innerHeight}resizeCanvas();window.addEventListener('resize',resizeCanvas);
+const pts=Array.from({length:60},()=>({x:Math.random()*innerWidth,y:Math.random()*innerHeight,vx:(Math.random()-.5)*.3,vy:(Math.random()-.5)*.3,r:Math.random()*1.2+.4,a:Math.random()*.4+.1}));
+(function drawBg(){ctx.clearRect(0,0,cvs.width,cvs.height);pts.forEach(p=>{p.x+=p.vx;p.y+=p.vy;if(p.x<0)p.x=cvs.width;if(p.x>cvs.width)p.x=0;if(p.y<0)p.y=cvs.height;if(p.y>cvs.height)p.y=0;ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fillStyle=`rgba(245,197,24,${p.a})`;ctx.fill()});for(let i=0;i<pts.length;i++)for(let j=i+1;j<pts.length;j++){const dx=pts[i].x-pts[j].x,dy=pts[i].y-pts[j].y,d=Math.sqrt(dx*dx+dy*dy);if(d<90){ctx.beginPath();ctx.moveTo(pts[i].x,pts[i].y);ctx.lineTo(pts[j].x,pts[j].y);ctx.strokeStyle=`rgba(245,197,24,${.04*(1-d/90)})`;ctx.lineWidth=.5;ctx.stroke()}}requestAnimationFrame(drawBg)})();
+
+/* ============ PROGRESS ============ */
+window.addEventListener('scroll',()=>{document.getElementById('progress').style.width=(scrollY/(document.documentElement.scrollHeight-innerHeight)*100)+'%'});
+
+/* ============ TERMINAL ============ */
+const termLines=[
+  {text:'<span class="t-prompt">$ </span><span class="t-cmd">load-chapter --module=cryptographie-classique</span>',delay:0},
+  {text:'<span class="t-ok">✓</span> <span class="t-cmd">Concepts de base........................OK</span>',delay:700},
+  {text:'<span class="t-ok">✓</span> <span class="t-cmd">Code de César...........................OK</span>',delay:1300},
+  {text:'<span class="t-ok">✓</span> <span class="t-cmd">Chiffrement Affine......................OK</span>',delay:1900},
+  {text:'<span class="t-ok">✓</span> <span class="t-cmd">Vigenère (polyalphabétique)............OK</span>',delay:2500},
+  {text:'<span class="t-ok">✓</span> <span class="t-cmd">Playfair & Hill.........................OK</span>',delay:3100},
+  {text:'<span class="t-ok">✓</span> <span class="t-cmd">Transposition par colonnes..............OK</span>',delay:3700},
+  {text:'<span class="t-warn">⚡</span> <span class="t-warn">Démos interactives chargées.............OK</span>',delay:4300},
+  {text:'<span class="t-prompt">$ </span><span class="t-comment"># Scroll pour démarrer le déchiffrement 🔐</span>',delay:5000},
+];
+const tout=document.getElementById('term-output');
+termLines.forEach(l=>setTimeout(()=>{const d=document.createElement('div');d.innerHTML=l.text;tout.appendChild(d);d.style.animation='fade-up .3s both'},l.delay));
+
+/* ============ SIDENAV ============ */
+const secs=document.querySelectorAll('[data-nav]'),nav=document.getElementById('sidenav');
+secs.forEach((s,i)=>{const item=document.createElement('div');item.className='snav-item';item.innerHTML=`<span class="snav-label">${s.dataset.nav}</span><div class="snav-dot"></div>`;item.addEventListener('click',()=>s.scrollIntoView({behavior:'smooth'}));nav.appendChild(item)});
+const navItems=nav.querySelectorAll('.snav-item');
+window.addEventListener('scroll',()=>{let ci=0;secs.forEach((s,i)=>{if(s.getBoundingClientRect().top<innerHeight*.5)ci=i});navItems.forEach(n=>n.classList.remove('active'));navItems[ci]?.classList.add('active')});
+
+/* ============ REVEAL ============ */
+const obsReveal=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting)e.target.classList.add('visible')})},{threshold:.1});
+document.querySelectorAll('.reveal,.reveal-l,.reveal-r').forEach(el=>obsReveal.observe(el));
+
+/* ============ FREQUENCY CHART ============ */
+const freqFr={A:8.11,B:0.81,C:3.38,D:4.28,E:17.22,F:1.14,G:1.27,H:0.92,I:7.34,J:0.29,K:0.05,L:5.98,M:2.29,N:7.14,O:5.14,P:2.84,Q:1.06,R:6.53,S:7.91,T:7.24,U:6.31,V:1.27,W:0.08,X:0.38,Y:0.46,Z:0.15};
+const freqEn={A:8.17,B:1.49,C:2.78,D:4.25,E:12.70,F:2.23,G:2.02,H:6.09,I:6.97,J:0.15,K:0.77,L:4.03,M:2.41,N:6.75,O:7.51,P:1.93,Q:0.10,R:5.99,S:6.33,T:9.06,U:2.76,V:0.98,W:2.36,X:0.15,Y:1.97,Z:0.07};
+const maxFreq=Math.max(...Object.values(freqFr),...Object.values(freqEn));
+const chartEl=document.getElementById('freq-chart');
+'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').forEach(l=>{
+  const g=document.createElement('div');g.className='freq-bar-group';
+  const hFr=Math.round(freqFr[l]/maxFreq*140),hEn=Math.round(freqEn[l]/maxFreq*140);
+  g.innerHTML=`<div class="freq-hover-label">${l}: FR ${freqFr[l]}% · EN ${freqEn[l]}%</div><div style="display:flex;align-items:flex-end;gap:1px;height:140px">
+    <div class="freq-bar" style="height:${hFr}px;background:rgba(0,255,231,.55);width:8px"></div>
+    <div class="freq-bar" style="height:${hEn}px;background:rgba(255,45,120,.45);width:8px"></div>
+  </div><div class="freq-letter">${l}</div>`;
+  chartEl.appendChild(g);
+});
+
+/* ==============================================
+   ALPHABET DISPLAY CLIQUABLE — fonction commune
+   plainContainerId: container des lettres en clair (cyan)
+   cipherContainerId: container des lettres chiffrées (rouge/rose)
+   encodeFn: fonction(lettre) → lettre chiffrée
+   ============================================== */
+function buildClickableAlphabet(plainContainerId, cipherContainerId, encodeFn) {
+  const plainEl = document.getElementById(plainContainerId);
+  const cipherEl = document.getElementById(cipherContainerId);
+  if (!plainEl || !cipherEl) return;
+  
+  plainEl.innerHTML = '';
+  cipherEl.innerHTML = '';
+  
+  const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+  const plainCells = [];
+  const cipherCells = [];
+  
+  // Build mapping: plainLetter → cipherLetter
+  const mapping = {};
+  letters.forEach(l => { mapping[l] = encodeFn(l); });
+  
+  // Build reverse mapping: cipherLetter → [plainLetters]
+  const reverseMapping = {};
+  letters.forEach(l => {
+    const c = mapping[l];
+    if (!reverseMapping[c]) reverseMapping[c] = [];
+    reverseMapping[c].push(l);
+  });
+  
+  // Create plain row
+  letters.forEach((l, i) => {
+    const cell = document.createElement('div');
+    cell.className = 'alpha-letter plain-letter';
+    cell.textContent = l;
+    cell.dataset.letter = l;
+    cell.title = `${l} → ${mapping[l]}`;
+    
+    cell.addEventListener('click', () => {
+      // Clear all
+      plainCells.forEach(c => c.classList.remove('plain-selected'));
+      cipherCells.forEach(c => c.classList.remove('cipher-selected'));
+      // Highlight this plain letter
+      cell.classList.add('plain-selected');
+      // Highlight the corresponding cipher letter
+      const cipherLetter = mapping[l];
+      cipherCells.forEach(c => {
+        if (c.dataset.letter === cipherLetter) c.classList.add('cipher-selected');
+      });
+    });
+    
+    plainEl.appendChild(cell);
+    plainCells.push(cell);
+  });
+  
+  // Create cipher row
+  letters.forEach((l, i) => {
+    // The cipher letter at position i is mapping[A+i]
+    const cipherLetter = mapping[letters[i]];
+    const cell = document.createElement('div');
+    cell.className = 'alpha-letter cipher-letter';
+    cell.textContent = cipherLetter;
+    cell.dataset.letter = cipherLetter;
+    cell.title = `${letters[i]} → ${cipherLetter}`;
+    
+    cell.addEventListener('click', () => {
+      // Clear all
+      plainCells.forEach(c => c.classList.remove('plain-selected'));
+      cipherCells.forEach(c => c.classList.remove('cipher-selected'));
+      // Highlight all plain letters that map to this cipher letter
+      reverseMapping[cipherLetter]?.forEach(pl => {
+        plainCells.forEach(pc => { if (pc.dataset.letter === pl) pc.classList.add('plain-selected'); });
+      });
+      cell.classList.add('cipher-selected');
+    });
+    
+    cipherEl.appendChild(cell);
+    cipherCells.push(cell);
+  });
+}
+
+/* ============ CESAR INTERACTIVE ============ */
+function cesarEncode(text, key) {
+  return text.toUpperCase().replace(/[A-Z]/g, c => String.fromCharCode((c.charCodeAt(0) - 65 + key) % 26 + 65));
+}
+function cesarEncodeL(letter, key) {
+  return String.fromCharCode((letter.charCodeAt(0) - 65 + key) % 26 + 65);
+}
+function updateCesar() {
+  const txt = document.getElementById('cesar-input').value;
+  const key = parseInt(document.getElementById('cesar-key').value);
+  document.getElementById('cesar-key-val').textContent = key;
+  document.getElementById('cesar-output').textContent = cesarEncode(txt, key);
+  buildClickableAlphabet('cesar-plain-alpha', 'cesar-cipher-alpha', l => cesarEncodeL(l, key));
+}
+updateCesar();
+document.getElementById('cesar-input').addEventListener('input', updateCesar);
+document.getElementById('cesar-key').addEventListener('input', updateCesar);
+
+/* ============ AFFINE INTERACTIVE ============ */
+function gcd(a,b){return b===0?a:gcd(b,a%b)}
+function modInverse(a,m){for(let x=1;x<m;x++)if((a*x)%m===1)return x;return -1}
+function affineEncodeL(letter, a, b) {
+  const p = letter.charCodeAt(0) - 65;
+  return String.fromCharCode((a * p + b) % 26 + 65);
+}
+function affineEncode(text, a, b) {
+  return text.toUpperCase().replace(/[A-Z]/g, c => affineEncodeL(c, a, b));
+}
+function updateAffine() {
+  const txt = document.getElementById('affine-input').value;
+  const a = parseInt(document.getElementById('affine-a').value);
+  const b = parseInt(document.getElementById('affine-b').value);
+  document.getElementById('affine-b-val').textContent = b;
+  document.getElementById('affine-output').textContent = affineEncode(txt, a, b);
+  
+  // Build affine table with click interaction
+  const table = document.getElementById('affine-table');
+  table.innerHTML = '';
+  const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+  const cells = [];
+  
+  // Build mapping
+  const mapping = {};
+  letters.forEach(l => { mapping[l] = affineEncodeL(l, a, b); });
+  const reverseMapping = {};
+  letters.forEach(l => {
+    const c = mapping[l];
+    if (!reverseMapping[c]) reverseMapping[c] = [];
+    reverseMapping[c].push(l);
+  });
+  
+  letters.forEach((l, i) => {
+    const enc = mapping[l];
+    const d = document.createElement('div');
+    d.className = 'affine-pair';
+    d.innerHTML = `<span class="plain">${l} →</span><span class="cipher">${enc}</span>`;
+    d.dataset.plain = l;
+    d.dataset.cipher = enc;
+    
+    d.addEventListener('click', () => {
+      // Clear all
+      cells.forEach(c => { c.classList.remove('active', 'cipher-active'); });
+      // Highlight clicked (plain)
+      d.classList.add('active');
+      // Highlight all cells whose cipher output = this cell's cipher
+      cells.forEach(c => {
+        if (c.dataset.cipher === enc) c.classList.add('cipher-active');
+      });
+    });
+    
+    table.appendChild(d);
+    cells.push(d);
+  });
+}
+updateAffine();
+
+/* ============ VIGENERE INTERACTIVE ============ */
+function vigenereEncode(plain, key) {
+  plain = plain.toUpperCase().replace(/[^A-Z]/g, '');
+  key = key.toUpperCase().replace(/[^A-Z]/g, '');
+  if (!key.length) return { result: plain, steps: [] };
+  let result = '', steps = [];
+  for (let i = 0; i < plain.length; i++) {
+    const p = plain.charCodeAt(i) - 65;
+    const k = key.charCodeAt(i % key.length) - 65;
+    const c = (p + k) % 26;
+    result += String.fromCharCode(c + 65);
+    steps.push({ p: plain[i], k: key[i % key.length], pNum: p, kNum: k, cNum: c, c: String.fromCharCode(c + 65) });
+  }
+  return { result, steps };
+}
+function updateVigenere() {
+  const plain = document.getElementById('vig-plain').value;
+  const key = document.getElementById('vig-key').value;
+  const { result, steps } = vigenereEncode(plain, key);
+  document.getElementById('vig-output').textContent = result;
+  
+  // Steps
+  const stepsEl = document.getElementById('vig-steps');
+  stepsEl.innerHTML = '';
+  steps.slice(0, 6).forEach((s, i) => {
+    const d = document.createElement('div');
+    d.className = 'vig-step active';
+    d.innerHTML = `<div class="vig-step-num" style="border-color:var(--neon4);color:var(--neon4)">${i+1}</div>
+    <div style="font-family:'Share Tech Mono',monospace;font-size:.78rem">
+      <span style="color:var(--neon)">${s.p}(${s.pNum})</span> + 
+      <span style="color:var(--neon4)">${s.k}(${s.kNum})</span> = 
+      <span style="color:var(--muted)">${s.pNum + s.kNum} mod 26 = ${s.cNum}</span> → 
+      <span style="color:var(--neon3);font-weight:700">${s.c}</span>
+    </div>`;
+    stepsEl.appendChild(d);
+  });
+  if (steps.length > 6) {
+    const more = document.createElement('div');
+    more.style.cssText = "font-family:'Share Tech Mono',monospace;font-size:.68rem;color:var(--muted);padding:8px 16px";
+    more.textContent = `... et ${steps.length - 6} autres lettres`;
+    stepsEl.appendChild(more);
+  }
+  
+  // Alphabet cliquable — basé sur la première lettre du mot-clé
+  const k = key.toUpperCase().replace(/[^A-Z]/g, '') || 'A';
+  const ki = k.charCodeAt(0) - 65;
+  buildClickableAlphabet('vig-plain-alpha', 'vig-cipher-alpha', l => {
+    const p = l.charCodeAt(0) - 65;
+    return String.fromCharCode((p + ki) % 26 + 65);
+  });
+}
+updateVigenere();
+
+/* ============ VIGENERE SQUARE ============ */
+const vigWrap = document.getElementById('vig-square-wrap');
+let vigTable = document.createElement('table');
+vigTable.style.cssText = "border-collapse:collapse;font-family:'Share Tech Mono',monospace;font-size:.58rem";
+let hRow = document.createElement('tr');
+let thEmpty = document.createElement('th');
+thEmpty.style.cssText = 'width:22px;height:22px;background:transparent;border:none';
+hRow.appendChild(thEmpty);
+'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').forEach(l => {
+  const th = document.createElement('th');
+  th.textContent = l;
+  th.style.cssText = 'width:22px;height:22px;background:rgba(245,197,24,.08);color:var(--neon3);border:1px solid rgba(245,197,24,.1);font-size:.58rem';
+  hRow.appendChild(th);
+});
+vigTable.appendChild(hRow);
+'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').forEach((row, ri) => {
+  const tr = document.createElement('tr');
+  const th = document.createElement('th');
+  th.textContent = row;
+  th.style.cssText = 'width:22px;height:22px;background:rgba(255,45,120,.06);color:var(--neon2);border:1px solid rgba(255,45,120,.1);font-size:.58rem';
+  tr.appendChild(th);
+  'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').forEach((col, ci) => {
+    const td = document.createElement('td');
+    td.textContent = String.fromCharCode((ri + ci) % 26 + 65);
+    td.style.cssText = 'width:22px;height:22px;text-align:center;border:1px solid rgba(255,255,255,.04);color:var(--text);opacity:.5;font-size:.58rem;cursor:pointer;transition:all .15s';
+    td.dataset.row = ri;
+    td.dataset.col = ci;
+    td.title = `Clé: ${row} + Clair: ${col} = Chiffré: ${String.fromCharCode((ri+ci)%26+65)}`;
+    td.addEventListener('mouseenter', () => {
+      vigTable.querySelectorAll('td').forEach(c => {
+        const r = parseInt(c.dataset.row), cl = parseInt(c.dataset.col);
+        c.classList.remove('row-highlight','col-highlight','intersect');
+        if (r === ri && cl !== ci) c.classList.add('row-highlight');
+        else if (cl === ci && r !== ri) c.classList.add('col-highlight');
+        else if (r === ri && cl === ci) c.classList.add('intersect');
+      });
+      const info = document.getElementById('vig-hover-info');
+      const res = String.fromCharCode((ri+ci)%26+65);
+      if (info) info.innerHTML = `
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+          <span style="background:rgba(255,45,120,.12);border:1px solid rgba(255,45,120,.3);border-radius:6px;padding:4px 12px;font-size:.95rem;color:var(--neon2)">${row}</span>
+          <span style="color:var(--muted);font-size:.8rem">clé</span>
+          <span style="font-size:.9rem;color:var(--muted)">+</span>
+          <span style="background:rgba(0,255,231,.1);border:1px solid rgba(0,255,231,.2);border-radius:6px;padding:4px 12px;font-size:.95rem;color:var(--neon)">${col}</span>
+          <span style="color:var(--muted);font-size:.8rem">clair</span>
+          <span style="font-size:.9rem;color:var(--muted)">=</span>
+          <span style="background:rgba(245,197,24,.15);border:1px solid rgba(245,197,24,.3);border-radius:6px;padding:4px 14px;font-size:1.1rem;font-weight:700;color:var(--neon3)">${res}</span>
+        </div>
+        <div style="color:var(--muted);font-size:.7rem;margin-top:6px;font-family:'Share Tech Mono',monospace">(${ri}+${ci}) mod 26 = ${(ri+ci)%26} = <strong style="color:var(--neon3)">${res}</strong></div>`;
+    });
+    tr.appendChild(td);
+  });
+  vigTable.appendChild(tr);
+});
+vigTable.addEventListener('mouseleave', () => vigTable.querySelectorAll('td').forEach(c => c.classList.remove('row-highlight','col-highlight','intersect')));
+vigWrap.appendChild(vigTable);
+
+/* ============ PLAYFAIR ============ */
+function buildPlayfairGrid(keyword) {
+  keyword = keyword.toUpperCase().replace(/[^A-Z]/g, '').replace(/W/g, '');
+  let used = new Set(), grid = [];
+  for (const c of keyword) if (!used.has(c)) { used.add(c); grid.push(c); }
+  'ABCDEFGHIJKLMNOPQRSTUVXYZ'.split('').forEach(c => { if (!used.has(c)) { used.add(c); grid.push(c); } });
+  return { grid, keyword };
+}
+function updatePlayfair() {
+  const kw = document.getElementById('pf-key-input').value || 'SALUT';
+  const { grid } = buildPlayfairGrid(kw);
+  const gridEl = document.getElementById('pf-grid');
+  gridEl.innerHTML = '';
+  const kwClean = kw.toUpperCase().replace(/[^A-Z]/g, '').replace(/W/g, '');
+  const keySet = new Set();
+  for (const c of kwClean) keySet.add(c);
+  grid.forEach(letter => {
+    const cell = document.createElement('div');
+    cell.className = 'pf-cell';
+    cell.textContent = letter;
+    if (keySet.has(letter)) { cell.classList.add('key-letter'); cell.title = `"${letter}" — lettre du mot-clé`; }
+    else { cell.classList.add('normal-letter'); cell.title = `"${letter}" — lettre de l'alphabet`; }
+    gridEl.appendChild(cell);
+  });
+}
+updatePlayfair();
+
+/* ============ TRANSPOSITION ============ */
+function updateTranspo() {
+  const txt = document.getElementById('transpo-input').value.toUpperCase().replace(/[^A-Z]/g, '');
+  const cols = parseInt(document.getElementById('transpo-cols').value);
+  document.getElementById('transpo-cols-val').textContent = cols;
+  if (!txt || cols < 2) return;
+  
+  const rows = Math.ceil(txt.length / cols);
+  const padded = txt.padEnd(rows * cols, '_');
+  
+  const gridEl = document.getElementById('transpo-grid');
+  const colWidth = `repeat(${cols},1fr)`;
+  gridEl.innerHTML = `<div style="display:grid;grid-template-columns:${colWidth};gap:4px">`;
+  
+  let cells = [];
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      const idx = r * cols + c;
+      const cell = document.createElement('div');
+      cell.className = 'transpo-cell plain';
+      cell.textContent = padded[idx] === '_' ? '_' : padded[idx];
+      if (padded[idx] === '_') cell.style.opacity = '.3';
+      cells.push({ el: cell, row: r, col: c, letter: padded[idx] });
+      gridEl.firstChild.appendChild(cell);
+    }
+  }
+  
+  // Build cipher (read by columns)
+  let cipher = '';
+  for (let c = 0; c < cols; c++) {
+    for (let r = 0; r < rows; r++) {
+      const l = padded[r * cols + c];
+      if (l !== '_') cipher += l;
+    }
+  }
+  document.getElementById('transpo-output').textContent = cipher;
+  
+  let idx = 0;
+  function animStep() {
+    if (idx > 0) {
+      const prev = cells.find(ce => ce.col === Math.floor((idx-1)/rows) && ce.row === (idx-1)%rows);
+      if (prev && prev.el) prev.el.classList.replace('reading', 'done');
+    }
+    if (idx < cells.length) {
+      const col = Math.floor(idx / rows), row = idx % rows;
+      const cell = cells.find(c => c.col === col && c.row === row);
+      if (cell && cell.letter !== '_') { cell.el.classList.add('reading'); setTimeout(animStep, 180); idx++; }
+      else idx++;
+    }
+  }
+  setTimeout(animStep, 200);
+}
+updateTranspo();
+
+/* ============ MODAL DATA ============ */
+const modals = {
+  cryptologie:{icon:'🔬',title:'Cryptologie',cat:'Concept de Base · Science Globale',color:'var(--neon3)',desc:`La <strong style="color:var(--neon3)">cryptologie</strong> est la science qui englobe l'ensemble des techniques scientifiques liées au secret des communications. Elle se divise en deux branches complémentaires : la <em>cryptographie</em> (construire des systèmes sécurisés) et la <em>cryptanalyse</em> (les attaquer).`,analogy:'⚔️🛡️ C\'est comme la "Science militaire" — elle inclut à la fois l\'art d\'attaquer et celui de défendre. Tu ne peux pas exceller dans l\'un sans comprendre l\'autre.',steps:['Cryptographie → créer des codes sécurisés','Cryptanalyse → casser des codes existants','Stéganographie → cacher l\'existence d\'un message','Ensemble → comprendre et améliorer la sécurité des communications'],stepColor:'var(--neon3)',tags:['Cryptographie','Cryptanalyse','Stéganographie','Sécurité']},
+  cryptographie:{icon:'🔐',title:'Cryptographie',cat:'Concept de Base · Protection',color:'var(--neon3)',desc:`La <strong style="color:var(--neon3)">cryptographie</strong> désigne l'ensemble des techniques permettant de rendre un message <em>inintelligible</em> (incompréhensible) à toute personne n'ayant pas la clé de déchiffrement. Le terme vient du grec : <em>kryptos</em> (caché) + <em>graphia</em> (écriture).`,analogy:'🗣️ C\'est comme parler un langage secret que seule ta meilleure amie comprend. Tout le monde t\'entend parler, personne ne comprend — sauf elle.',steps:['On dispose d\'un texte en clair P','On applique un algorithme E avec une clé Ke','On obtient le texte chiffré C = E(P, Ke)','Le destinataire applique D avec la clé Kd pour retrouver P'],stepColor:'var(--neon3)',tags:['Algorithme','Clé','Chiffrement','Déchiffrement']},
+  cryptanalyse:{icon:'⚔️',title:'Cryptanalyse',cat:'Concept de Base · Attaque',color:'var(--neon2)',desc:`La <strong style="color:var(--neon2)">cryptanalyse</strong> consiste à analyser et casser des fonctions cryptographiques, généralement sans connaître la clé. Son but peut être de retrouver la clé, de déchiffrer des messages, ou de démontrer des faiblesses théoriques.`,analogy:'🕵️ C\'est le boulot du détective : tu as une lettre codée, tu ne sais pas le code, mais tu vas quand même la déchiffrer grâce à ta logique et aux patterns que tu observes.',steps:['COA : seulement le texte chiffré disponible','KPA : paires (clair, chiffré) disponibles','CPA : choisir ses propres textes à chiffrer','Brute force : tout essayer systématiquement'],stepColor:'var(--neon2)',tags:['COA','KPA','CPA','Force brute','Analyse fréquences']},
+  stegano:{icon:'🎭',title:'Stéganographie',cat:'Concept de Base · Dissimulation',color:'var(--neon4)',desc:`La <strong style="color:var(--neon4)">stéganographie</strong> (du grec "écriture couverte") cache l'<em>existence même</em> d'un message, contrairement à la cryptographie qui cache son <em>contenu</em>. Si quelqu'un intercepte le message, il ne sait même pas qu'il y a un message caché.`,analogy:'📸 Tu caches un message dans les pixels d\'une photo de vacances. Ta sœur reçoit la photo sur Instagram, lit le message. Les 1000 personnes qui ont liké la photo ne savent même pas qu\'il y a un message dedans.',steps:['Exemple classique : Collecter les mots de positions impaires','Message : "Il ne faut pas tuer Jules César car il n\'est pas le vrai coupable"','Positions impaires : Il, faut, tuer, César, il, pas, vrai, coupable','Message caché : "Il faut tuer César il est le coupable"'],stepColor:'var(--neon4)',tags:['LSB','Pixel','Audio','Watermarking']},
+  comp_cesar:{icon:'🏛️',title:'César — Analyse Complète',cat:'Algorithme Classique',color:'var(--neon3)',desc:`Le chiffrement de César est le plus simple des chiffrements monoalphabétiques. Chaque lettre est décalée d'un nombre fixe K dans l'alphabet.`,analogy:'🎰 Avec seulement 25 clés possibles, c\'est comme un cadenas à 25 combinaisons. Un enfant de 10 ans peut le casser à la main en quelques minutes.',steps:['26 lettres → 25 clés possibles (K=1 à K=25)','Force brute : tester les 25 combinaisons en < 1 seconde','Analyse de fréquences : identifier la lettre la plus fréquente → correspond à E (en français)','Vulnérabilité : déchiffrable sans outil en quelques secondes'],stepColor:'var(--neon3)',tags:['K=3','Substitution mono','26 lettres','Romain']},
+  comp_affine:{icon:'📐',title:'Affine — Analyse Complète',cat:'Algorithme Classique',color:'var(--neon3)',desc:`Le chiffrement affine est une généralisation de César qui utilise une multiplication et un décalage. C = (a×P + b) mod 26. Nécessite que pgcd(a, 26) = 1.`,analogy:'🔢 Avec 312 clés, c\'est mieux que César (25) mais bien en deçà du seuil de sécurité moderne (2¹²⁸). Un ordinateur teste toutes les clés en moins d\'une milliseconde.',steps:['12 valeurs valides pour a (premiers avec 26)','26 valeurs pour b','Total : 12 × 26 = 312 clés','Vulnérabilité 1 : force brute triviale','Vulnérabilité 2 : analyse de fréquences (même principe que César)'],stepColor:'var(--neon3)',tags:['312 clés','Linéaire','Inverse modulaire','pgcd(a,26)=1']},
+  comp_mono:{icon:'🎲',title:'Monoalphabétique Aléatoire',cat:'Algorithme Classique',color:'var(--neon3)',desc:`Chaque lettre est remplacée aléatoirement par une autre lettre. La clé est une permutation complète de l'alphabet (26 caractères).`,analogy:'🃏 C\'est comme mélanger un jeu de 26 cartes. Il y a 26! façons de les mélanger — soit environ 4 × 10²⁶ combinaisons. La force brute est donc impossible.',steps:['Nombre de clés : 26! ≈ 4.03 × 10²⁶','Force brute : impossible même pour un superordinateur','Mais : vulnérable à l\'analyse de fréquences !','En anglais, E=12.7%, T=9.1%, A=8.2%... Ces patterns survivent au chiffrement'],stepColor:'var(--neon3)',tags:['26!','Aléatoire','Analyse de fréquences','Pattern']},
+  comp_vigenere:{icon:'🌊',title:'Vigenère — Analyse Complète',cat:'Algorithme Classique',color:'var(--neon4)',desc:`Vigenère utilise un mot-clé pour appliquer des décalages différents à chaque position. Un même caractère peut être chiffré de façons différentes selon sa position.`,analogy:'🌈 Imagine que ta lettre secrète change de langue à chaque mot. "Bonjour" devient parfois "X7#", parfois "K2!" selon où tu es dans le message. L\'analyse de fréquences simple ne fonctionne plus.',steps:['Résistant à l\'analyse de fréquences simple','Vulnérable au test de Kasiski : chercher les répétitions dans le texte chiffré','La distance entre répétitions = multiple de la longueur de la clé','Une fois la longueur trouvée : on décompose en n chiffrements de César et on attaque chacun'],stepColor:'var(--neon4)',tags:['Polyalphabétique','Test Kasiski','IC','Longueur de clé']},
+  comp_playfair:{icon:'⬛',title:'Playfair — Analyse Complète',cat:'Algorithme Classique',color:'var(--neon4)',desc:`Playfair chiffre des bigrammes (paires de lettres) à la fois, créant 676 combinaisons possibles au lieu de 26. Cela rend l'analyse de fréquences monographique inefficace.`,analogy:'🧩 Au lieu de chiffrer lettre par lettre, on chiffre 2 à 2. C\'est comme coder des mots entiers au lieu de lettres. Il y a beaucoup plus de "mots" à analyser.',steps:['676 bigrammes possibles (26×26) vs 26 monogrammes','Résistant à l\'analyse de fréquences simple','Vulnerable à l\'analyse de bigrammes avec assez de texte chiffré','Historiquement utilisé par les Alliés en WWI'],stepColor:'var(--neon4)',tags:['Bigramme','5×5','WWI','676 combinaisons']},
+  comp_hill:{icon:'🧮',title:'Hill — Analyse Complète',cat:'Algorithme Classique',color:'var(--neon4)',desc:`Hill utilise l'algèbre matricielle pour chiffrer m lettres simultanément. Sa force mathématique est considérable, mais sa faiblesse face aux attaques KPA est critique.`,analogy:'🏗️ Hill est comme un bâtiment solide contre les cambrioleurs ordinaires (analyse de fréquences) mais avec une porte dérobée ouverte aux ingénieurs (attaque KPA).',steps:['Très résistant à l\'analyse de fréquences (m lettres mélangées)','Mais : si l\'attaquant a m paires (clair, chiffré), il peut résoudre K = C × P⁻¹','Avec m=2 : seulement 2 bigrammes connus suffisent à retrouver K !','Vulnérabilité KPA critique : raison pour laquelle Hill n\'est jamais utilisé seul'],stepColor:'var(--neon4)',tags:['Matriciel','KPA critique','m×m','Algèbre linéaire']},
+  comp_transpo:{icon:'🔀',title:'Transposition — Analyse Complète',cat:'Algorithme Classique',color:'var(--neon)',desc:`La transposition réorganise les lettres sans les modifier. L'analyse de fréquences montre donc les mêmes fréquences que le texte clair — c'est sa principale faiblesse.`,analogy:'🔀 Si tu mets les mots d\'une phrase dans le désordre, les lettres individuelles gardent leurs fréquences. Un cryptanalyste sait immédiatement que c\'est une transposition.',steps:['Détection : l\'analyse de fréquences correspond à celle de la langue source','L\'indice de coïncidence est identique au texte en clair','Pour casser : l\'attaquant cherche les arrangements qui donnent des mots valides','Renforcement : combiner substitution + transposition (chiffrement produit)'],stepColor:'var(--neon)',tags:['Permutation','Indice coïncidence','Produit','Colonnes']},
+  g_plaintext:{icon:'📄',title:'Texte en Clair (P)',cat:'Glossaire · Cryptographie',color:'var(--neon)',desc:'Le texte en clair (plaintext en anglais) est le message original, lisible par tout le monde. C\'est l\'input du processus de chiffrement.',analogy:'📝 C\'est simplement ta lettre avant de la mettre dans l\'enveloppe secrète.',steps:[],stepColor:'var(--neon)',tags:['P','Input','Message','Original']},
+  g_cipher:{icon:'🔒',title:'Texte Chiffré (C)',cat:'Glossaire · Cryptographie',color:'var(--neon2)',desc:'Le texte chiffré (ciphertext) est le message transformé par l\'algorithme de chiffrement. Sans la clé, il est incompréhensible.',analogy:'🔐 C\'est ta lettre dans l\'enveloppe scellée — personne ne peut lire le contenu sans ouvrir l\'enveloppe (= connaître la clé).',steps:[],stepColor:'var(--neon2)',tags:['C','Ciphertext','Sortie','Incompréhensible']},
+  g_key:{icon:'🗝️',title:'Clé (K)',cat:'Glossaire · Cryptographie',color:'var(--neon3)',desc:'La clé est l\'information secrète qui paramètre l\'algorithme. Le principe de Kerckhoffs stipule que la sécurité doit reposer sur la clé, pas sur le secret de l\'algorithme.',analogy:'🏠 La clé de ta maison. Tout le monde sait que les maisons ont des serrures (l\'algorithme est public), mais seul toi as la clé.',steps:[],stepColor:'var(--neon3)',tags:['Secrète','Kerckhoffs','Symétrique','Asymétrique']},
+  g_kasiski:{icon:'🔍',title:'Test de Kasiski',cat:'Glossaire · Cryptanalyse',color:'var(--neon2)',desc:'Méthode inventée par Friedrich Kasiski (1863) pour trouver la longueur de la clé d\'un chiffrement de Vigenère. On cherche des répétitions de séquences dans le texte chiffré.',analogy:'🎼 Si une mélodie se répète tous les 8 temps, le thème musical a probablement 8 temps. C\'est le même principe : les répétitions trahissent la périodicité.',steps:['Trouver toutes les répétitions de trigraphes dans le texte chiffré','Calculer les distances entre chaque répétition','PGCD de toutes les distances = longueur probable de la clé','Décomposer le chiffrement en n Caesar indépendants et les attaquer'],stepColor:'var(--neon2)',tags:['1863','Kasiski','Longueur de clé','Vigenère']},
+  g_ic:{icon:'📊',title:'Indice de Coïncidence (IC)',cat:'Glossaire · Statistiques',color:'var(--neon3)',desc:'L\'indice de coïncidence mesure la probabilité que deux lettres choisies au hasard dans un texte soient identiques. IC du français/anglais ≈ 0.065 (non uniforme). IC d\'un texte chiffré aléatoire ≈ 0.038.',analogy:'🎲 Si tu lances un dé truqué qui sort souvent 6, tu as plus de chances de lancer deux 6 de suite qu\'avec un dé équilibré.',steps:[],stepColor:'var(--neon3)',tags:['0.065','0.038','Friedman','Statistique']},
+  g_modular:{icon:'🔄',title:'Arithmétique Modulaire',cat:'Glossaire · Mathématiques',color:'var(--neon4)',desc:'L\'arithmétique modulaire est fondamentale en cryptographie. a mod n = reste de la division de a par n. Pour l\'alphabet : on travaille modulo 26.',analogy:'🕐 Une horloge fonctionne modulo 12. Après 12h, on revient à 0. 15h = 15 mod 12 = 3h.',steps:['25 + 1 = 26 mod 26 = 0 → A après Z','18 + 15 = 33 mod 26 = 7 → (S + décalage 15 = H)','Pour les négatifs : -3 mod 26 = 23 (on ajoute 26)'],stepColor:'var(--neon4)',tags:['mod 26','Horloge','Reste','Division euclidienne']},
+  g_pgcd:{icon:'🔢',title:'PGCD',cat:'Glossaire · Mathématiques',color:'var(--neon)',desc:'Le PGCD de deux entiers a et b est le plus grand entier qui divise exactement les deux. En cryptographie, on l\'utilise pour vérifier l\'inversibilité.',analogy:'🧱 PGCD(12,8) = 4 car 4 est la plus grande brique commune.',steps:['Algorithme d\'Euclide : pgcd(a,b) = pgcd(b, a mod b)','pgcd(7,26) = 1 ✓ → 7 peut être clé affine','pgcd(4,26) = 2 ≠ 1 → 4 ne peut pas être clé affine'],stepColor:'var(--neon)',tags:['Euclide','Inversible','pgcd=1','Premiers entre eux']},
+  g_inverse:{icon:'↩️',title:'Inverse Modulaire',cat:'Glossaire · Mathématiques',color:'var(--neon3)',desc:'L\'inverse modulaire de a modulo n est un entier b tel que a×b ≡ 1 (mod n). Il existe si et seulement si pgcd(a,n)=1.',analogy:'Division normale : 5 × (1/5) = 1. Modulaire : 5 × 21 mod 26 = 105 mod 26 = 1. Donc 5⁻¹ mod 26 = 21.',steps:['Trouver b tel que a×b mod n = 1','Exemple : 5⁻¹ mod 26 = 21 (car 5×21=105=4×26+1)'],stepColor:'var(--neon3)',tags:['a×a⁻¹≡1','Euclide étendu','Déchiffrement','Affine']},
+  g_bigramme:{icon:'🔤',title:'Bigramme',cat:'Glossaire · Cryptographie',color:'var(--neon4)',desc:'Un bigramme est une paire de deux lettres consécutives. Les chiffrements polygraphiques comme Playfair et Hill opèrent sur des bigrammes.',analogy:'📰 En français, certains bigrammes sont très courants : EN, ES, LE, DE...',steps:[],stepColor:'var(--neon4)',tags:['m=2','Polygramme','676','Playfair','Hill']},
+  g_polyalpha:{icon:'🌈',title:'Substitution Polyalphabétique',cat:'Glossaire · Classification',color:'var(--neon4)',desc:'Un chiffrement polyalphabétique utilise plusieurs alphabets de substitution différents, appliqués de façon cyclique. Un même caractère en clair peut être chiffré en différents caractères.',analogy:'🗣️ C\'est comme si pour chiffrer chaque lettre, tu changeais de langue : la 1ère en anglais, la 2ème en espagnol...',steps:['Mono : A → toujours X (facile à attaquer)','Poly : A → X (pos.1), Y (pos.2), Z (pos.3)...','Plus la clé est longue, plus c\'est difficile à casser'],stepColor:'var(--neon4)',tags:['Vigenère','Plusieurs alphabets','Cyclique','Résistant']},
+  pf_r1:{icon:'🔲',title:'Règle 1 — Rectangle',cat:'Playfair · Règle de chiffrement',color:'var(--neon3)',desc:'Si les deux lettres du bigramme se trouvent sur des <strong style="color:var(--neon3)">lignes et colonnes différentes</strong>, elles forment les coins opposés d\'un rectangle. Chaque lettre est remplacée par celle sur <em>la même ligne</em> à l\'<em>autre coin</em> du rectangle.',analogy:'🔲 Imagine un rectangle dans la grille. Tu as les coins haut-gauche et bas-droite. Tu les échanges avec les coins haut-droite et bas-gauche.',steps:['Bigramme à chiffrer : AF (sur la grille avec clé SALUT)','A est en ligne 0, col 0 · F est en ligne 1, col 4 → rectangle','A → lettre en ligne 0, col 4 = T / F → lettre en ligne 1, col 0 = C','AF → TC ✓'],stepColor:'var(--neon3)',tags:['Rectangle','Bigramme','Substitution','5×5']},
+  pf_r2:{icon:'↔️',title:'Règle 2 — Même Ligne',cat:'Playfair · Règle de chiffrement',color:'var(--neon)',desc:'Si les deux lettres du bigramme sont sur la <strong style="color:var(--neon)">même ligne</strong>, chaque lettre est remplacée par celle immédiatement à sa <em>droite</em> (circulaire).',analogy:'↔️ Tu es sur une ligne de cinq cases. Tu décales chaque lettre d\'une case vers la droite. Arrivé au bout, tu reviens au début.',steps:['Bigramme : SL — grille avec clé SALUT','S est en ligne 0, col 0 · L est en ligne 0, col 2 — même ligne','S (col 0) → A (col 1) · L (col 2) → U (col 3)','SL → AU ✓'],stepColor:'var(--neon)',tags:['Même ligne','Décalage droite','Circulaire','Bigramme']},
+  pf_r3:{icon:'↕️',title:'Règle 3 — Même Colonne',cat:'Playfair · Règle de chiffrement',color:'var(--neon2)',desc:'Si les deux lettres du bigramme sont dans la <strong style="color:var(--neon2)">même colonne</strong>, chaque lettre est remplacée par celle immédiatement <em>en dessous</em> (circulaire).',analogy:'↕️ Comme un ascenseur dans une tour de 5 étages. Tu montes d\'un étage. Au dernier étage, tu reviens au rez-de-chaussée.',steps:['Bigramme : TR — grille avec clé SALUT','T est en ligne 0, col 4 · R est en ligne 2, col 4 — même colonne','T (ligne 0) → F (ligne 1) · R (ligne 2) → Z (ligne 3)','TR → FZ ✓'],stepColor:'var(--neon2)',tags:['Même colonne','Décalage bas','Circulaire','Bigramme']},
+  pf_r4:{icon:'✖️',title:'Règle 4 — Lettres Identiques',cat:'Playfair · Règle de chiffrement',color:'var(--neon4)',desc:'Si les deux lettres d\'un bigramme sont <strong style="color:var(--neon4)">identiques</strong>, on insère un caractère nul — généralement <strong style="color:var(--neon4)">X</strong> — entre les deux lettres pour les séparer.',analogy:'✖️ Tu veux envoyer "BALLOON". B-AL-LO-ON → problème sur LL. Tu insères X : BA-LX-LO-ON.',steps:['Message original : "BALLOON"','Découpage naïf : BA LL OO N','LL → identiques ! On insère X → BA LX LO ON','OO → identiques → "BALLOON" → BA LX LO NX'],stepColor:'var(--neon4)',tags:['Doublon','Insertion X','Padding','Bigramme']},
+};
+
+function showModal(key) {
+  const d = modals[key];
+  if (!d) return;
+  const body = document.getElementById('modal-body');
+  const letters = ['A','B','C','D','E','F'];
+  let stepsHtml = '';
+  if (d.steps && d.steps.length) {
+    stepsHtml = `<div class="modal-steps">${d.steps.map((s,i) => `<div class="modal-step"><div class="modal-step-num" style="background:rgba(0,0,0,.3);border:1.5px solid ${d.stepColor};color:${d.stepColor}">${letters[i]||i+1}</div><div>${s}</div></div>`).join('')}</div>`;
+  }
+  body.innerHTML = `<span class="modal-icon">${d.icon}</span><div class="modal-title" style="color:${d.color}">${d.title}</div><div class="modal-category">${d.cat}</div>${d.desc?`<div class="modal-section"><div class="modal-sec-title" style="color:${d.color}">📖 Définition</div><div class="modal-text">${d.desc}</div></div>`:''} ${d.analogy?`<div class="modal-analogy"><span style="font-size:1.2rem">💡</span><div>${d.analogy}</div></div>`:''} ${stepsHtml?`<div class="modal-section"><div class="modal-sec-title" style="color:${d.color}">⚙️ Détails</div>${stepsHtml}</div>`:''} ${d.tags?.length?`<div class="modal-tags">${d.tags.map(t=>`<span class="modal-tag" style="color:${d.color};border-color:${d.color}40">${t}</span>`).join('')}</div>`:''}`;
+  document.getElementById('modal-overlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeModal(e, force) {
+  if (force || e?.target === document.getElementById('modal-overlay')) {
+    document.getElementById('modal-overlay').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(null, true); });
+
+/* ============ QUIZ ============ */
+const questions = [
+  {q:"🔐 C = (P + K) mod 26 avec K=5. Quelle est la lettre chiffrée de 'A' (P=0) ?",opts:["E","F","G","D"],ans:1,fb:"✅ <strong>F</strong> ! C = (0 + 5) mod 26 = 5 → F (A=0, B=1, C=2, D=3, E=4, F=5)."},
+  {q:"🔍 Un cryptanalyste dispose uniquement du texte chiffré. C'est quel type d'attaque ?",opts:["KPA","CPA","COA","Brute Force"],ans:2,fb:"✅ <strong>COA</strong> (Ciphertext-Only Attack) ! Seulement le texte chiffré est disponible."},
+  {q:"🎯 Dans le chiffrement affine C=(a×P+b) mod 26, quelle condition est OBLIGATOIRE pour a ?",opts:["a doit être pair","pgcd(a, 26) = 1","a > 13","a doit être premier"],ans:1,fb:"✅ <strong>pgcd(a, 26) = 1</strong> ! a doit être inversible modulo 26."},
+  {q:"🌈 Pourquoi Vigenère est plus résistant que César contre l'analyse de fréquences ?",opts:["La clé est plus longue","Un même caractère peut être chiffré différemment selon sa position","L'algorithme est secret","Il utilise des nombres"],ans:1,fb:"✅ Parce qu'<strong>un même caractère peut être chiffré de plusieurs façons</strong> selon sa position (polyalphabétique)."},
+  {q:"⬛ Dans Playfair, si AF forme les coins opposés d'un rectangle dans la grille (clé SALUT), comment chiffre-t-on AF ?",opts:["FA (inversion)","TC (les deux autres coins, même ligne)","XX","AF reste AF"],ans:1,fb:"✅ <strong>TC</strong> ! Règle 1 de Playfair : les deux lettres chiffrées sont les deux autres coins du rectangle."},
+  {q:"🧮 Hill utilise une matrice comme clé. Quelle est sa principale vulnérabilité ?",opts:["Trop lente à calculer","Vulnérable aux attaques KPA (texte en clair connu)","Difficile à mémoriser","Nécessite une clé très longue"],ans:1,fb:"✅ <strong>Vulnérabilité KPA</strong> ! Avec seulement m paires (clair, chiffré), on peut retrouver la matrice clé."},
+  {q:"🔀 Quelle est la différence FONDAMENTALE entre substitution et transposition ?",opts:["La substitution est plus ancienne","La substitution remplace les lettres, la transposition réorganise leur ordre","La transposition utilise une clé numérique","La substitution est plus sécurisée"],ans:1,fb:"✅ <strong>Substitution = remplacer</strong> les lettres. <strong>Transposition = permuter</strong> leur position."},
+  {q:"📊 Dans un texte chiffré par César, 'T' apparaît 25 fois sur 100. Sachant que 'E' est la lettre la plus fréquente en français, quelle est la clé K ?",opts:["K = 4","K = 19","K = 15","K = 7"],ans:2,fb:"✅ <strong>K = 15</strong> ! T est à la position 19, E à la position 4. K = 19 - 4 = 15. Exemple exact du cours !"},
+];
+
+let qidx=0, qscore=0, qanswered=false;
+function buildProgress(){const p=document.getElementById('qprogress');p.innerHTML=questions.map((_,i)=>`<div class="qp-dot ${i<qidx?'done':i===qidx?'current':''}"></div>`).join('')}
+function renderQ(){
+  buildProgress();
+  const r=document.getElementById('qresult'),qc=document.getElementById('qcard');
+  if(qidx>=questions.length){
+    qc.style.display='none';r.classList.add('show');
+    const pct=Math.round(qscore/questions.length*100);
+    const msgs=[[0,60,'😬 Revois les formules et les exemples du cours !'],[60,88,'🔥 Bien joué ! Quelques points à consolider.'],[88,101,'🏆 PARFAIT ! Tu maîtrises la cryptographie classique !']];
+    const msg=msgs.find(m=>pct>=m[0]&&pct<m[1]);
+    r.innerHTML=`<div class="qr-score" style="color:${pct===100?'var(--neon3)':pct>=60?'var(--neon)':'var(--neon2)'}">${qscore}/${questions.length}</div><div class="qr-label">${pct}% — ${['À retravailler','Bien','Excellent'][pct<60?0:pct<88?1:2]}</div><div class="qr-msg">${msg[2]}</div><button class="qr-restart" onclick="restartQ()">Recommencer 🔄</button>`;
+    return;
+  }
+  qanswered=false;const q=questions[qidx];const ls=['A','B','C','D'];
+  qc.style.display='';
+  qc.innerHTML=`<div class="q-counter">Question ${qidx+1} / ${questions.length}</div><div class="q-text">${q.q}</div><div class="q-opts">${q.opts.map((o,i)=>`<div class="q-opt" onclick="answerQ(${i})" data-i="${i}"><span class="q-letter">${ls[i]}</span>${o}</div>`).join('')}</div><div class="q-feedback" id="qfb"></div><button class="q-next" id="qnext" onclick="nextQ()">${qidx<questions.length-1?'Question suivante →':'Voir les résultats 🏁'}</button>`;
+}
+function answerQ(i){
+  if(qanswered)return;qanswered=true;const q=questions[qidx];
+  document.querySelectorAll('.q-opt').forEach((o,j)=>{if(j===q.ans)o.classList.add('correct');else if(j===i&&i!==q.ans)o.classList.add('wrong')});
+  const fb=document.getElementById('qfb');
+  if(i===q.ans){qscore++;fb.className='q-feedback show good';fb.innerHTML=q.fb}else{fb.className='q-feedback show bad';fb.innerHTML=`❌ Mauvaise réponse ! ${q.fb}`}
+  document.getElementById('qnext').classList.add('show');
+}
+function nextQ(){qidx++;renderQ()}
+function restartQ(){qidx=0;qscore=0;qanswered=false;document.getElementById('qresult').classList.remove('show');renderQ()}
+renderQ();
+</script>
+</body>
+</html>
