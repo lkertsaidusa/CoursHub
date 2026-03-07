@@ -503,7 +503,7 @@ footer .f-gold{color:var(--neon3)}footer .f-pink{color:var(--neon2)}
       <div class="formula-block">
         <div class="formula-block-title">Formules Mathématiques</div>
         <div class="formula-row"><span class="fr-icon">🔐</span><span class="fr-label">Chiffrement</span><span class="fr-eq">C = (P + K) <span class="has-tooltip">mod 26<div class="tooltip">Reste de la division par 26 — revient à A après Z</div></span></span></div>
-        <div class="formula-row"><span class="fr-icon">🔓</span><span class="fr-label">Déchiffrement</span><span class="fr-eq">P = (C − K + 26) mod 26</span></div>
+        <div class="formula-row"><span class="fr-icon">🔓</span><span class="fr-label">Déchiffrement</span><span class="fr-eq">P = (C − K) mod 26</span></div>
         <div class="formula-note">P = position lettre claire (A=0, B=1 … Z=25) &nbsp;·&nbsp; K = clé (1 à 25) &nbsp;·&nbsp; C = position lettre chiffrée</div>
       </div>
       <div class="warning-box"><span>⚠️</span><span><strong>Vulnérabilité :</strong> Seulement <strong>25 clés possibles</strong>. Force brute instantanée. Analyse de fréquences encore plus rapide.</span></div>
@@ -1452,4 +1452,5 @@ function restartQ(){qidx=0;qscore=0;qanswered=false;document.getElementById('qre
 renderQ();
 </script>
 </body>
+
 </html>
